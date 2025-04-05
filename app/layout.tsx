@@ -7,8 +7,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Your App Name",
-  description: "A modern web application",
+  title: "SnapLink",
+  description: "A modern web application for connecting photographers and clients",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

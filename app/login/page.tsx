@@ -67,7 +67,7 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="w-full min-w-md border-muted/30 shadow-lg">
+          <Card className="w-full max-w-md border-muted/30 shadow-lg">
             <CardHeader className="space-y-4 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 ">
                 <LinkIcon className="h-6 w-6 text-primary" />

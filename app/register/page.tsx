@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Eye, EyeOff, Lock, Mail, User, LinkIcon, Github, Twitter } from "lucide-react"
+import { Eye, EyeOff, Lock, Mail, User, LinkIcon, Github, Twitter, MapPin, Phone } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
@@ -15,13 +15,29 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
+import { Switch } from "@/components/ui/switch"
+
+interface FormData {
+  name: string
+  email: string
+  password: string
+  confirmPassword: string
+  role: "CUSTOMER" | "PHOTOGRAPHER"
+  bio: string[]
+  location: string
+  phoneNumber: string
+}
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
+    role: "CUSTOMER",
+    bio: [],
+    location: "",
+    phoneNumber: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -96,6 +112,26 @@ export default function RegisterPage() {
 
   const passwordsMatch = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword
 
+  const bioOptions = [
+    "Portrait Photography",
+    "Wedding Photography",
+    "Landscape Photography",
+    "Event Photography",
+    "Fashion Photography",
+    "Product Photography",
+    "Street Photography",
+    "Wildlife Photography",
+  ]
+
+  const handleBioChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      bio: prev.bio.includes(value)
+        ? prev.bio.filter((item) => item !== value)
+        : [...prev.bio, value],
+    }))
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-background to-muted/30 p-4">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -113,6 +149,32 @@ export default function RegisterPage() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-6">
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="role" className="text-sm font-medium">
+                  {/* {formData.role === "CUSTOMER" ? "Customer" : "Photographer"} */}
+                  {formData.role === "CUSTOMER" 
+                      ? <p className="text-sm font-medium">Customer</p>
+                      : <p className="text-sm font-medium line-through italic">Customer</p>
+                  }
+                </Label>
+                <Switch
+                  id="role"
+                  checked={formData.role === "PHOTOGRAPHER"}
+                  onCheckedChange={(checked: boolean) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      role: checked ? "PHOTOGRAPHER" : "CUSTOMER",
+                    }))
+                  }
+                />
+                <Label htmlFor="role" className="text-sm font-medium">
+                  {formData.role === "PHOTOGRAPHER" 
+                      ? <p className="text-sm font-medium">Photographer</p>
+                      : <p className="text-sm font-medium line-through italic">Photographer</p>
+                  }
+                </Label>
+              </div>
+
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-medium">
@@ -236,6 +298,68 @@ export default function RegisterPage() {
                     <p className="text-xs text-destructive mt-1">Passwords do not match</p>
                   )}
                 </div>
+
+                {formData.role === "PHOTOGRAPHER" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="bio" className="text-sm font-medium">
+                        Photography Specialties
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {bioOptions.map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={option}
+                              checked={formData.bio.includes(option)}
+                              onCheckedChange={() => handleBioChange(option)}
+                            />
+                            <Label htmlFor={option} className="text-sm">
+                              {option}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="location" className="text-sm font-medium">
+                        Location
+                      </Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                        <Input
+                          id="location"
+                          name="location"
+                          type="text"
+                          placeholder="City, Country"
+                          value={formData.location}
+                          onChange={handleChange}
+                          className="pl-10"
+                          required={formData.role === "PHOTOGRAPHER"}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber" className="text-sm font-medium">
+                        Phone Number
+                      </Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                        <Input
+                          id="phoneNumber"
+                          name="phoneNumber"
+                          type="tel"
+                          placeholder="+1 (234) 567-8900"
+                          value={formData.phoneNumber}
+                          onChange={handleChange}
+                          className="pl-10"
+                          required={formData.role === "PHOTOGRAPHER"}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="flex items-start space-x-2 pt-2">
                   <Checkbox
