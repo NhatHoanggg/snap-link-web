@@ -57,6 +57,8 @@ interface RegisterResponse {
 }
 
 export async function login(credentials: { email: string; password: string }): Promise<LoginResponse> {
+  console.log("credentials", credentials);
+  
   const response = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: {

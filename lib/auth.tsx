@@ -27,8 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    // Check if user is logged in on mount
+  const updateAuthState = () => {
     const token = localStorage.getItem("token")
     const userData = localStorage.getItem("user")
     
@@ -39,20 +38,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Error parsing user data:", error)
         localStorage.removeItem("token")
         localStorage.removeItem("user")
+        setUser(null)
       }
+    } else {
+      setUser(null)
     }
     setIsLoading(false)
+  }
+
+  useEffect(() => {
+    // Check if user is logged in on mount
+    updateAuthState()
+
+    // Listen for storage events
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "token" || e.key === "user") {
+        updateAuthState()
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("login", email, password);
       const response = await apiLogin({ email, password })
       const { access_token, user } = response
       
       localStorage.setItem("token", access_token)
       localStorage.setItem("user", JSON.stringify(user))
       setUser(user)
-      router.push("/")
+      router.push("/home")
     } catch (error) {
       throw error
     }

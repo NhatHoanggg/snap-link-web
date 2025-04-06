@@ -3,7 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Eye,
@@ -27,12 +27,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { login } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function LoginPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -47,29 +48,20 @@ export default function LoginPage() {
       ...prev,
       [name]: value,
     }));
-    setError(null); // Clear error when user types
+    setError(null); 
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-
+    
     try {
-      const response = await login(formData);
-      
-      // Store the token in localStorage
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
+      await login(formData.email, formData.password);
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
-      
-      // Redirect to dashboard
-      // router.push("/dashboard");
-      router.push("/home");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       setError(errorMessage);
