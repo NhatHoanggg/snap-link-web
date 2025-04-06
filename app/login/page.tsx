@@ -68,7 +68,8 @@ export default function LoginPage() {
       });
       
       // Redirect to dashboard
-      router.push("/dashboard");
+      // router.push("/dashboard");
+      router.push("/home");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       setError(errorMessage);

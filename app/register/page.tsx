@@ -1,11 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { Eye, EyeOff, Lock, Mail, User, LinkIcon, Github, Twitter, MapPin, Phone } from "lucide-react"
+import { Eye, EyeOff, Lock, Mail, User, LinkIcon, Github, Twitter, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Switch } from "@/components/ui/switch"
+import { useToast } from "@/components/ui/use-toast"
+import { registerCustomer, registerPhotographer } from "@/lib/api"
 
 interface FormData {
   name: string
@@ -26,9 +28,12 @@ interface FormData {
   bio: string[]
   location: string
   phoneNumber: string
+  pricePerHour?: number
 }
 
 export default function RegisterPage() {
+  const router = useRouter()
+  const { toast } = useToast()
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -38,11 +43,13 @@ export default function RegisterPage() {
     bio: [],
     location: "",
     phoneNumber: "",
+    pricePerHour: 0,
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -50,27 +57,72 @@ export default function RegisterPage() {
       ...prev,
       [name]: value,
     }))
+    setError(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!agreeToTerms) {
-      alert("Please agree to the terms and conditions")
+      toast({
+        title: "Terms and Conditions",
+        description: "Please agree to the terms and conditions",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match",
+        variant: "destructive",
+      })
       return
     }
 
     setIsLoading(true)
+    setError(null)
 
-    // Simulate API call
     try {
-      // Add your registration logic here
-      console.log("Registration attempt with:", formData)
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API delay
-      // After successful registration:
-      // router.push("/login")
+      if (formData.role === "CUSTOMER") {
+        await registerCustomer({
+          email: formData.email,
+          full_name: formData.name,
+          password: formData.password,
+          confirm_password: formData.confirmPassword,
+          phone_number: formData.phoneNumber,
+        })
+        toast({
+          title: "Registration Successful",
+          description: "Your account has been created successfully",
+        })
+        router.push("/login")
+      } else {
+        await registerPhotographer({
+          email: formData.email,
+          full_name: formData.name,
+          phone_number: formData.phoneNumber,
+          password: formData.password,
+          bio: formData.bio.join(", "),
+          location: formData.location,
+          price_per_hour: formData.pricePerHour || 0,
+          confirm_password: formData.confirmPassword,
+        })
+        toast({
+          title: "Registration Successful",
+          description: "Your photographer account has been created successfully",
+        })
+        router.push("/login")
+      }
     } catch (error) {
-      console.error("Registration failed:", error)
+      const errorMessage = error instanceof Error ? error.message : "Registration failed"
+      setError(errorMessage)
+      toast({
+        title: "Registration Failed",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -149,6 +201,11 @@ export default function RegisterPage() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-6">
+              {error && (
+                <div className="text-sm text-destructive text-center">
+                  {error}
+                </div>
+              )}
               <div className="flex items-center justify-between space-x-2">
                 <Label htmlFor="role" className="text-sm font-medium">
                   {/* {formData.role === "CUSTOMER" ? "Customer" : "Photographer"} */}
@@ -331,63 +388,57 @@ export default function RegisterPage() {
                           id="location"
                           name="location"
                           type="text"
-                          placeholder="City, Country"
+                          placeholder="Your location"
                           value={formData.location}
                           onChange={handleChange}
                           className="pl-10"
-                          required={formData.role === "PHOTOGRAPHER"}
+                          required
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phoneNumber" className="text-sm font-medium">
-                        Phone Number
+                      <Label htmlFor="pricePerHour" className="text-sm font-medium">
+                        Price per Hour ($)
                       </Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          id="phoneNumber"
-                          name="phoneNumber"
-                          type="tel"
-                          placeholder="+1 (234) 567-8900"
-                          value={formData.phoneNumber}
-                          onChange={handleChange}
-                          className="pl-10"
-                          required={formData.role === "PHOTOGRAPHER"}
-                        />
-                      </div>
+                      <Input
+                        id="pricePerHour"
+                        name="pricePerHour"
+                        type="number"
+                        placeholder="0"
+                        value={formData.pricePerHour}
+                        onChange={handleChange}
+                        min="0"
+                        required
+                      />
                     </div>
                   </>
                 )}
 
-                <div className="flex items-start space-x-2 pt-2">
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="terms"
                     checked={agreeToTerms}
-                    onCheckedChange={(checked) => setAgreeToTerms(checked === true)}
-                    className="mt-1"
+                    onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
                   />
-                  <Label htmlFor="terms" className="text-sm text-muted-foreground">
+                  <Label htmlFor="terms" className="text-sm">
                     I agree to the{" "}
                     <Link href="/terms" className="text-primary hover:underline">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/privacy" className="text-primary hover:underline">
-                      Privacy Policy
+                      terms and conditions
                     </Link>
                   </Label>
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading || !passwordsMatch || !agreeToTerms}>
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>
 
               <div className="relative flex items-center justify-center">
                 <Separator className="w-full" />
-                <span className="absolute bg-card px-2 text-xs text-muted-foreground">OR CONTINUE WITH</span>
+                <span className="absolute bg-card px-2 text-xs text-muted-foreground">
+                  OR CONTINUE WITH
+                </span>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
