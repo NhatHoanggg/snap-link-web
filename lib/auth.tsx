@@ -10,6 +10,7 @@ type User = {
   full_name: string
   role: string
   avatar?: string
+  phone_number?: string
 }
 
 type AuthContextType = {

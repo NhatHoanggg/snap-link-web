@@ -8,10 +8,12 @@ import { Menu, X, LinkIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
+  const { isAuthenticated } = useAuth()
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -29,6 +31,11 @@ export function Navbar() {
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+
+  // Don't render navbar if user is authenticated
+  if (isAuthenticated) {
+    return null
+  }
 
   const navItems = [
     { href: "/", label: "Home" },
