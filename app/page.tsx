@@ -1,5 +1,10 @@
+"use client"
+
 import Link from "next/link"
 import { ArrowRight, CheckCircle, Filter, MapPin, Search } from "lucide-react"
+import { useAuth } from "@/lib/auth"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
@@ -11,6 +16,15 @@ import { HowItWorks } from "@/components/landingpage/how-it-works"
 import { TestimonialSection } from "@/components/landingpage/testimonial-section"
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/home")
+    }
+  }, [isAuthenticated, router])
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}

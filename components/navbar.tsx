@@ -40,8 +40,8 @@ export function Navbar() {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
+    { href: "/photographers", label: "Photographers" },
     { href: "/contact", label: "Contact" },
-    // { href: "/login", label: "Login" },
     // { href: "/register", label: "Register" },
   ]
 

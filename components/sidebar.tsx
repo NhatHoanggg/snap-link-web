@@ -26,6 +26,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { ModeToggle } from "@/components/mode-toggle"
+
 
 const sidebarItems = [
   // {
@@ -164,6 +166,7 @@ export function Sidebar({ isCollapsed, onCollapse }: SidebarProps) {
       {/* User Profile */}
       <div className="mt-auto border-t pt-4">
         <Tooltip>
+          <ModeToggle />
           <TooltipTrigger asChild>
             <div className={cn(
               "flex items-center gap-3 px-2 py-2",

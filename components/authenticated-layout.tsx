@@ -16,7 +16,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
       <Sidebar isCollapsed={isCollapsed} onCollapse={setIsCollapsed} />
       <main className={cn(
         "flex-1 overflow-y-auto p-8 transition-all duration-300",
-        isCollapsed ? "ml-[80px]" : "ml-[240px]"
+        isCollapsed ? "ml-[10px]" : "ml-[30px]"
       )}>
         {children}
       </main>
