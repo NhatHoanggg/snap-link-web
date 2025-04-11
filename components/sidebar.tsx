@@ -75,6 +75,11 @@ const sidebarItems = [
     href: "/account",
     icon: User,
   },
+  {
+    title: "Profile",
+    href: "/profile",
+    icon: User,
+  },
 ];
 
 interface SidebarProps {

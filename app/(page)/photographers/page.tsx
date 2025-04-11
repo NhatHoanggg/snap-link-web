@@ -5,24 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Star } from 'lucide-react';
-
-interface Photographer {
-  user_id: number;
-  photographer_id: number;
-  full_name: string;
-  email: string;
-  phone_number: string;
-  avatar: string;
-  bio: string;
-  location: string;
-  price_per_hour: number;
-  followers_count: number;
-  average_rating: number;
-  total_reviews: number;
-  total_bookings: number;
-  is_active: boolean;
-  slug: string;
-}
+import { photographerService, Photographer } from '@/lib/services/photographer.service';
 
 export default function PhotographersPage() {
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
@@ -31,8 +14,10 @@ export default function PhotographersPage() {
   useEffect(() => {
     const fetchPhotographers = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8001/photographers?skip=0&limit=100&search');
-        const data = await response.json();
+        const data = await photographerService.getPhotographers({
+          skip: 0,
+          limit: 100,
+        });
         setPhotographers(data.photographers);
       } catch (error) {
         console.error('Error fetching photographers:', error);
