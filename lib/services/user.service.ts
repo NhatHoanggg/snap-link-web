@@ -32,6 +32,12 @@ export interface UpdateProfileData {
   price_per_hour?: number | null;
 }
 
+export interface ChangePasswordData {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 export const userService = {
   async getProfile(token: string): Promise<UserProfile> {
     try {
@@ -60,6 +66,21 @@ export const userService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(error.response?.data?.message || 'Failed to update profile');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  async changePassword(data: ChangePasswordData, token: string): Promise<void> {
+    try {
+      await axios.put(`${API_URL}/change-password`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to change password');
       }
       throw new Error('An unexpected error occurred');
     }

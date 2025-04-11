@@ -7,11 +7,12 @@ import { cn } from "@/lib/utils";
 import {
   // LayoutDashboard,
   House,
-  FileText,
-  MessageSquare,
-  Tag,
+  Search,
+  // FileText,
+  // MessageSquare,
+  // Tag,
   Settings,
-  Users,
+  // Users,
   User,
   LogOut,
   ChevronLeft,
@@ -41,35 +42,36 @@ const sidebarItems = [
     icon: House,
   },
   {
-    title: "Contents",
-    href: "/contents",
-    icon: FileText,
+    title: "Search",
+    href: "/search",
+    icon: Search,
   },
-  {
-    title: "Posts",
-    href: "/posts",
-    icon: MessageSquare,
-  },
-  {
-    title: "Categories",
-    href: "/categories",
-    icon: Tag,
-  },
-  {
-    title: "Tags",
-    href: "/tags",
-    icon: Tag,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
-  {
-    title: "Users",
-    href: "/users",
-    icon: Users,
-  },
+  // {
+  //   title: "Contents",
+  //   href: "/contents",
+  //   icon: FileText,
+  // },
+  // {
+  //   title: "Posts",
+  //   href: "/posts",
+  //   icon: MessageSquare,
+  // },
+  // {
+  //   title: "Categories",
+  //   href: "/categories",
+  //   icon: Tag,
+  // },
+  // {
+  //   title: "Tags",
+  //   href: "/tags",
+  //   icon: Tag,
+  // },
+  
+  // {
+  //   title: "Users",
+  //   href: "/users",
+  //   icon: Users,
+  // },
   {
     title: "Account",
     href: "/account",
@@ -79,6 +81,11 @@ const sidebarItems = [
     title: "Profile",
     href: "/profile",
     icon: User,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
   },
 ];
 
