@@ -1,70 +1,48 @@
-"use client"
-
-import { useAuth } from "@/lib/auth"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
+import { Suspense } from "react"
+import PostFeed from "./post-feed"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function HomePage() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth()
-  const router = useRouter()
-  const [isChecking, setIsChecking] = useState(true)
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("token")
-      const userData = localStorage.getItem("user")
-      return !!(token && userData)
-    }
-
-    // console.log("Home page - Auth state:", {
-    //   isAuthenticated,
-    //   isLoading,
-    //   user,
-    //   localStorageCheck: checkAuth()
-    // })
-
-    if (!isLoading) {
-      if (!checkAuth()) {
-        console.log("Redirecting to login - Not authenticated in localStorage")
-        router.push("/")
-      } else {
-        setIsChecking(false)
-      }
-    }
-  }, [isLoading, isAuthenticated, router])
-
-  if (isLoading || isChecking) {
-    console.log("Home page - Loading state")
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  console.log("Home page - Rendering content for authenticated user:", user)
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold">Welcome, {user?.full_name}!</h1>
-          <Button 
-            variant="outline" 
-            onClick={() => logout()}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-        <p className="text-muted-foreground">You are logged in as {user?.role}</p>
-      </main>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <header className="mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2">For you</h1>
+        </header>
+
+        <Suspense fallback={<FeedSkeleton />}>
+          <PostFeed />
+        </Suspense>
+      </div>
     </div>
   )
 }
 
+function FeedSkeleton() {
+  return (
+    <div className="space-y-8">
+      {Array(3)
+        .fill(0)
+        .map((_, i) => (
+          <div key={i} className="bg-card rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+            <div className="flex gap-4 mt-6">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-24" />
+            </div>
+          </div>
+        ))}
+    </div>
+  )
+}
