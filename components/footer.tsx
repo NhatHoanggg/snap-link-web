@@ -158,7 +158,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-          <p>© {new Date().getFullYear()} SnapLink. All rights reserved.</p>
+          <p>© 2025 SnapLink. All rights reserved.</p>
         </div>
       </div>
     </div>

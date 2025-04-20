@@ -2,6 +2,31 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
+export interface FeaturedPhoto {
+  featured_photo_id: number;
+  image_url: string;
+  title: string;
+  description: string;
+}
+
+export interface SocialMediaLinks {
+  facebook?: string;
+  instagram?: string;
+  [key: string]: string | undefined;
+}
+
+export interface Portfolio {
+  portfolio_id: number;
+  avatar_url: string;
+  bio: string;
+  social_media_links: SocialMediaLinks;
+  phone_number: string;
+  email: string;
+  average_rating: string; // <-- string theo API
+  review_count: number;
+  featured_photos: FeaturedPhoto[];
+}
+
 export interface Photographer {
   user_id: number;
   photographer_id: number;
@@ -9,16 +34,20 @@ export interface Photographer {
   email: string;
   phone_number: string;
   avatar: string;
+  background_image: string;
   bio: string;
-  location: string;
+  location: string | null;
   price_per_hour: number;
+  experience_years: number;
   followers_count: number;
   average_rating: number;
   total_reviews: number;
   total_bookings: number;
   is_active: boolean;
   slug: string;
+  portfolio: Portfolio | null;
 }
+
 
 export interface PhotographersResponse {
   total: number;
