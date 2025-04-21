@@ -49,6 +49,7 @@ interface PhotographerRegisterData {
   location: string;
   price_per_hour: number;
   confirm_password: string;
+  experience_years: number;
 }
 
 interface RegisterResponse {
