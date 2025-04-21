@@ -13,11 +13,13 @@ import { useAuth } from '@/lib/auth';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { token, isLoading: isAuthLoading } = useAuth();
+  const { token, isLoading: isAuthLoading, user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
+
+  console.log("user", user);  
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -30,10 +32,8 @@ export default function ProfilePage() {
         const data = await userService.getProfile(token);
         setProfile(data);
         setFormData(data);
-        console.log("data", data);
       } catch (error) {
         console.error('Error fetching profile:', error);
-        // If token is invalid, redirect to login
         if (error instanceof Error && error.message.includes('Failed to fetch profile')) {
           router.push('/login');
         }
@@ -54,15 +54,19 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || !profile) return;
 
     try {
-      const updatedProfile = await userService.updateProfile(formData, token);
+      const updatedProfile = await userService.updateProfile(
+        formData, 
+        token, 
+        user?.role as 'customer' | 'photographer'
+      );
       setProfile(updatedProfile);
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-    }
+    } 
   };
 
   if (isAuthLoading || loading) {
@@ -86,14 +90,12 @@ export default function ProfilePage() {
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-2xl mx-auto">
         <CardHeader className="relative h-48">
-          
-            <Image
-              src={profile.background || 'https://images.unsplash.com/photo-1509803874385-db7c23652552?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}
-              alt="Background"
-              fill
-              className="object-cover rounded-t-lg"
-            />
-         
+          <Image
+            src={profile.background_image || 'https://images.unsplash.com/photo-1509803874385-db7c23652552?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}
+            alt="Background"
+            fill
+            className="object-cover rounded-t-lg"
+          />
           <div className="absolute -bottom-16 left-8">
             <div className="relative w-32 h-32 rounded-full border-4 border-white overflow-hidden">
               <Image
@@ -152,30 +154,45 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                name="bio"
-                value={formData.bio || ''}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                rows={4}
-              />
-            </div>
-
             {profile.role === 'photographer' && (
-              <div className="space-y-2">
-                <Label htmlFor="price_per_hour">Price per Hour (VND)</Label>
-                <Input
-                  id="price_per_hour"
-                  name="price_per_hour"
-                  type="number"
-                  value={formData.price_per_hour || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio || ''}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    rows={4}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price_per_hour">Price per Hour (VND)</Label>
+                    <Input
+                      id="price_per_hour"
+                      name="price_per_hour"
+                      type="number"
+                      value={formData.price_per_hour || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="experience_year">Experience Years</Label>
+                    <Input
+                      id="experience_year"
+                      name="experience_year"
+                      type="number"
+                      value={formData.experience_year || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="flex justify-end space-x-4">

@@ -8,7 +8,7 @@ export interface UserProfile {
   email: string;
   phone_number: string;
   avatar: string;
-  background: string | null;
+  background_image: string | null;
   is_active: boolean;
   slug: string;
   role: 'customer' | 'photographer' | 'admin';
@@ -16,6 +16,7 @@ export interface UserProfile {
   bio: string | null;
   location: string | null;
   price_per_hour: number | null;
+  experience_year: number | null;
   followers_count: number;
   average_rating: number;
   total_reviews: number;
@@ -55,9 +56,10 @@ export const userService = {
     }
   },
 
-  async updateProfile(data: UpdateProfileData, token: string): Promise<UserProfile> {
+  async updateProfile(data: UpdateProfileData, token: string, role: 'customer' | 'photographer'): Promise<UserProfile> {
     try {
-      const response = await axios.patch<UserProfile>(`${API_URL}/profile`, data, {
+      const endpoint = role === 'customer' ? 'customers/profile' : 'photographers/profile';
+      const response = await axios.put<UserProfile>(`${API_URL}/${endpoint}`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
