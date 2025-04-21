@@ -16,6 +16,7 @@ import {
   Camera,
   Users,
   BookOpen,
+  BookImage,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -66,6 +67,11 @@ const photographerItems = [
     title: "Search",
     href: "/search",
     icon: Search,
+  },
+  {
+    title: "Posts",
+    href: "/posts",
+    icon: BookImage,
   },
   {
     title: "My Bookings",
