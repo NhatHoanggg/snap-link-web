@@ -89,7 +89,7 @@ export const photographerService = {
 
   async getPhotographerBySlug(slug: string): Promise<Photographer> {
     try {
-      const response = await axios.get<Photographer>(`${API_URL}/photographers/${slug}`);
+      const response = await axios.get<Photographer>(`${API_URL}/photographers/slug/${slug}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
