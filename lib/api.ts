@@ -76,6 +76,26 @@ export async function login(credentials: { email: string; password: string }): P
   return response.json()
 }
 
+export async function loginWithGoogle(idToken: string): Promise<LoginResponse> {
+  console.log("idToken -->", idToken);
+  const response = await fetch(`${API_URL}/auth/google`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ google_token: idToken }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || "Login failed")
+  }
+
+  return response.json()
+}
+
+
+
 export async function logout(token: string): Promise<void> {
   const response = await fetch(`${API_URL}/logout`, {
     method: "POST",

@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
 import { User, Mail, Phone } from "lucide-react"
 import { Label } from "@/components/ui/label"
@@ -20,6 +22,27 @@ interface BasicInfoStepProps {
 }
 
 export default function BasicInfoStep({ formData, updateFormData, onNext }: BasicInfoStepProps) {
+  const searchParams = useSearchParams()
+  const emailParam = searchParams.get("email")
+  const nameParam = searchParams.get("name")
+
+  const [isEmailReadOnly, setIsEmailReadOnly] = useState(false)
+  const [isNameReadOnly, setIsNameReadOnly] = useState(false)
+
+  useEffect(() => {
+    if (emailParam && formData.email !== emailParam) {
+      updateFormData({ email: emailParam })
+      setIsEmailReadOnly(true)
+    }
+  }, [emailParam, formData.email, updateFormData])
+
+  useEffect(() => {
+    if (nameParam && formData.name !== nameParam) {
+      updateFormData({ name: nameParam })
+      setIsNameReadOnly(true)
+    }
+  }, [nameParam, formData.name, updateFormData])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onNext()
@@ -27,6 +50,7 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* SWITCH ROLE */}
       <div className="flex items-center justify-between space-x-2">
         <Label htmlFor="role" className="text-sm font-medium">
           {formData.role === "CUSTOMER" ? (
@@ -38,7 +62,9 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
         <Switch
           id="role"
           checked={formData.role === "PHOTOGRAPHER"}
-          onCheckedChange={(checked: boolean) => updateFormData({ role: checked ? "PHOTOGRAPHER" : "CUSTOMER" })}
+          onCheckedChange={(checked: boolean) =>
+            updateFormData({ role: checked ? "PHOTOGRAPHER" : "CUSTOMER" })
+          }
         />
         <Label htmlFor="role" className="text-sm font-medium">
           {formData.role === "PHOTOGRAPHER" ? (
@@ -49,57 +75,54 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
         </Label>
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-sm font-medium">
-            Full Name
-          </Label>
-          <div className="relative">
-            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => updateFormData({ name: e.target.value })}
-              className="pl-10"
-              placeholder="John Doe"
-              required
-            />
-          </div>
+      {/* NAME */}
+      <div className="space-y-2">
+        <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
+        <div className="relative">
+          <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => updateFormData({ name: e.target.value })}
+            className="pl-10"
+            placeholder="John Doe"
+            required
+            readOnly={isNameReadOnly}
+          />
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">
-            Email
-          </Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => updateFormData({ email: e.target.value })}
-              className="pl-10"
-              placeholder="name@example.com"
-              required
-            />
-          </div>
+      {/* EMAIL */}
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => updateFormData({ email: e.target.value })}
+            className="pl-10"
+            placeholder="name@example.com"
+            required
+            readOnly={isEmailReadOnly}
+          />
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="phoneNumber" className="text-sm font-medium">
-            Phone Number
-          </Label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-            <Input
-              id="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
-              className="pl-10"
-              placeholder="+1 (555) 123-4567"
-              required
-            />
-          </div>
+      {/* PHONE */}
+      <div className="space-y-2">
+        <Label htmlFor="phoneNumber" className="text-sm font-medium">Phone Number</Label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <Input
+            id="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
+            className="pl-10"
+            placeholder="+1 (555) 123-4567"
+            required
+          />
         </div>
       </div>
 

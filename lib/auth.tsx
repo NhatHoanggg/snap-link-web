@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { login as apiLogin, logout as apiLogout } from "@/lib/api"
+import { login as apiLogin, logout as apiLogout, loginWithGoogle as apiLoginWithGoogle } from "@/lib/api"
 
 type User = {
   user_id: number
@@ -19,6 +19,7 @@ type AuthContextType = {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: (idToken: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -64,6 +65,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const loginWithGoogle = async (idToken: string) => {
+    try {
+      const response = await apiLoginWithGoogle(idToken)
+      const { access_token, user } = response
+      localStorage.setItem("token", access_token)
+      localStorage.setItem("user", JSON.stringify(user))
+      setUser(user)
+      setToken(access_token)
+      router.push("/home")
+
+    } catch (error) {
+      throw error
+    } 
+  }
+
   const logout = async () => {
     try {
       const token = localStorage.getItem("token")
@@ -88,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     login,
     logout,
+    loginWithGoogle,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

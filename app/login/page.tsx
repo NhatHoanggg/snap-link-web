@@ -29,6 +29,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   // const router = useRouter();
@@ -73,6 +74,10 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl: "/google-token" });
   };
 
   return (
@@ -182,15 +187,20 @@ export default function LoginPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" type="button" className="w-full">
-                      {/* <Github className="mr-2 h-4 w-4" /> */}
+                    <Button 
+                      variant="outline" 
+                      type="button" 
+                      className="w-full"
+                      onClick={handleGoogleSignIn}
+                    >
                       <Image
                         src="/media/google.svg"
                         alt="Google"
                         width={16}
                         height={16}
                         className="mr-2 h-4 w-4"
-                      />Google
+                      />
+                      Google
                     </Button>
                     <Button variant="outline" type="button" className="w-full">
                       {/* <Google className="mr-2 h-4 w-4" /> */}
