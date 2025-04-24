@@ -26,27 +26,27 @@ const handler = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        try {
-          const response = await fetch("http://127.0.0.1:8001/check-email", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email: user.email }),
-          });
+        // try {
+        //   const response = await fetch("http://127.0.0.1:8001/check-email", {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({ email: user.email }),
+        //   });
 
-          const data = await response.json();
+        //   const data = await response.json();
           
-          if (!data.exists) {
-            return "/register?email=" + encodeURIComponent(user.email || "") + 
-               "&name=" + encodeURIComponent(user.name || "");
-          }
-          
-          return true;
-        } catch (error) {
-          console.error("Error checking email:", error);
-          return false;
-        }
+        //   if (!data.exists) {
+        //     return "/register?email=" + encodeURIComponent(user.email || "") + 
+        //        "&name=" + encodeURIComponent(user.name || "");
+        //   }
+        console.log("user", user);
+        return true;
+        // } catch (error) {
+        //   console.error("Error checking email:", error);
+        //   return false;
+        // }
       }
       return true;
     },
