@@ -98,7 +98,7 @@ const photographerItems = [
 const adminItems = [
   {
     title: "Dashboard",
-    href: "/admin",
+    href: "/admin/dashboard",
     icon: House,
   },
   {
@@ -110,11 +110,6 @@ const adminItems = [
     title: "Bookings",
     href: "/admin/bookings",
     icon: BookOpen,
-  },
-  {
-    title: "Profile",
-    href: "/profile",
-    icon: User,
   },
   {
     title: "Settings",

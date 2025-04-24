@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2, Plus, ImageIcon, Pencil, Trash2 } from "lucide-react"
-import { postsService, type Post } from "@/lib/services/posts.service"
+import { postsService, type Post } from "@/services/posts.service"
 
 export default function PostsManagement() {
   const [posts, setPosts] = useState<Post[]>([])

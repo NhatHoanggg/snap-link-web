@@ -20,7 +20,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, MapPin, Star, Calendar, SlidersHorizontal, Users, Clock, Loader2 } from "lucide-react"
-import { photographerService, type Photographer } from "@/lib/services/photographer.service"
+import { photographerService, type Photographer } from "@/services/photographer.service"
 
 export default function PhotographersDirectory() {
   const [photographers, setPhotographers] = useState<Photographer[]>([])

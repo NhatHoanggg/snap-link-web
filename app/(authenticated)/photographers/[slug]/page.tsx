@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 // import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, Star, Clock, Calendar, Loader2 } from "lucide-react"
-import { photographerService, type Photographer } from "@/lib/services/photographer.service"
+import { photographerService, type Photographer } from "@/services/photographer.service"
 
 export default function PhotographerDetail() {
   const params = useParams()

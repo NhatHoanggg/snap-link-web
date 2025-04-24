@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { userService, UserProfile } from '@/lib/services/user.service';
+import { userService, UserProfile } from '@/services/user.service';
 import { useAuth } from '@/lib/auth';
 
 export default function ProfilePage() {
