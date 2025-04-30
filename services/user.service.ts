@@ -31,7 +31,7 @@ export interface UpdateProfileData {
   full_name?: string;
   phone_number?: string;
   avatar?: string;
-  background?: string | null;
+  background_image?: string | null;
   bio?: string | null;
   province?: string | null;
   district?: string | null;
