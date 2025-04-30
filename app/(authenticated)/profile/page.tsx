@@ -1,25 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { userService, UserProfile } from '@/services/user.service';
-import { useAuth } from '@/lib/auth';
+import { userService, UserProfile } from "@/services/user.service";
+import { useAuth } from "@/lib/auth";
+
+import { MoreVertical, Image as ImageIcon, Camera, Edit2 } from "lucide-react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { token, isLoading: isAuthLoading, user } = useAuth();
+  const { token, isLoading: isAuthLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<UserProfile>>({});
-
-  console.log("user", user);  
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,12 +34,9 @@ export default function ProfilePage() {
       try {
         const data = await userService.getProfile(token);
         setProfile(data);
-        setFormData(data);
       } catch (error) {
-        console.error('Error fetching profile:', error);
-        if (error instanceof Error && error.message.includes('Failed to fetch profile')) {
-          router.push('/login');
-        }
+        console.error("Error fetching profile:", error);
+        router.push("/login");
       } finally {
         setLoading(false);
       }
@@ -47,28 +47,6 @@ export default function ProfilePage() {
     }
   }, [token, isAuthLoading, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token || !profile) return;
-
-    try {
-      const updatedProfile = await userService.updateProfile(
-        formData, 
-        token, 
-        user?.role as 'customer' | 'photographer'
-      );
-      setProfile(updatedProfile);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    } 
-  };
-
   if (isAuthLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -77,21 +55,21 @@ export default function ProfilePage() {
     );
   }
 
-  if (!token) {
-    router.push('/login');
-    return null;
-  }
-
-  if (!profile) {
+  if (!token || !profile) {
     return <div>Error loading profile</div>;
   }
+
+  const formatLocation = () => {
+    const parts = [profile.ward, profile.district, profile.province].filter(Boolean);
+    return parts.join(", ") || "Chưa cập nhật";
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-2xl mx-auto">
         <CardHeader className="relative h-48">
           <Image
-            src={profile.background_image || 'https://images.unsplash.com/photo-1509803874385-db7c23652552?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}
+            src={profile.background_image || "/default-bg.jpg"}
             alt="Background"
             fill
             className="object-cover rounded-t-lg"
@@ -99,7 +77,7 @@ export default function ProfilePage() {
           <div className="absolute -bottom-16 left-8">
             <div className="relative w-32 h-32 rounded-full border-4 border-white overflow-hidden">
               <Image
-                src={profile.avatar}
+                src={profile.avatar || "/default-avatar.jpg"}
                 alt={profile.full_name}
                 fill
                 className="object-cover"
@@ -107,115 +85,107 @@ export default function ProfilePage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-20">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name</Label>
-                <Input
-                  id="full_name"
-                  name="full_name"
-                  value={formData.full_name || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  value={profile.email}
-                  disabled
-                />
-              </div>
+        <CardContent className="pt-20 space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input value={profile.full_name} readOnly />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone_number">Phone Number</Label>
-                <Input
-                  id="phone_number"
-                  name="phone_number"
-                  value={formData.phone_number || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  name="location"
-                  value={formData.location || ''}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={profile.email} readOnly />
             </div>
+          </div>
 
-            {profile.role === 'photographer' && (
-              <>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Phone Number</Label>
+              <Input value={profile.phone_number || "Chưa cập nhật"} readOnly />
+            </div>
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <Input value={formatLocation()} readOnly />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Detailed Address</Label>
+            <Input value={profile.address_detail || "Chưa cập nhật"} readOnly />
+          </div>
+
+          {profile.role === "photographer" && (
+            <>
+              <div className="space-y-2">
+                <Label>Bio</Label>
+                <Textarea value={profile.bio || "Chưa cập nhật"} readOnly rows={4} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    value={formData.bio || ''}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    rows={4}
-                  />
+                  <Label>Price per Hour (VND)</Label>
+                  <Input value={profile.price_per_hour?.toLocaleString() || "Chưa cập nhật"} readOnly />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price_per_hour">Price per Hour (VND)</Label>
-                    <Input
-                      id="price_per_hour"
-                      name="price_per_hour"
-                      type="number"
-                      value={formData.price_per_hour || ''}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="experience_year">Experience Years</Label>
-                    <Input
-                      id="experience_year"
-                      name="experience_year"
-                      type="number"
-                      value={formData.experience_year || ''}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Experience Years</Label>
+                  <Input value={profile.experience_year || "Chưa cập nhật"} readOnly />
                 </div>
-              </>
-            )}
-
-            <div className="flex justify-end space-x-4">
-              {!isEditing ? (
-                <Button type="button" onClick={() => setIsEditing(true)}>
-                  Edit Profile
-                </Button>
-              ) : (
-                <>
-                  <Button type="button" variant="outline" onClick={() => {
-                    setIsEditing(false);
-                    setFormData(profile);
-                  }}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    Save Changes
-                  </Button>
-                </>
-              )}
-            </div>
-          </form>
+              </div>
+            </>
+          )}
         </CardContent>
+
+        <div className="flex justify-end mt-6 mb-4 mr-6">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <MoreVertical className="h-4 w-4" />
+                Tùy chọn
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60 p-2 space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => profile.avatar && window.open(profile.avatar, "_blank")}
+              >
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Xem ảnh đại diện
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => profile.background_image && window.open(profile.background_image, "_blank")}
+              >
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Xem ảnh bìa
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => alert("TODO: Mở modal thay ảnh đại diện")}
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                Sửa ảnh đại diện
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => alert("TODO: Mở modal thay ảnh bìa")}
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                Sửa ảnh bìa
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => router.push("/profile/edit")}
+              >
+                <Edit2 className="mr-2 h-4 w-4" />
+                Chỉnh sửa thông tin
+              </Button>
+            </PopoverContent>
+          </Popover>
+        </div>
       </Card>
     </div>
   );

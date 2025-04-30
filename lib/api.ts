@@ -38,6 +38,10 @@ interface CustomerRegisterData {
   password: string;
   confirm_password: string;
   phone_number: string;
+  province: string;
+  district: string;
+  ward: string;
+  address_detail: string;
 }
 
 interface PhotographerRegisterData {
@@ -45,10 +49,13 @@ interface PhotographerRegisterData {
   full_name: string;
   phone_number: string;
   password: string;
-  bio: string;
-  location: string;
-  price_per_hour: number;
   confirm_password: string;
+  province: string;
+  district: string;
+  ward: string;
+  address_detail: string;
+  tags: string[];
+  price_per_hour: number;
   experience_years: number;
 }
 
@@ -123,6 +130,7 @@ export const registerCustomer = async (data: CustomerRegisterData): Promise<Regi
 
 export const registerPhotographer = async (data: PhotographerRegisterData): Promise<RegisterResponse> => {
   try {
+    console.log("data -->", data);
     const response = await axios.post<RegisterResponse>(`${API_URL}/register/photographer`, data);
     return response.data;
   } catch (error: unknown) {

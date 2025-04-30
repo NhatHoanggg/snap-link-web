@@ -14,7 +14,11 @@ export interface UserProfile {
   role: 'customer' | 'photographer' | 'admin';
   photographer_id: number | null;
   bio: string | null;
-  location: string | null;
+  province: string | null;
+  district: string | null;
+  ward: string | null;
+  address_detail: string | null;
+  tags: string[] | null;
   price_per_hour: number | null;
   experience_year: number | null;
   followers_count: number;
@@ -29,8 +33,13 @@ export interface UpdateProfileData {
   avatar?: string;
   background?: string | null;
   bio?: string | null;
-  location?: string | null;
+  province?: string | null;
+  district?: string | null;
+  ward?: string | null;
+  address_detail?: string | null;
+  tags?: string[] | null;
   price_per_hour?: number | null;
+  experience_year?: number | null;
 }
 
 export interface ChangePasswordData {
@@ -58,6 +67,7 @@ export const userService = {
 
   async updateProfile(data: UpdateProfileData, token: string, role: 'customer' | 'photographer'): Promise<UserProfile> {
     try {
+      console.log(data);
       const endpoint = role === 'customer' ? 'customers/profile' : 'photographers/profile';
       const response = await axios.put<UserProfile>(`${API_URL}/${endpoint}`, data, {
         headers: {

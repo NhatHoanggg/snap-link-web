@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import { MapPin } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -10,9 +9,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 interface PhotographerDetailsStepProps {
   formData: {
-    bio: string[]
-    location: string
+    tags: string[]
     pricePerHour?: number
+    experienceYears: number
   }
   updateFormData: (data: Partial<PhotographerDetailsStepProps["formData"]>) => void
   onNext: () => void
@@ -25,7 +24,7 @@ export default function PhotographerDetailsStep({
   onNext,
   onPrev,
 }: PhotographerDetailsStepProps) {
-  const bioOptions = [
+  const tagOptions = [
     "Portrait Photography",
     "Wedding Photography",
     "Landscape Photography",
@@ -36,9 +35,9 @@ export default function PhotographerDetailsStep({
     "Wildlife Photography",
   ]
 
-  const handleBioChange = (value: string) => {
+  const handleTagChange = (value: string) => {
     updateFormData({
-      bio: formData.bio.includes(value) ? formData.bio.filter((item) => item !== value) : [...formData.bio, value],
+      tags: formData.tags.includes(value) ? formData.tags.filter((item) => item !== value) : [...formData.tags, value],
     })
   }
 
@@ -51,39 +50,22 @@ export default function PhotographerDetailsStep({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="bio" className="text-sm font-medium">
+          <Label htmlFor="tags" className="text-sm font-medium">
             Photography Specialties
           </Label>
           <div className="grid grid-cols-2 gap-2">
-            {bioOptions.map((option) => (
+            {tagOptions.map((option) => (
               <div key={option} className="flex items-center space-x-2">
                 <Checkbox
                   id={option}
-                  checked={formData.bio.includes(option)}
-                  onCheckedChange={() => handleBioChange(option)}
+                  checked={formData.tags.includes(option)}
+                  onCheckedChange={() => handleTagChange(option)}
                 />
                 <Label htmlFor={option} className="text-sm">
                   {option}
                 </Label>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="location" className="text-sm font-medium">
-            Location
-          </Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => updateFormData({ location: e.target.value })}
-              className="pl-10"
-              placeholder="Your location"
-              required
-            />
           </div>
         </div>
 
@@ -96,6 +78,21 @@ export default function PhotographerDetailsStep({
             type="number"
             value={formData.pricePerHour}
             onChange={(e) => updateFormData({ pricePerHour: Number(e.target.value) })}
+            placeholder="0"
+            min="0"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="experienceYears" className="text-sm font-medium">
+            Years of Experience
+          </Label>
+          <Input
+            id="experienceYears"
+            type="number"
+            value={formData.experienceYears}
+            onChange={(e) => updateFormData({ experienceYears: Number(e.target.value) })}
             placeholder="0"
             min="0"
             required

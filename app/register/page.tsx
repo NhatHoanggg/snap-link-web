@@ -12,6 +12,7 @@ import StepIndicator from "./step/step-indicator"
 import BasicInfoStep from "./step/basic-info-step"
 import PasswordStep from "./step/password-step"
 import PhotographerDetailsStep from "./step/photographer-details-step"
+import LocationStep from "./step/location-step"
 import FinalStep from "./step/final-step"
 
 interface FormData {
@@ -21,9 +22,13 @@ interface FormData {
   password: string
   confirmPassword: string
   role: "CUSTOMER" | "PHOTOGRAPHER"
-  bio: string[]
-  location: string
+  tags: string[]
+  province: string
+  district: string
+  ward: string
+  address_detail: string
   pricePerHour?: number
+  experienceYears: number
   agreeToTerms: boolean
 }
 
@@ -41,9 +46,13 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     role: "CUSTOMER",
-    bio: [],
-    location: "",
+    tags: [],
+    province: "",
+    district: "",
+    ward: "",
+    address_detail: "",
     pricePerHour: 0,
+    experienceYears: 0,
     agreeToTerms: false,
   })
 
@@ -61,7 +70,7 @@ export default function RegisterPage() {
   }
 
   const getTotalSteps = () => {
-    return formData.role === "PHOTOGRAPHER" ? 4 : 3
+    return formData.role === "PHOTOGRAPHER" ? 5 : 3
   }
 
   const handleSubmit = async () => {
@@ -94,23 +103,34 @@ export default function RegisterPage() {
           password: formData.password,
           confirm_password: formData.confirmPassword,
           phone_number: formData.phoneNumber,
+          province: formData.province,
+          district: formData.district,
+          ward: formData.ward,
+          address_detail: formData.address_detail,
         })
         toast({
           title: "Registration Successful",
           description: "Your account has been created successfully",
         })
       } else {
-        await registerPhotographer({
+        const photographerData = {
           email: formData.email,
           full_name: formData.name,
           phone_number: formData.phoneNumber,
           password: formData.password,
-          bio: formData.bio.join(", "),
-          location: formData.location,
-          price_per_hour: formData.pricePerHour || 0,
           confirm_password: formData.confirmPassword,
-          experience_years: 0,
-        })
+          province: formData.province,
+          district: formData.district,
+          ward: formData.ward,
+          address_detail: formData.address_detail,
+          tags: formData.tags,
+          price_per_hour: formData.pricePerHour || 0,
+          experience_years: formData.experienceYears,
+        }
+        
+        console.log('Sending photographer data:', photographerData)
+        
+        await registerPhotographer(photographerData)
         toast({
           title: "Registration Successful",
           description: "Your photographer account has been created successfully",
@@ -154,6 +174,15 @@ export default function RegisterPage() {
           />
         )
       case 4:
+        return formData.role === "PHOTOGRAPHER" ? (
+          <LocationStep
+            formData={formData}
+            updateFormData={updateFormData}
+            onNext={nextStep}
+            onPrev={prevStep}
+          />
+        ) : null
+      case 5:
         return (
           <FinalStep
             formData={formData}
