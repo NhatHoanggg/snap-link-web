@@ -12,7 +12,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { CheckCircle2, AlertCircle, Eye, EyeOff, Lock, ShieldCheck, KeyRound, Sparkles } from "lucide-react"
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "@/services/auth"
 import { userService } from "@/services/user.service"
 
 const passwordSchema = z

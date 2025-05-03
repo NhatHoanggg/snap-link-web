@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import LocationSelector from "@/components/common/location-selector";
 import { userService } from "@/services/user.service";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/services/auth";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import toast, { Toaster } from "react-hot-toast";
 

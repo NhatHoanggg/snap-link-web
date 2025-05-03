@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "@/services/auth"
 import { Navbar } from "@/components/navbar"
 import { usePathname } from "next/navigation"
 

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/services/auth";
 
 export default function GoogleTokenPage() {
   const router = useRouter();

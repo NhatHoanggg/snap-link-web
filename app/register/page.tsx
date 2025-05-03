@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { LinkIcon } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { registerCustomer, registerPhotographer } from "@/lib/api"
+import { registerCustomer, registerPhotographer } from "@/services/auth.service"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import StepIndicator from "./step/step-indicator"

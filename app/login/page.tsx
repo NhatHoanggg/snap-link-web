@@ -27,7 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/services/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { signIn } from "next-auth/react";
 

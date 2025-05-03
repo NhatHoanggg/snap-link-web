@@ -3,7 +3,7 @@
 import { Sidebar } from "./sidebar";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/services/auth";
 // import { Navbar } from "./navbar";
 
 interface AuthenticatedLayoutProps {

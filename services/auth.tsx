@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { login as apiLogin, logout as apiLogout, loginWithGoogle as apiLoginWithGoogle } from "@/lib/api"
+import { login as apiLogin, logout as apiLogout, loginWithGoogle as apiLoginWithGoogle } from "@/services/auth.service"
 
 type User = {
   user_id: number

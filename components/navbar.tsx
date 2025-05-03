@@ -8,7 +8,7 @@ import { Menu, X, LinkIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "@/services/auth"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)

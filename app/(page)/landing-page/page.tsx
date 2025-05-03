@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { ArrowRight, CheckCircle, Filter, MapPin, Search } from "lucide-react"
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "@/services/auth"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
