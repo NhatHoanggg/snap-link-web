@@ -335,6 +335,20 @@ export default function ProfilePage() {
                 <Edit2 className="mr-2 h-4 w-4" />
                 Chỉnh sửa thông tin
               </Button>
+              
+              {profile.role === "photographer" && (
+            <>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => router.push("/profile/portfolio")}
+              >
+                <Edit2 className="mr-2 h-4 w-4" />
+                Chỉnh sửa hồ sơ
+              </Button>
+            </>
+          )}
+              
             </PopoverContent>
           </Popover>
         </div>

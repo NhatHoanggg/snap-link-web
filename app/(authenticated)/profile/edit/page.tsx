@@ -28,19 +28,35 @@ interface Province {
   districts: District[];
 }
 
+interface SocialMediaLinks {
+  [key: string]: string;
+}
+
+interface PhotographerProfileData extends UpdateProfileData {
+  price_per_hour?: number | null;
+  experience_year?: number | null;
+  social_media_links?: SocialMediaLinks;
+  tags?: string[];
+}
+
 export default function EditProfilePage() {
   const { token, user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [formData, setFormData] = useState<UpdateProfileData>({
+  const [formData, setFormData] = useState<PhotographerProfileData>({
     full_name: "",
     phone_number: "",
     province: "",
     district: "",
     ward: "",
     address_detail: "",
+    price_per_hour: 0,
+    experience_year: 0,
+    social_media_links: {},
+    tags: [],
   });
+  const [socialMediaLinks, setSocialMediaLinks] = useState<SocialMediaLinks>({});
 
   const [location, setLocation] = useState<{
     province: Province | null;
@@ -59,6 +75,8 @@ export default function EditProfilePage() {
     district?: string;
     ward?: string;
     address_detail?: string;
+    price_per_hour?: string;
+    experience_year?: string;
   }>({});
 
   useEffect(() => {
@@ -77,7 +95,11 @@ export default function EditProfilePage() {
           district: profile.district || "",
           ward: profile.ward || "",
           address_detail: profile.address_detail || "",
+          price_per_hour: profile.price_per_hour || 0,
+          experience_year: profile.experience_year || 0,
+          tags: profile.tags || [],
         });
+        // TODO: Fetch social media links from a separate API endpoint
       } catch (err) {
         console.error("Error loading profile", err);
         toast.error("Không thể tải thông tin hồ sơ");
@@ -130,6 +152,14 @@ export default function EditProfilePage() {
     if (!formData.address_detail?.trim()) {
       newErrors.address_detail = "Địa chỉ chi tiết không được để trống";
     }
+    if (user?.role === "photographer") {
+      if (formData.price_per_hour === undefined || formData.price_per_hour === null || formData.price_per_hour < 0) {
+        newErrors.price_per_hour = "Giá mỗi giờ phải là số dương";
+      }
+      if (formData.experience_year === undefined || formData.experience_year === null || formData.experience_year < 0) {
+        newErrors.experience_year = "Số năm kinh nghiệm phải là số dương";
+      }
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -161,7 +191,6 @@ export default function EditProfilePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-2xl mx-auto">
-      
         <CardHeader>
           <h2 className="text-xl font-semibold">Chỉnh sửa thông tin cá nhân</h2>
         </CardHeader>
@@ -219,6 +248,112 @@ export default function EditProfilePage() {
                 required
               />
             </div>
+
+            {user?.role === "photographer" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="price_per_hour">Giá mỗi giờ (VNĐ)</Label>
+                  <Input
+                    id="price_per_hour"
+                    type="number"
+                    min="0"
+                    value={formData.price_per_hour || 0}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price_per_hour: parseInt(e.target.value) })
+                    }
+                    placeholder="Nhập giá mỗi giờ"
+                  />
+                  {errors.price_per_hour && (
+                    <p className="text-sm text-red-500">{errors.price_per_hour}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="experience_year">Số năm kinh nghiệm</Label>
+                  <Input
+                    id="experience_year"
+                    type="number"
+                    min="0"
+                    value={formData.experience_year || 0}
+                    onChange={(e) =>
+                      setFormData({ ...formData, experience_year: parseInt(e.target.value) })
+                    }
+                    placeholder="Nhập số năm kinh nghiệm"
+                  />
+                  {errors.experience_year && (
+                    <p className="text-sm text-red-500">{errors.experience_year}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags (phân cách bằng dấu phẩy)</Label>
+                  <Input
+                    id="tags"
+                    value={formData.tags?.join(", ") || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tags: e.target.value.split(",").map((tag) => tag.trim()),
+                      })
+                    }
+                    placeholder="Nhập các tags, phân cách bằng dấu phẩy"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Liên kết mạng xã hội</Label>
+                  <div className="space-y-4">
+                    {Object.entries(socialMediaLinks).map(([platform, link]) => (
+                      <div key={platform} className="flex gap-2">
+                        <Input
+                          value={platform}
+                          onChange={(e) => {
+                            const newLinks = { ...socialMediaLinks };
+                            delete newLinks[platform];
+                            newLinks[e.target.value] = link;
+                            setSocialMediaLinks(newLinks);
+                          }}
+                          placeholder="Nền tảng"
+                        />
+                        <Input
+                          value={link}
+                          onChange={(e) => {
+                            setSocialMediaLinks({
+                              ...socialMediaLinks,
+                              [platform]: e.target.value,
+                            });
+                          }}
+                          placeholder="URL"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const newLinks = { ...socialMediaLinks };
+                            delete newLinks[platform];
+                            setSocialMediaLinks(newLinks);
+                          }}
+                        >
+                          Xóa
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setSocialMediaLinks({
+                          ...socialMediaLinks,
+                          "": "",
+                        });
+                      }}
+                    >
+                      Thêm liên kết
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex justify-end gap-4">
               <Button

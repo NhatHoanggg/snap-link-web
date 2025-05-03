@@ -98,14 +98,11 @@ export default function ChangePasswordPage() {
     setSuccess(false)
 
     try {
-      await userService.changePassword(
-        {
-          current_password: data.currentPassword,
-          new_password: data.newPassword,
-          confirm_password: data.confirmPassword,
-        },
-        token
-      )
+      await userService.changePassword({
+        current_password: data.currentPassword,
+        new_password: data.newPassword,
+        confirm_password: data.confirmPassword,
+      })
 
       setSuccess(true)
       reset()
