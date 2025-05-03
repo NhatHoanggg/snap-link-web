@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import LocationSelector from "@/components/common/location-selector";
-import { userService } from "@/services/user.service";
+import { UpdateProfileData, userService } from "@/services/user.service";
 import { useAuth } from "@/services/auth";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import toast, { Toaster } from "react-hot-toast";
@@ -31,7 +31,9 @@ interface Province {
 export default function EditProfilePage() {
   const { token, user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [formData, setFormData] = useState<UpdateProfileData>({
     full_name: "",
     phone_number: "",
     province: "",
@@ -39,7 +41,6 @@ export default function EditProfilePage() {
     ward: "",
     address_detail: "",
   });
-  const [loading, setLoading] = useState(true);
 
   const [location, setLocation] = useState<{
     province: Province | null;
@@ -51,12 +52,24 @@ export default function EditProfilePage() {
     ward: null,
   });
 
+  const [errors, setErrors] = useState<{
+    full_name?: string;
+    phone_number?: string;
+    province?: string;
+    district?: string;
+    ward?: string;
+    address_detail?: string;
+  }>({});
+
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!token) return;
+      if (!token) {
+        router.push("/login");
+        return;
+      }
 
       try {
-        const profile = await userService.getProfile(token);
+        const profile = await userService.getProfile();
         setFormData({
           full_name: profile.full_name || "",
           phone_number: profile.phone_number || "",
@@ -67,6 +80,7 @@ export default function EditProfilePage() {
         });
       } catch (err) {
         console.error("Error loading profile", err);
+        toast.error("Không thể tải thông tin hồ sơ");
         router.push("/profile");
       } finally {
         setLoading(false);
@@ -94,27 +108,49 @@ export default function EditProfilePage() {
     }
   }, [location]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    if (!formData.full_name?.trim()) {
+      newErrors.full_name = "Họ tên không được để trống";
+    }
+    if (!formData.phone_number?.trim()) {
+      newErrors.phone_number = "Số điện thoại không được để trống";
+    } else if (!/^\d{10}$/.test(formData.phone_number)) {
+      newErrors.phone_number = "Số điện thoại không hợp lệ";
+    }
+    if (!formData.province) {
+      newErrors.province = "Vui lòng chọn tỉnh/thành phố";
+    }
+    if (!formData.district) {
+      newErrors.district = "Vui lòng chọn quận/huyện";
+    }
+    if (!formData.ward) {
+      newErrors.ward = "Vui lòng chọn phường/xã";
+    }
+    if (!formData.address_detail?.trim()) {
+      newErrors.address_detail = "Địa chỉ chi tiết không được để trống";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
-
+    if (!validateForm()) return;
+    setUpdating(true);
     try {
       const response = await userService.updateProfile(
         formData,
-        token,
         user?.role as "customer" | "photographer"
       );
       console.log("Profile updated:", response);
       toast.success("Cập nhật thông tin thành công");
-      // router.push("/profile");
+      router.push("/profile");
     } catch (err) {
       console.error("Error updating profile", err);
       toast.error("Cập nhật thông tin thất bại");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -135,22 +171,30 @@ export default function EditProfilePage() {
               <Label htmlFor="full_name">Họ tên</Label>
               <Input
                 id="full_name"
-                name="full_name"
                 value={formData.full_name}
-                onChange={handleChange}
-                required
+                onChange={(e) =>
+                  setFormData({ ...formData, full_name: e.target.value })
+                }
+                placeholder="Nhập họ tên"
               />
+              {errors.full_name && (
+                <p className="text-sm text-red-500">{errors.full_name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="phone_number">Số điện thoại</Label>
               <Input
                 id="phone_number"
-                name="phone_number"
                 value={formData.phone_number}
-                onChange={handleChange}
-                required
+                onChange={(e) =>
+                  setFormData({ ...formData, phone_number: e.target.value })
+                }
+                placeholder="Nhập số điện thoại"
               />
+              {errors.phone_number && (
+                <p className="text-sm text-red-500">{errors.phone_number}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -168,8 +212,10 @@ export default function EditProfilePage() {
               <Input
                 id="address_detail"
                 name="address_detail"
-                value={formData.address_detail}
-                onChange={handleChange}
+                value={formData.address_detail || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, address_detail: e.target.value })
+                }
                 required
               />
             </div>
@@ -182,7 +228,16 @@ export default function EditProfilePage() {
               >
                 Hủy
               </Button>
-              <Button type="submit">Lưu thay đổi</Button>
+              <Button type="submit" className="" disabled={updating}>
+                {updating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-900"></div>
+                    Đang cập nhật...
+                  </div>
+                ) : (
+                  "Cập nhật thông tin"
+                )}
+              </Button>
             </div>
           </form>
         </CardContent>

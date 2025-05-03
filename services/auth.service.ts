@@ -1,4 +1,5 @@
-import axios from 'axios';
+import axiosInstance from './axios';
+import { isAxiosError } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"
 
@@ -21,6 +22,7 @@ interface User {
 
 export interface LoginResponse {
   access_token: string;
+  refresh_token: string;
   token_type: string;
   expires_in: number;
   user: {
@@ -30,6 +32,13 @@ export interface LoginResponse {
     role: string;
     avatar?: string;
   };
+}
+
+interface RefreshTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
 }
 
 interface CustomerRegisterData {
@@ -67,61 +76,35 @@ interface RegisterResponse {
 export async function login(credentials: { email: string; password: string }): Promise<LoginResponse> {
   console.log("credentials", credentials);
   
-  const response = await fetch(`${API_URL}/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(credentials),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.detail || "Login failed")
-  }
-
-  return response.json()
+  const response = await axiosInstance.post<LoginResponse>('/login', credentials);
+  return response.data;
 }
 
 export async function loginWithGoogle(idToken: string): Promise<LoginResponse> {
   console.log("idToken -->", idToken);
-  const response = await fetch(`${API_URL}/auth/google`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ google_token: idToken }),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.detail || "Login failed")
-  }
-
-  return response.json()
+  const response = await axiosInstance.post<LoginResponse>('/auth/google', { google_token: idToken });
+  return response.data;
 }
 
-
+export async function refreshToken(refresh_token: string): Promise<RefreshTokenResponse> {
+  const response = await axiosInstance.post<RefreshTokenResponse>('/refresh-token', { refresh_token });
+  return response.data;
+}
 
 export async function logout(token: string): Promise<void> {
-  const response = await fetch(`${API_URL}/logout`, {
-    method: "POST",
+  await axiosInstance.post('/logout', null, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
-
-  if (!response.ok) {
-    throw new Error("Logout failed")
-  }
+  });
 }
 
 export const registerCustomer = async (data: CustomerRegisterData): Promise<RegisterResponse> => {
   try {
-    const response = await axios.post<RegisterResponse>(`${API_URL}/register/customer`, data);
+    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/register/customer`, data);
     return response.data;
   } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       throw new Error(error.response?.data?.message || 'Registration failed');
     }
     throw new Error('An unexpected error occurred');
@@ -131,10 +114,10 @@ export const registerCustomer = async (data: CustomerRegisterData): Promise<Regi
 export const registerPhotographer = async (data: PhotographerRegisterData): Promise<RegisterResponse> => {
   try {
     console.log("data -->", data);
-    const response = await axios.post<RegisterResponse>(`${API_URL}/register/photographer`, data);
+    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/register/photographer`, data);
     return response.data;
   } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       throw new Error(error.response?.data?.message || 'Registration failed');
     }
     throw new Error('An unexpected error occurred');

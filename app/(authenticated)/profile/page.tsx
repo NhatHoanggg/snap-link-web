@@ -34,7 +34,7 @@ export default function ProfilePage() {
       }
 
       try {
-        const data = await userService.getProfile(token);
+        const data = await userService.getProfile();
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -77,7 +77,6 @@ export default function ProfilePage() {
       if (token) {
         await userService.updateProfile(
           { ...profile, avatar: data.secure_url },
-          token,
           profile?.role as "customer" | "photographer"
         );
         setProfile((prev) =>
@@ -123,7 +122,6 @@ export default function ProfilePage() {
       if (token) {
         await userService.updateProfile(
           { ...profile, background_image: data.secure_url },
-          token,
           profile?.role as "customer" | "photographer"
         );
         setProfile((prev) =>

@@ -1,6 +1,5 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+import axiosInstance from './axios';
+import { isAxiosError } from 'axios';
 
 export interface UserProfile {
   user_id: number;
@@ -49,49 +48,46 @@ export interface ChangePasswordData {
 }
 
 export const userService = {
-  async getProfile(token: string): Promise<UserProfile> {
+  async getProfile(): Promise<UserProfile> {
     try {
-      const response = await axios.get<UserProfile>(`${API_URL}/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.get<UserProfile>('/profile');
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch profile');
+      console.error('Error in getProfile:', error);
+      if (isAxiosError(error)) {
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+        if (error.response?.status === 401) {
+          throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        }
+        throw new Error(error.response?.data?.message || 'Không thể tải thông tin hồ sơ');
       }
-      throw new Error('An unexpected error occurred');
+      throw new Error('Đã xảy ra lỗi không xác định');
     }
   },
 
-  async updateProfile(data: UpdateProfileData, token: string, role: 'customer' | 'photographer'): Promise<UserProfile> {
+  async updateProfile(data: UpdateProfileData, role: 'customer' | 'photographer'): Promise<UserProfile> {
     try {
       console.log(data);
       const endpoint = role === 'customer' ? 'customers/profile' : 'photographers/profile';
-      const response = await axios.put<UserProfile>(`${API_URL}/${endpoint}`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.put<UserProfile>(`/${endpoint}`, data);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || 'Failed to update profile');
       }
       throw new Error('An unexpected error occurred');
     }
   },
 
-  async changePassword(data: ChangePasswordData, token: string): Promise<void> {
+  async changePassword(data: ChangePasswordData): Promise<void> {
     try {
-      await axios.put(`${API_URL}/change-password`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axiosInstance.put('/change-password', data);
     } catch (error) {
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || 'Failed to change password');
       }
       throw new Error('An unexpected error occurred');
