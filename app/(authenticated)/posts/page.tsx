@@ -13,18 +13,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2, Plus, ImageIcon, Pencil, Trash2 } from "lucide-react"
-import { postsService, type Post } from "@/services/posts.service"
+import { postsService, type Post, type CreatePostRequest } from "@/services/posts.service"
+import { useRouter } from "next/navigation"
 
 export default function PostsManagement() {
+  const router = useRouter()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [newPostDialogOpen, setNewPostDialogOpen] = useState(false)
   const [editPostDialogOpen, setEditPostDialogOpen] = useState(false)
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false)
   const [currentPost, setCurrentPost] = useState<Post | null>(null)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreatePostRequest>({
     image_url: "",
     caption: "",
+    tags: []
   })
   const [activeTab, setActiveTab] = useState("grid")
 
@@ -40,8 +43,8 @@ export default function PostsManagement() {
     } catch (error) {
       console.error("Error fetching posts:", error)
       toast({
-        title: "Error",
-        description: "Failed to load posts. Please try again.",
+        title: "Lỗi",
+        description: "Không thể tải bài viết. Vui lòng thử lại sau.",
         variant: "destructive",
       })
     } finally {
@@ -65,14 +68,14 @@ export default function PostsManagement() {
       setNewPostDialogOpen(false)
       resetForm()
       toast({
-        title: "Success",
-        description: "Post created successfully!",
+        title: "Thành công",
+        description: "Đã tạo bài viết thành công",
       })
     } catch (error) {
       console.error("Error creating post:", error)
       toast({
-        title: "Error",
-        description: "Failed to create post. Please try again.",
+        title: "Lỗi",
+        description: "Không thể tạo bài viết. Vui lòng thử lại sau.",
         variant: "destructive",
       })
     }
@@ -89,19 +92,19 @@ export default function PostsManagement() {
         return
       }
 
-      const updatedPost = await postsService.updatePost(currentPost.id, formData)
-      setPosts((prevPosts) => prevPosts.map((post) => (post.id === updatedPost.id ? updatedPost : post)))
+      const updatedPost = await postsService.updatePost(currentPost.post_id, formData)
+      setPosts((prevPosts) => prevPosts.map((post) => (post.post_id === updatedPost.post_id ? updatedPost : post)))
       setEditPostDialogOpen(false)
       resetForm()
       toast({
-        title: "Success",
-        description: "Post updated successfully!",
+        title: "Thành công",
+        description: "Đã cập nhật bài viết thành công",
       })
     } catch (error) {
       console.error("Error updating post:", error)
       toast({
-        title: "Error",
-        description: "Failed to update post. Please try again.",
+        title: "Lỗi",
+        description: "Không thể cập nhật bài viết. Vui lòng thử lại sau.",
         variant: "destructive",
       })
     }
@@ -111,31 +114,22 @@ export default function PostsManagement() {
     try {
       if (!currentPost) return
 
-      await postsService.deletePost(currentPost.id)
-      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== currentPost.id))
+      await postsService.deletePost(currentPost.post_id)
+      setPosts((prevPosts) => prevPosts.filter((post) => post.post_id !== currentPost.post_id))
       setDeleteConfirmDialogOpen(false)
       setCurrentPost(null)
       toast({
-        title: "Success",
-        description: "Post deleted successfully!",
+        title: "Thành công",
+        description: "Đã xóa bài viết thành công",
       })
     } catch (error) {
       console.error("Error deleting post:", error)
       toast({
-        title: "Error",
-        description: "Failed to delete post. Please try again.",
+        title: "Lỗi",
+        description: "Không thể xóa bài viết. Vui lòng thử lại sau.",
         variant: "destructive",
       })
     }
-  }
-
-  const openEditDialog = (post: Post) => {
-    setCurrentPost(post)
-    setFormData({
-      image_url: post.image_url,
-      caption: post.caption,
-    })
-    setEditPostDialogOpen(true)
   }
 
   const openDeleteDialog = (post: Post) => {
@@ -147,6 +141,7 @@ export default function PostsManagement() {
     setFormData({
       image_url: "",
       caption: "",
+      tags: []
     })
     setCurrentPost(null)
   }
@@ -156,6 +151,14 @@ export default function PostsManagement() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }))
+  }
+
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tags = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+    setFormData(prev => ({
+      ...prev,
+      tags
     }))
   }
 
@@ -180,7 +183,7 @@ export default function PostsManagement() {
       <div className="container mx-auto px-4 py-16 flex justify-center">
         <div className="flex flex-col items-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-lg font-medium">Loading posts...</p>
+          <p className="text-lg font-medium">Đang tải bài viết...</p>
         </div>
       </div>
     )
@@ -190,18 +193,18 @@ export default function PostsManagement() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Posts Management</h1>
-          <p className="text-muted-foreground mt-1">Create and manage your posts</p>
+          <h1 className="text-3xl font-bold">Quản lý bài viết</h1>
+          <p className="text-muted-foreground mt-1">Tạo và quản lý bài viết của bạn</p>
         </div>
-        <Button onClick={() => setNewPostDialogOpen(true)} className="gap-2">
+        <Button onClick={() => router.push("/posts/create")} className="gap-2">
           <Plus className="h-4 w-4" />
-          New Post
+          Tạo bài viết mới
         </Button>
       </div>
 
       <div className="mb-6 flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          {posts.length} {posts.length === 1 ? "post" : "posts"}
+          {posts.length} {posts.length === 1 ? "bài viết" : "bài viết"}
         </p>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
           <TabsList className="grid w-[180px] grid-cols-2">
@@ -215,11 +218,11 @@ export default function PostsManagement() {
         {posts.length === 0 ? (
           <div className="text-center py-16 bg-muted/30 rounded-lg">
             <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium mb-2">No posts yet</h3>
-            <p className="text-muted-foreground mb-6">Create your first post to get started</p>
-            <Button onClick={() => setNewPostDialogOpen(true)} className="gap-2">
+            <h3 className="text-lg font-medium mb-2">Chưa có bài viết nào</h3>
+            <p className="text-muted-foreground mb-6">Tạo bài viết đầu tiên của bạn</p>
+            <Button onClick={() => router.push("/posts/create")} className="gap-2">
               <Plus className="h-4 w-4" />
-              Create Post
+              Tạo bài viết
             </Button>
           </div>
         ) : (
@@ -232,7 +235,7 @@ export default function PostsManagement() {
                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
               >
                 {posts.map((post) => (
-                  <motion.div key={post.id} variants={item}>
+                  <motion.div key={post.post_id} variants={item}>
                     <Card className="overflow-hidden h-full">
                       <div className="relative aspect-square">
                         <Image
@@ -245,11 +248,23 @@ export default function PostsManagement() {
                       </div>
                       <CardContent className="p-4">
                         <p className="text-sm line-clamp-3">{post.caption}</p>
+                        {post.tags.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {post.tags.map((tag, index) => (
+                              <span key={index} className="text-xs bg-muted px-2 py-1 rounded-full">
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          {new Date(post.created_at).toLocaleDateString()}
+                        </div>
                       </CardContent>
                       <CardFooter className="p-4 pt-0 flex justify-between">
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(post)}>
+                        <Button variant="outline" size="sm" onClick={() => router.push(`/posts/edit/${post.post_id}`)}>
                           <Pencil className="h-4 w-4 mr-1" />
-                          Edit
+                          Chỉnh sửa
                         </Button>
                         <Button
                           variant="outline"
@@ -258,7 +273,7 @@ export default function PostsManagement() {
                           onClick={() => openDeleteDialog(post)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
+                          Xóa
                         </Button>
                       </CardFooter>
                     </Card>
@@ -270,7 +285,7 @@ export default function PostsManagement() {
             <TabsContent value="list" className="mt-0">
               <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
                 {posts.map((post) => (
-                  <motion.div key={post.id} variants={item}>
+                  <motion.div key={post.post_id} variants={item}>
                     <Card>
                       <div className="flex flex-col sm:flex-row">
                         <div className="relative w-full sm:w-48 h-48">
@@ -285,11 +300,23 @@ export default function PostsManagement() {
                         <div className="flex flex-col flex-1 p-4">
                           <div className="flex-1">
                             <p>{post.caption}</p>
+                            {post.tags.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {post.tags.map((tag, index) => (
+                                  <span key={index} className="text-xs bg-muted px-2 py-1 rounded-full">
+                                    #{tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              {new Date(post.created_at).toLocaleDateString()}
+                            </div>
                           </div>
                           <div className="flex justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm" onClick={() => openEditDialog(post)}>
+                            <Button variant="outline" size="sm" onClick={() => router.push(`/posts/edit/${post.post_id}`)}>
                               <Pencil className="h-4 w-4 mr-1" />
-                              Edit
+                              Chỉnh sửa
                             </Button>
                             <Button
                               variant="outline"
@@ -298,7 +325,7 @@ export default function PostsManagement() {
                               onClick={() => openDeleteDialog(post)}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
+                              Xóa
                             </Button>
                           </div>
                         </div>
@@ -316,12 +343,12 @@ export default function PostsManagement() {
       <Dialog open={newPostDialogOpen} onOpenChange={setNewPostDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create New Post</DialogTitle>
+            <DialogTitle>Tạo bài viết mới</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label htmlFor="image_url" className="text-sm font-medium">
-                Image URL
+                URL hình ảnh
               </label>
               <Input
                 id="image_url"
@@ -338,10 +365,22 @@ export default function PostsManagement() {
               <Textarea
                 id="caption"
                 name="caption"
-                placeholder="Write a caption for your post..."
+                placeholder="Viết một caption cho bài viết của bạn..."
                 value={formData.caption}
                 onChange={handleInputChange}
                 rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="tags" className="text-sm font-medium">
+                Tags (phân cách bằng dấu phẩy)
+              </label>
+              <Input
+                id="tags"
+                name="tags"
+                placeholder="portrait, wedding, nature"
+                value={formData.tags.join(', ')}
+                onChange={handleTagsChange}
               />
             </div>
             {formData.image_url && (
@@ -363,9 +402,9 @@ export default function PostsManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewPostDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
-            <Button onClick={handleCreatePost}>Create Post</Button>
+            <Button onClick={handleCreatePost}>Tạo bài viết</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -374,12 +413,12 @@ export default function PostsManagement() {
       <Dialog open={editPostDialogOpen} onOpenChange={setEditPostDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Post</DialogTitle>
+            <DialogTitle>Chỉnh sửa bài viết</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label htmlFor="edit_image_url" className="text-sm font-medium">
-                Image URL
+                URL hình ảnh
               </label>
               <Input
                 id="edit_image_url"
@@ -396,10 +435,22 @@ export default function PostsManagement() {
               <Textarea
                 id="edit_caption"
                 name="caption"
-                placeholder="Write a caption for your post..."
+                placeholder="Viết một caption cho bài viết của bạn..."
                 value={formData.caption}
                 onChange={handleInputChange}
                 rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="edit_tags" className="text-sm font-medium">
+                Tags (phân cách bằng dấu phẩy)
+              </label>
+              <Input
+                id="edit_tags"
+                name="tags"
+                placeholder="portrait, wedding, nature"
+                value={formData.tags.join(', ')}
+                onChange={handleTagsChange}
               />
             </div>
             {formData.image_url && (
@@ -421,9 +472,9 @@ export default function PostsManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditPostDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
-            <Button onClick={handleUpdatePost}>Update Post</Button>
+            <Button onClick={handleUpdatePost}>Cập nhật bài viết</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -432,16 +483,16 @@ export default function PostsManagement() {
       <Dialog open={deleteConfirmDialogOpen} onOpenChange={setDeleteConfirmDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Post</DialogTitle>
+            <DialogTitle>Xóa bài viết</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+            <p>Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.</p>
             {currentPost && (
               <div className="mt-4 flex items-center gap-4">
                 <div className="relative w-16 h-16 rounded overflow-hidden flex-shrink-0">
                   <Image
                     src={currentPost.image_url || "/placeholder.svg"}
-                    alt="Post to delete"
+                    alt="Bài viết cần xóa"
                     fill
                     className="object-cover"
                   />
@@ -452,10 +503,10 @@ export default function PostsManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
             <Button variant="destructive" onClick={handleDeletePost}>
-              Delete
+              Xóa
             </Button>
           </DialogFooter>
         </DialogContent>
