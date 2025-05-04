@@ -19,7 +19,7 @@ export interface UserProfile {
   address_detail: string | null;
   tags: string[] | null;
   price_per_hour: number | null;
-  experience_year: number | null;
+  experience_years: number | null;
   followers_count: number;
   average_rating: number;
   total_reviews: number;
@@ -38,7 +38,7 @@ export interface UpdateProfileData {
   address_detail?: string | null;
   tags?: string[] | null;
   price_per_hour?: number | null;
-  experience_year?: number | null;
+  experience_years?: number | null;
 }
 
 export interface ChangePasswordData {

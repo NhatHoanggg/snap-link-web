@@ -272,7 +272,7 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label>Experience Years</Label>
                   <Input
-                    value={profile.experience_year || "Chưa cập nhật"}
+                    value={profile.experience_years || "Chưa cập nhật"}
                     readOnly
                   />
                 </div>

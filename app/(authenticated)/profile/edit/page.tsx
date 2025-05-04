@@ -10,7 +10,7 @@ import { UpdateProfileData, userService } from "@/services/user.service";
 import { useAuth } from "@/services/auth";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import toast, { Toaster } from "react-hot-toast";
-
+import { Textarea } from "@/components/ui/textarea";
 interface Ward {
   name: string;
   code: number;
@@ -96,10 +96,10 @@ export default function EditProfilePage() {
           ward: profile.ward || "",
           address_detail: profile.address_detail || "",
           price_per_hour: profile.price_per_hour || 0,
-          experience_year: profile.experience_year || 0,
+          experience_years: profile.experience_years || 0,
           tags: profile.tags || [],
+          bio: profile.bio || "",
         });
-        // TODO: Fetch social media links from a separate API endpoint
       } catch (err) {
         console.error("Error loading profile", err);
         toast.error("Không thể tải thông tin hồ sơ");
@@ -252,6 +252,18 @@ export default function EditProfilePage() {
             {user?.role === "photographer" && (
               <>
                 <div className="space-y-2">
+                  <Label htmlFor="bio">Giới thiệu</Label>
+                  <Textarea
+                    id="bio"
+                    value={formData.bio || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bio: e.target.value })
+                    }
+                    placeholder=""
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="price_per_hour">Giá mỗi giờ (VNĐ)</Label>
                   <Input
                     id="price_per_hour"
@@ -269,12 +281,12 @@ export default function EditProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="experience_year">Số năm kinh nghiệm</Label>
+                  <Label htmlFor="experience_years">Số năm kinh nghiệm</Label>
                   <Input
-                    id="experience_year"
+                    id="experience_years"
                     type="number"
                     min="0"
-                    value={formData.experience_year || 0}
+                    value={formData.experience_years || 0}
                     onChange={(e) =>
                       setFormData({ ...formData, experience_year: parseInt(e.target.value) })
                     }
