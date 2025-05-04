@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label"
 import { getServiceById, updateService } from "@/services/services.service"
 import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
+import { use } from "react"
 
 interface EditServicePageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default function EditServicePage({ params }: EditServicePageProps) {
@@ -27,10 +28,13 @@ export default function EditServicePage({ params }: EditServicePageProps) {
     is_active: true,
   })
 
+  const resolvedParams = use(params)
+  const serviceId = parseInt(resolvedParams.id)
+
   useEffect(() => {
     const fetchService = async () => {
       try {
-        const service = await getServiceById(parseInt(params.id))
+        const service = await getServiceById(serviceId)
         setFormData({
           title: service.title,
           description: service.description,
@@ -46,17 +50,17 @@ export default function EditServicePage({ params }: EditServicePageProps) {
     }
 
     fetchService()
-  }, [params.id, router])
+  }, [serviceId, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      await updateService(parseInt(params.id), {
+      await updateService(serviceId, {
         ...formData,
         price: parseFloat(formData.price),
-        service_id: parseInt(params.id),
+        service_id: serviceId,
         photographer_id: 0, // Will be set by backend
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
