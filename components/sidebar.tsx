@@ -87,7 +87,7 @@ const photographerItems = [
   },
   {
     title: "My Portfolio",
-    href: "/portfolio",
+    href: "/portfolio/featured-photos",
     icon: Camera,
   },
   {

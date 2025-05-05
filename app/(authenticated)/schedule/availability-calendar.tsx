@@ -32,6 +32,8 @@ export function AvailabilityCalendar() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const { toast } = useToast()
 
+  console.log(selectedDate)
+
   useEffect(() => {
     fetchAvailabilities()
   }, [])

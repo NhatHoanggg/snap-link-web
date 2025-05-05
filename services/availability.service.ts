@@ -60,3 +60,50 @@ export async function deleteAvailability(availabilityId: number): Promise<void> 
     throw new Error("Failed to delete availability")
   }
 }
+
+export async function getMockAvailabilities(): Promise<Availability[]> {
+  return [
+    {
+      available_date: "2025-05-10",
+      status: "available",
+      availability_id: 6,
+      created_at: "2025-04-29T16:29:18.821982Z",
+    },
+    {
+      available_date: "2025-05-11",
+      status: "available",
+      availability_id: 7,
+      created_at: "2025-04-29T16:29:41.975343Z",
+    },
+    {
+      available_date: "2025-05-12",
+      status: "booked",
+      availability_id: 8,
+      created_at: "2025-04-29T16:29:50.208842Z",
+    },
+    {
+      available_date: "2025-05-13",
+      status: "available",
+      availability_id: 9,
+      created_at: "2025-04-29T16:29:58.588843Z",
+    },
+    {
+      available_date: "2025-05-18",
+      status: "available",
+      availability_id: 10,
+      created_at: "2025-05-04T10:03:48.153007Z",
+    },
+    {
+      available_date: "2025-05-21",
+      status: "available",
+      availability_id: 12,
+      created_at: "2025-05-04T10:34:18.040198Z",
+    },
+    {
+      available_date: "2025-05-22",
+      status: "available",
+      availability_id: 13,
+      created_at: "2025-05-04T10:36:15.263025Z",
+    },
+  ]
+}
