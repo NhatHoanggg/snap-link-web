@@ -111,6 +111,15 @@ export default function PhotographersDirectory() {
     }).format(price)
   }
 
+  const formatLocation = (photographer: Photographer) => {
+    const parts = [
+      photographer.ward,
+      photographer.district,
+      photographer.province
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : "Chưa cập nhật";
+  };
+
   const handleMouseEnter = (photographer: Photographer) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current)
@@ -190,7 +199,7 @@ export default function PhotographersDirectory() {
                   <h3 className="text-white font-bold text-lg truncate">{photographer.full_name}</h3>
                   <div className="flex items-center text-white/90 text-sm">
                     <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                    <span className="truncate">{photographer.location ?? "Chưa cập nhật"}</span>
+                    <span className="truncate">{formatLocation(photographer)}</span>
                   </div>
                 </div>
                 {photographer.average_rating > 0 && (
@@ -257,7 +266,7 @@ export default function PhotographersDirectory() {
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground mb-3">
                     <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                    <span>{photographer.location ?? "Chưa cập nhật"}</span>
+                    <span>{formatLocation(photographer)}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{photographer.bio}</p>
                   <div className="flex flex-wrap gap-3 text-xs">
@@ -415,7 +424,7 @@ export default function PhotographersDirectory() {
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center text-sm">
                       <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{hoveredPhotographer.location ?? "Chưa cập nhật"}</span>
+                      <span>{formatLocation(hoveredPhotographer)}</span>
                     </div>
 
                     <div className="flex items-center text-sm">
@@ -455,24 +464,26 @@ export default function PhotographersDirectory() {
                     </div>
                   )} */}
 
-                  {hoveredPhotographer.portfolio?.featured_photos &&
-                    hoveredPhotographer.portfolio.featured_photos.length > 0 && (
-                      <div>
-                        <h3 className="font-medium mb-2">Featured Photos</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {hoveredPhotographer.portfolio.featured_photos.map((photo) => (
-                            <div key={photo.featured_photo_id} className="relative h-32 rounded-md overflow-hidden">
-                              <Image
-                                src={photo.image_url || "/placeholder.svg"}
-                                alt={photo.title}
-                                fill
-                                className="object-cover"
-                              />
+                  {hoveredPhotographer.featured_photos && hoveredPhotographer.featured_photos.length > 0 && (
+                    <div>
+                      <h3 className="font-medium mb-2">Featured Photos</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {hoveredPhotographer.featured_photos.map((photo) => (
+                          <div key={photo.featured_photo_id} className="relative h-32 rounded-md overflow-hidden">
+                            <Image
+                              src={photo.image_url || "/placeholder.svg"}
+                              alt={photo.title}
+                              fill
+                              className="object-cover"
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                              <p className="text-white text-xs truncate">{photo.title}</p>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   <div className="pt-4">
                     <Button asChild className="w-full">
