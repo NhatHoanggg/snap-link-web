@@ -1,20 +1,21 @@
+import axiosInstance from "./axios"
 export interface BookingFormData {
-    date?: Date
-    service: string
-    shootingType: "studio" | "outdoor"
-    location: string
-    customLocation?: string
-    locationDetails?: string
-    locationNotes?: string
-    package: string
-    concept: string
-    illustrations: string[]
-  }
+  photographer_id: number
+  booking_date: string
+  location_id: number
+  custom_location: string
+  quantity: number
+  service_id: number
+  shooting_type: string
+  concept: string
+  illustration_url: string
+  availability_id: number
+}
   
-  export interface Package {
-    id: string
-    name: string
-    price: number
-    description: string
-    features: string[]
-  }
+
+export async function createBooking(booking: BookingFormData) {
+  const response = await axiosInstance.post('/bookings', booking)
+  return response.data
+}
+
+

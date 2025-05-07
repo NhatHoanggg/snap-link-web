@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Info, Edit2, Trash2, Clock } from "lucide-react"
+import { Calendar, Info, Edit2, Trash2, Clock, Archive  } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import type { Service } from "@/services/services.service"
 import { Switch } from "@/components/ui/switch"
@@ -104,6 +104,11 @@ export function ServiceCard({ service, onEdit, onDelete, onUpdate }: ServiceCard
                   </div>
                 )}
               </div>
+              <p className="text-muted-foreground text-sm mt-2 flex items-center">
+                <Archive className="w-4 h-4 mr-2" />
+                <span>Đơn vị: </span>
+                <span className="font-bold text-primary indent-2"> {service.unit_type === "package" ? " Gói" : " Người"}</span>
+              </p>
             </CardContent>
 
             <CardFooter className="px-4 md:px-6 pb-4 md:pb-6 pt-0 flex gap-2">

@@ -61,6 +61,16 @@ export async function deleteAvailability(availabilityId: number): Promise<void> 
   }
 }
 
+export async function getAvailabilitiesBySlug(slug: string): Promise<Availability[]> {
+  try {
+    const response = await axiosInstance.get(`/photographers/slug/${slug}/availability`)
+    return response.data
+  } catch (error) {
+    console.error("Error fetching availability by slug:", error)
+    throw new Error("Failed to fetch availability by slug")
+  }
+}
+
 export async function getMockAvailabilities(): Promise<Availability[]> {
   return [
     {

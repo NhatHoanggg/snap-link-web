@@ -10,6 +10,7 @@ export interface Service {
     photographer_id: number
     created_at: string
     updated_at: string | null
+    unit_type: string
 }
 
 export async function getServices(): Promise<Service[]> {
@@ -61,6 +62,17 @@ export async function deleteService(serviceId: number): Promise<void> {
     }
 }
 
+export async function getPhotographerServicesBySlug(slug: string): Promise<Service> {
+  try {
+      const response = await axiosInstance.get(`/photographers/slug/${slug}/services`)
+      return response.data
+  } catch (error) {
+      console.error('Error fetching service by slug:', error)
+      throw error
+  }
+}
+
+
 export async function getMockServices(): Promise<Service[]> {
     return [
       {
@@ -74,7 +86,8 @@ export async function getMockServices(): Promise<Service[]> {
         photographer_id: 14,
         created_at: "2025-04-29T07:09:06.774565Z",
         updated_at: null,
-      },
+        unit_type: "package",
+      },  
       {
         title: "Gói 2: Chụp Chill Chill 3",
         thumbnail_url:
@@ -86,6 +99,7 @@ export async function getMockServices(): Promise<Service[]> {
         photographer_id: 14,
         created_at: "2025-05-04T07:26:42.496230Z",
         updated_at: null,
+        unit_type: "package",
       },
       {
         title: "Gói 3: Chụp ảnh cưới",
@@ -98,6 +112,7 @@ export async function getMockServices(): Promise<Service[]> {
         photographer_id: 14,
         created_at: "2025-05-04T07:27:22.883884Z",
         updated_at: null,
+        unit_type: "package",
       },
       {
         title: "Gói 4: Chụp ảnh gia đình",
@@ -110,6 +125,7 @@ export async function getMockServices(): Promise<Service[]> {
         photographer_id: 14,
         created_at: "2025-05-04T07:44:13.291108Z",
         updated_at: "2025-05-04T07:53:35.683998Z",
+        unit_type: "package",
       },
     ]
   }

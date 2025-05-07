@@ -6,28 +6,39 @@ import { BookingStep1 } from "./booking-step-1"
 import { BookingStep2 } from "./booking-step-2"
 import { BookingStep3 } from "./booking-step-3"
 import { BookingStep4 } from "./booking-step-4"
-import { BookingStep5 } from "./booking-step-5"
 import { BookingReview } from "./booking-review"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { BookingStepIndicator } from "./booking-step-indicator"
 import type { BookingFormData } from "@/services/booking.service"
+import type { Service } from "@/services/services.service"
+import type { Availability } from "@/services/availability.service"
+import { createBooking } from "@/services/booking.service"
+import { updateAvailability } from "@/services/availability.service"
 
-export function BookingForm() {
+interface BookingFormProps {
+  services: Service[]
+  availabilities: Availability[]
+  photographerSlug: string
+}
+
+export function BookingForm({ services, availabilities, photographerSlug }: BookingFormProps) {
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<BookingFormData>({
     date: undefined,
     service: "",
     shootingType: "studio",
-    location: "19 Đặng Huy Trứ",
-    package: "",
+    location: "",
+    customLocation: "",
+    locationDetails: "",
+    locationNotes: "",
     concept: "",
     illustrations: [],
   })
   const { toast } = useToast()
 
   const nextStep = () => {
-    if (step < 6) {
+    if (step < 5) {
       setStep(step + 1)
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
@@ -46,12 +57,21 @@ export function BookingForm() {
 
   const handleSubmit = async () => {
     try {
-      // Ở đây bạn sẽ gửi dữ liệu đến API
-      // await fetch('/api/bookings', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // })
+      // Tạo booking mới
+      const booking = await createBooking({
+        ...formData,
+        photographerSlug,
+      })
+
+      // Cập nhật trạng thái availability
+      if (formData.date) {
+        const availability = availabilities.find(
+          (a) => new Date(a.available_date).toDateString() === formData.date?.toDateString()
+        )
+        if (availability) {
+          await updateAvailability(availability.availability_id, "booked")
+        }
+      }
 
       toast({
         title: "Đặt lịch thành công",
@@ -63,8 +83,10 @@ export function BookingForm() {
         date: undefined,
         service: "",
         shootingType: "studio",
-        location: "19 Đặng Huy Trứ",
-        package: "",
+        location: "",
+        customLocation: "",
+        locationDetails: "",
+        locationNotes: "",
         concept: "",
         illustrations: [],
       })
@@ -99,7 +121,14 @@ export function BookingForm() {
             variants={variants}
             transition={{ duration: 0.3 }}
           >
-            {step === 1 && <BookingStep1 formData={formData} updateFormData={updateFormData} nextStep={nextStep} />}
+            {step === 1 && (
+              <BookingStep1
+                formData={formData}
+                updateFormData={updateFormData}
+                nextStep={nextStep}
+                availabilities={availabilities}
+              />
+            )}
             {step === 2 && (
               <BookingStep2
                 formData={formData}
@@ -114,6 +143,7 @@ export function BookingForm() {
                 updateFormData={updateFormData}
                 nextStep={nextStep}
                 prevStep={prevStep}
+                services={services}
               />
             )}
             {step === 4 && (
@@ -124,18 +154,10 @@ export function BookingForm() {
                 prevStep={prevStep}
               />
             )}
-            {step === 5 && (
-              <BookingStep5
-                formData={formData}
-                updateFormData={updateFormData}
-                nextStep={nextStep}
-                prevStep={prevStep}
-              />
-            )}
-            {step === 6 && <BookingReview formData={formData} prevStep={prevStep} handleSubmit={handleSubmit} />}
+            {step === 5 && <BookingReview formData={formData} prevStep={prevStep} handleSubmit={handleSubmit} />}
           </motion.div>
         </AnimatePresence>
       </Card>
     </div>
   )
-}
+} 
