@@ -10,11 +10,10 @@ interface BookingStepIndicatorProps {
 export function BookingStepIndicator({ currentStep }: BookingStepIndicatorProps) {
   const steps = [
     { id: 1, name: "Ngày" },
-    { id: 2, name: "Dịch vụ" },
-    { id: 3, name: "Địa điểm" },
-    { id: 4, name: "Gói" },
-    { id: 5, name: "Concept" },
-    { id: 6, name: "Xác nhận" },
+    { id: 2, name: "Địa điểm" },
+    { id: 3, name: "Gói" },
+    { id: 4, name: "Concept" },
+    { id: 5, name: "Xác nhận" },
   ]
 
   return (
