@@ -10,7 +10,7 @@ import { CalendarIcon, Camera, Home, MapPin } from "lucide-react"
 import Image from "next/image"
 import type { BookingFormData } from "@/services/booking.service"
 import type { Service } from "@/services/services.service"
-import { getServiceById } from "@/services/services.service"
+import { getServiceByIdPublic } from "@/services/services.service"
 
 interface BookingReviewProps {
   formData: BookingFormData
@@ -27,7 +27,7 @@ export function BookingReview({ formData, prevStep, handleSubmit }: BookingRevie
       if (formData.service_id) {
         try {
           setIsLoading(true)
-          const data = await getServiceById(formData.service_id)
+          const data = await getServiceByIdPublic(formData.service_id)
           setService(data)
         } catch (error) {
           console.error("Error fetching service:", error)

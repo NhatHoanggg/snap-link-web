@@ -33,6 +33,17 @@ export async function getServiceById(serviceId: number): Promise<Service> {
     }
 }
 
+export async function getServiceByIdPublic(serviceId: number): Promise<Service> {
+    try {
+        const response = await axiosInstance.get(`/photographers/services/${serviceId}`)
+        return response.data
+    } catch (error) {
+        console.error('Error fetching service by id:', error)
+        throw error
+    }
+}
+
+
 export async function createService(service: Service): Promise<Service> {
     try {
         const response = await axiosInstance.post('/photographers/me/services', service)

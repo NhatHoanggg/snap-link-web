@@ -17,7 +17,7 @@ export default function BookingHeader({ photographer }: { photographer: Photogra
         <div className="flex items-center space-x-4">
           <div className="relative w-32 h-32 rounded-full border-2 border-white overflow-hidden">
             <Image
-              src={photographer.avatar_url || "/avatar-placeholder.jpg"}
+              src={photographer.avatar || "/images/my-avatar.jpg"}
               alt="Avatar"
               fill
               className="object-cover"

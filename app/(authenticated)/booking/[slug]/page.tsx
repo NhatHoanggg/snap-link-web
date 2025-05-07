@@ -18,8 +18,10 @@ import {
 } from "@/services/photographer.service";
 import { useParams } from "next/navigation";
 import BookingHeader from "@/components/booking/booking-header";
+import { useRouter } from "next/navigation";
 
 export default function BookingForm() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
 
@@ -87,28 +89,14 @@ export default function BookingForm() {
     try {
       console.log('Form data before submit:', formData);
       
+      localStorage.setItem('bookingData', JSON.stringify(formData));
+      
       toast({
         title: "Đặt lịch thành công",
         description: "Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.",
       });
-
-      // const resetFormData = {
-      //   photographer_id: 0,
-      //   booking_date: new Date().toISOString(),
-      //   location_id: 0,
-      //   custom_location: "",
-      //   quantity: 1,
-      //   service_id: 0,
-      //   shooting_type: "outdoor",
-      //   concept: "",
-      //   illustration_url: "",
-      //   availability_id: 0,
-      // };
-
-      // setFormData(resetFormData);
-      // console.log('Form data after reset:', resetFormData);
       
-      // setStep(1);
+      router.push("/booking/success");
       
     } catch (error) {
       console.error("Error submitting booking:", error);
