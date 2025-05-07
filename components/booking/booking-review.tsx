@@ -1,13 +1,16 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { CalendarIcon, Camera, Home, MapPin, Package } from "lucide-react"
+import { CalendarIcon, Camera, Home, MapPin } from "lucide-react"
 import Image from "next/image"
 import type { BookingFormData } from "@/services/booking.service"
+import type { Service } from "@/services/services.service"
+import { getServiceById } from "@/services/services.service"
 
 interface BookingReviewProps {
   formData: BookingFormData
@@ -16,32 +19,28 @@ interface BookingReviewProps {
 }
 
 export function BookingReview({ formData, prevStep, handleSubmit }: BookingReviewProps) {
-  // Giả lập dữ liệu gói dịch vụ
-  const packageDetails = {
-    basic: {
-      name: "Gói Cơ Bản",
-      price: 1500000,
-    },
-    standard: {
-      name: "Gói Tiêu Chuẩn",
-      price: 2500000,
-    },
-    premium: {
-      name: "Gói Cao Cấp",
-      price: 4000000,
-    },
-  }
+  const [service, setService] = useState<Service | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Giả lập dữ liệu dịch vụ
-  const serviceDetails = {
-    "1": "Gói 1: Chụp ảnh Hội An",
-    "2": "Gói 2: Chụp Chill Chill 3",
-    "3": "Gói 3: Chụp ảnh cưới",
-    "4": "Gói 4: Chụp ảnh gia đình",
-  }
+  useEffect(() => {
+    const fetchService = async () => {
+      if (formData.service_id) {
+        try {
+          setIsLoading(true)
+          const data = await getServiceById(formData.service_id)
+          setService(data)
+        } catch (error) {
+          console.error("Error fetching service:", error)
+        } finally {
+          setIsLoading(false)
+        }
+      }
+    }
 
-  const selectedPackage = formData.package ? packageDetails[formData.package as keyof typeof packageDetails] : null
-  const selectedService = formData.service ? serviceDetails[formData.service as keyof typeof serviceDetails] : null
+    fetchService()
+  }, [formData.service_id])
+
+  const totalPrice = service ? service.price * (formData.quantity || 1) : 0
 
   return (
     <>
@@ -54,7 +53,7 @@ export function BookingReview({ formData, prevStep, handleSubmit }: BookingRevie
             <CalendarIcon className="h-5 w-5 mr-3 mt-0.5 text-primary" />
             <div>
               <h3 className="font-medium">Ngày chụp</h3>
-              <p>{formData.date ? format(formData.date, "EEEE, dd MMMM yyyy", { locale: vi }) : "Chưa chọn"}</p>
+              <p>{format(new Date(formData.booking_date), "EEEE, dd MMMM yyyy", { locale: vi })}</p>
             </div>
           </div>
 
@@ -64,14 +63,23 @@ export function BookingReview({ formData, prevStep, handleSubmit }: BookingRevie
             <Camera className="h-5 w-5 mr-3 mt-0.5 text-primary" />
             <div>
               <h3 className="font-medium">Dịch vụ</h3>
-              <p>{selectedService || "Chưa chọn"}</p>
+              {isLoading ? (
+                <p>Đang tải...</p>
+              ) : (
+                <>
+                  <p>{service?.title}</p>
+                  {formData.quantity > 1 && (
+                    <p className="text-sm text-muted-foreground">Số lượng: {formData.quantity} người</p>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
           <Separator />
 
           <div className="flex items-start">
-            {formData.shootingType === "studio" ? (
+            {formData.shooting_type === "studio" ? (
               <Home className="h-5 w-5 mr-3 mt-0.5 text-primary" />
             ) : (
               <MapPin className="h-5 w-5 mr-3 mt-0.5 text-primary" />
@@ -79,30 +87,7 @@ export function BookingReview({ formData, prevStep, handleSubmit }: BookingRevie
             <div>
               <h3 className="font-medium">Loại chụp & Địa điểm</h3>
               <p>
-                {formData.shootingType === "studio" ? "Studio" : "Outdoor"} - {formData.location}
-                {formData.locationDetails && ` (${formData.locationDetails})`}
-              </p>
-              {formData.locationNotes && <p className="text-sm text-muted-foreground mt-1">{formData.locationNotes}</p>}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="flex items-start">
-            <Package className="h-5 w-5 mr-3 mt-0.5 text-primary" />
-            <div>
-              <h3 className="font-medium">Gói dịch vụ</h3>
-              <p>
-                {selectedPackage ? (
-                  <>
-                    {selectedPackage.name} -{" "}
-                    {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-                      selectedPackage.price,
-                    )}
-                  </>
-                ) : (
-                  "Chưa chọn"
-                )}
+                {formData.shooting_type === "studio" ? "Studio" : "Outdoor"} - {formData.custom_location}
               </p>
             </div>
           </div>
@@ -114,29 +99,42 @@ export function BookingReview({ formData, prevStep, handleSubmit }: BookingRevie
             <p className="text-sm">{formData.concept || "Không có"}</p>
           </div>
 
-          {formData.illustrations && formData.illustrations.length > 0 && (
+          {formData.illustration_url && (
             <>
               <Separator />
               <div>
                 <h3 className="font-medium mb-2">Hình ảnh minh họa</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {formData.illustrations.map((url: string, index: number) => (
-                    <div key={index} className="aspect-square rounded-md overflow-hidden border">
-                      <Image
-                        src={url || "/placeholder.svg"}
-                        alt={`Illustration ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
+                <div className="relative w-48 h-48 rounded-md overflow-hidden border">
+                  <Image
+                    src={formData.illustration_url}
+                    alt="Illustration"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
                 </div>
               </div>
             </>
           )}
+
+          <Separator />
+
+          <div className="flex items-start">
+            <div className="w-full">
+              <h3 className="font-medium">Tổng tiền</h3>
+              <p className="text-lg font-bold text-primary">
+                {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(totalPrice)}
+              </p>
+              {formData.quantity > 1 && (
+                <p className="text-sm text-muted-foreground">
+                  ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service?.price || 0)} x {formData.quantity} người)
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between mt-6">
         <Button variant="outline" onClick={prevStep}>
           Quay lại
         </Button>

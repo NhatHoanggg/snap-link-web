@@ -85,24 +85,31 @@ export default function BookingForm() {
 
   const handleSubmit = async () => {
     try {
+      console.log('Form data before submit:', formData);
+      
       toast({
         title: "Đặt lịch thành công",
         description: "Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.",
       });
 
-      setFormData({
-        photographer_id: 0,
-        booking_date: new Date().toISOString(),
-        location_id: 0,
-        custom_location: "",
-        quantity: 1,
-        service_id: 0,
-        shooting_type: "outdoor",
-        concept: "",
-        illustration_url: "",
-        availability_id: 0,
-      });
-      setStep(1);
+      // const resetFormData = {
+      //   photographer_id: 0,
+      //   booking_date: new Date().toISOString(),
+      //   location_id: 0,
+      //   custom_location: "",
+      //   quantity: 1,
+      //   service_id: 0,
+      //   shooting_type: "outdoor",
+      //   concept: "",
+      //   illustration_url: "",
+      //   availability_id: 0,
+      // };
+
+      // setFormData(resetFormData);
+      // console.log('Form data after reset:', resetFormData);
+      
+      // setStep(1);
+      
     } catch (error) {
       console.error("Error submitting booking:", error);
       toast({
@@ -160,10 +167,10 @@ export default function BookingForm() {
             )}
             {step === 4 && (
               <BookingStep4
-                // formData={formData}
-                // updateFormData={updateFormData}
-                // nextStep={nextStep}
-                // prevStep={prevStep}
+                formData={formData}
+                updateFormData={updateFormData}
+                nextStep={nextStep}
+                prevStep={prevStep}
               />
             )}
             {step === 5 && (
