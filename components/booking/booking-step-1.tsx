@@ -1,86 +1,90 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { format, isSameDay, parseISO } from "date-fns"
-import { vi } from "date-fns/locale"
-import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@/components/ui/button"
-import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarIcon, Loader2 } from "lucide-react"
-import { getMockAvailabilities } from "@/services/availability.service"
-import type { BookingFormData } from "@/services/booking.service"
-import type { Availability } from "@/services/availability.service"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from "react";
+import { format, isSameDay, parseISO } from "date-fns";
+import { vi } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import {
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { getAvailabilitiesBySlug } from "@/services/availability.service";
+import type { BookingFormData } from "@/services/booking.service";
+import type { Availability } from "@/services/availability.service";
+import { useParams } from "next/navigation";
+import dayjs from 'dayjs';
+
+
+import toast, { Toaster, ToastBar } from "react-hot-toast";
 
 interface BookingStep1Props {
-  formData: BookingFormData
-  updateFormData: (data: Partial<BookingFormData>) => void
-  nextStep: () => void
+  formData: BookingFormData;
+  updateFormData: (data: Partial<BookingFormData>) => void;
+  nextStep: () => void;
 }
 
-export function BookingStep1({ formData, updateFormData, nextStep }: BookingStep1Props) {
-  const [availabilities, setAvailabilities] = useState<Availability[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const { toast } = useToast()
+export function BookingStep1({
+  formData,
+  updateFormData,
+  nextStep,
+}: BookingStep1Props) {
+  const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const params = useParams();
+  const slug = params.slug as string;
 
   useEffect(() => {
     const fetchAvailabilities = async () => {
       try {
-        setIsLoading(true)
-        const data = await getMockAvailabilities()
-        setAvailabilities(data)
+        setIsLoading(true);
+        const data = await getAvailabilitiesBySlug(slug);
+        setAvailabilities(data);
       } catch (error) {
-        console.error("Error fetching availabilities:", error)
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải lịch làm việc. Vui lòng thử lại sau.",
-          variant: "destructive",
-        })
+        console.error("Error fetching availabilities:", error);
+        toast.error("Không thể tải lịch làm việc. Vui lòng thử lại sau.");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchAvailabilities()
-  }, [toast])
+    fetchAvailabilities();
+  }, [toast, slug]);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       const isAvailable = availabilities.some(
-        (availability) => isSameDay(parseISO(availability.available_date), date) && availability.status === "available",
-      )
+        (availability) =>
+          isSameDay(parseISO(availability.available_date), date) &&
+          availability.status === "available"
+      );
 
       if (isAvailable) {
-        console.log('Selected date:', date)
-        updateFormData({ booking_date: date.toISOString() })
+        console.log("Selected date:", date);
+        const selectedAvailability = availabilities.find((a) =>
+          isSameDay(parseISO(a.available_date), date)
+        );
+        updateFormData({
+          availability_id: selectedAvailability?.availability_id,
+          booking_date: dayjs(date).format('YYYY-MM-DD'),
+        });
+        toast.success(`Ngày đã được chọn.
+          ${selectedAvailability?.available_date}
+          `);
       } else {
-        toast({
-          title: "Không khả dụng",
-          description: "Ngày này không có sẵn để đặt lịch.",
-          variant: "destructive",
-        })
+        toast.error("Ngày này không có sẵn để đặt lịch.");
       }
     } else {
-      updateFormData({ booking_date: new Date().toISOString() })
+      updateFormData({
+        availability_id: undefined,
+        booking_date: new Date().toISOString(),
+      });
     }
-  }
-
-  // Tùy chỉnh hiển thị ngày trong calendar
-//   const dayClassName = (date: Date) => {
-//     const availability = availabilities.find((a) => isSameDay(parseISO(a.available_date), date))
-
-//     if (!availability) return ""
-
-//     if (availability.status === "available") {
-//       return "bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium"
-//     }
-
-//     if (availability.status === "booked") {
-//       return "bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 line-through opacity-70"
-//     }
-
-//     return ""
-//   }
+  };
 
   return (
     <>
@@ -94,60 +98,41 @@ export function BookingStep1({ formData, updateFormData, nextStep }: BookingStep
           </div>
         ) : (
           <div className="space-y-4">
-            {/* <Calendar
+            <Calendar
               mode="single"
-              selected={formData.date}
+              selected={
+                formData.booking_date
+                  ? new Date(formData.booking_date)
+                  : undefined
+              }
               onSelect={handleDateSelect}
-              className="rounded-md border mx-auto"
+              month={
+                formData.booking_date
+                  ? new Date(formData.booking_date)
+                  : undefined
+              }
+              className="rounded-md border"
               modifiers={{
                 available: (date) =>
-                  availabilities.some((a) => isSameDay(parseISO(a.available_date), date) && a.status === "available"),
+                  availabilities.some(
+                    (a) =>
+                      isSameDay(parseISO(a.available_date), date) &&
+                      a.status === "available"
+                  ),
                 booked: (date) =>
-                  availabilities.some((a) => isSameDay(parseISO(a.available_date), date) && a.status === "booked"),
+                  availabilities.some(
+                    (a) =>
+                      isSameDay(parseISO(a.available_date), date) &&
+                      a.status === "booked"
+                  ),
               }}
               modifiersClassNames={{
-                available: "available-day",
-                booked: "booked-day",
+                available:
+                  "bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium",
+                booked:
+                  "bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 line-through opacity-70",
               }}
-              components={{
-                Day: ({ date, ...props }) => {
-                  const isAvailable = availabilities.some(
-                    (a) => isSameDay(parseISO(a.available_date), date) && a.status === "available",
-                  )
-                  const isBooked = availabilities.some(
-                    (a) => isSameDay(parseISO(a.available_date), date) && a.status === "booked",
-                  )
-
-                  return (
-                    <div
-                      {...props}
-                      className={`${props.className} ${isAvailable ? dayClassName(date) : ""} ${
-                        isBooked ? dayClassName(date) : ""
-                      }`}
-                    >
-                      {date.getDate()}
-                    </div>
-                  )
-                },
-              }}
-            /> */}
-            <Calendar
-                mode="single"
-                selected={formData.booking_date ? new Date(formData.booking_date) : undefined}
-                onSelect={handleDateSelect}
-                month={formData.booking_date ? new Date(formData.booking_date) : undefined}
-                className="rounded-md border"
-                modifiers={{
-                  available: (date) =>
-                    availabilities.some((a) => isSameDay(parseISO(a.available_date), date) && a.status === "available"),
-                  booked: (date) =>
-                    availabilities.some((a) => isSameDay(parseISO(a.available_date), date) && a.status === "booked"),
-                }}
-                modifiersClassNames={{
-                  available: "bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium",
-                  booked: "bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 line-through opacity-70",
-                }}
-              />
+            />
 
             <div className="flex items-center justify-center space-x-8 mt-6">
               <div className="flex items-center">
@@ -165,7 +150,13 @@ export function BookingStep1({ formData, updateFormData, nextStep }: BookingStep
                 <div className="flex items-center">
                   <CalendarIcon className="h-5 w-5 mr-2 text-primary" />
                   <span className="font-medium">Ngày đã chọn:</span>
-                  <span className="ml-2">{format(new Date(formData.booking_date), "EEEE, dd MMMM yyyy", { locale: vi })}</span>
+                  <span className="ml-2">
+                    {format(
+                      new Date(formData.booking_date),
+                      "EEEE, dd MMMM yyyy",
+                      { locale: vi }
+                    )}
+                  </span>
                 </div>
               </div>
             )}
@@ -174,10 +165,38 @@ export function BookingStep1({ formData, updateFormData, nextStep }: BookingStep
       </CardContent>
       <CardFooter className="flex justify-between">
         <div></div>
-        <Button onClick={nextStep} disabled={!formData.booking_date || isLoading}>
+        <Button
+          onClick={nextStep}
+          disabled={
+            !formData.booking_date || 
+            isLoading || 
+            !availabilities.some(
+              (a) =>
+                isSameDay(parseISO(a.available_date), new Date(formData.booking_date)) &&
+                a.status === "available"
+            )
+          }
+        >
           Tiếp theo
         </Button>
       </CardFooter>
+      {/* <Toaster /> */}
+      <Toaster position="bottom-right">
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== "loading" && (
+                  <button onClick={() => toast.dismiss(t.id)}>X</button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
+      ;
     </>
-  )
+  );
 }
