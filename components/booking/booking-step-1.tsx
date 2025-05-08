@@ -196,7 +196,6 @@ export function BookingStep1({
           </ToastBar>
         )}
       </Toaster>
-      ;
     </>
   );
 }

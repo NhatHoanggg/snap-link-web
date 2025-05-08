@@ -6,8 +6,7 @@ import { vi } from "date-fns/locale"
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { CalendarIcon, Camera, Home, MapPin } from "lucide-react"
-import Image from "next/image"
+import { CalendarIcon, Camera, Home, MapPin, Loader2 } from "lucide-react"
 import type { BookingFormData } from "@/services/booking.service"
 import type { Service } from "@/services/services.service"
 import { getServiceByIdPublic } from "@/services/services.service"
@@ -16,9 +15,10 @@ interface BookingReviewProps {
   formData: BookingFormData
   prevStep: () => void
   handleSubmit: () => void
+  isSubmitting: boolean
 }
 
-export function BookingReview({ formData, prevStep, handleSubmit }: BookingReviewProps) {
+export function BookingReview({ formData, prevStep, handleSubmit, isSubmitting }: BookingReviewProps) {
   const [service, setService] = useState<Service | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -94,51 +94,57 @@ export function BookingReview({ formData, prevStep, handleSubmit }: BookingRevie
 
           <Separator />
 
-          <div>
-            <h3 className="font-medium mb-2">Concept</h3>
-            <p className="text-sm">{formData.concept || "Không có"}</p>
-          </div>
-
-          {formData.illustration_url && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="font-medium mb-2">Hình ảnh minh họa</h3>
-                <div className="relative w-48 h-48 rounded-md overflow-hidden border">
-                  <Image
-                    src={formData.illustration_url}
-                    alt="Illustration"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                </div>
+          {service && (
+            <div className="flex items-start">
+              <div className="w-full">
+                <h3 className="font-medium">Tổng tiền</h3>
+                <p className="text-lg font-bold text-primary">
+                  {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(totalPrice)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)} x {formData.quantity} người)
+                </p>
               </div>
-            </>
+            </div>
           )}
 
           <Separator />
 
-          <div className="flex items-start">
-            <div className="w-full">
-              <h3 className="font-medium">Tổng tiền</h3>
-              <p className="text-lg font-bold text-primary">
-                {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(totalPrice)}
-              </p>
-              {formData.quantity > 1 && (
-                <p className="text-sm text-muted-foreground">
-                  ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service?.price || 0)} x {formData.quantity} người)
-                </p>
-              )}
+          {formData.concept && (
+            <div>
+              <h3 className="font-medium mb-2">Concept</h3>
+              <p className="text-sm">{formData.concept}</p>
             </div>
-          </div>
+          )}
+
+          {formData.illustration_url && (
+            <div className="mt-4">
+              <h3 className="font-medium mb-2">Hình ảnh tham khảo</h3>
+              <div className="relative aspect-video rounded-lg overflow-hidden">
+                <img
+                  src={formData.illustration_url}
+                  alt="Concept illustration"
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between mt-6">
+      <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={prevStep}>
           Quay lại
         </Button>
-        <Button onClick={handleSubmit}>Xác nhận đặt lịch</Button>
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Đang xử lý...
+            </>
+          ) : (
+            'Xác nhận đặt lịch'
+          )}
+        </Button>
       </CardFooter>
     </>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
@@ -11,26 +11,17 @@ import { Separator } from "@/components/ui/separator"
 import { ConfettiEffect } from "@/components/booking/confetti-effect"
 import { CalendarCheck, Camera, Home, MapPin, ArrowLeft, Share2, Clock, Phone, Mail } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-
-// Mock data
-const mockBookingData = {
-  booking_id: "BK-" + Math.floor(Math.random() * 10000),
-  booking_date: new Date(),
-  service: {
-    title: "Gói Chụp Ảnh Cưới Premium",
-    price: 5000000,
-    quantity: 2
-  },
-  shooting_type: "studio",
-  location: "Studio Hội An - 19 Đặng Huy Trứ",
-  concept: "Phong cách vintage với tông màu ấm áp, kết hợp giữa truyền thống và hiện đại",
-  total_price: 10000000
-}
+import { getBookingByCode, type BookingResponse } from "@/services/booking.service"
+import { getServiceByIdPublic, type Service } from "@/services/services.service"
 
 export function BookingSuccessContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [showConfetti, setShowConfetti] = useState(true)
+  const [booking, setBooking] = useState<BookingResponse | null>(null)
+  const [service, setService] = useState<Service | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,12 +31,45 @@ export function BookingSuccessContent() {
     return () => clearTimeout(timer)
   }, [])
 
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      try {
+        const code = searchParams.get('code')
+        if (!code) {
+          router.push('/')
+          return
+        }
+
+        const bookingData = await getBookingByCode(code)
+        setBooking(bookingData)
+
+        if (bookingData.service_id) {
+          const serviceData = await getServiceByIdPublic(bookingData.service_id)
+          setService(serviceData)
+        }
+      } catch (error) {
+        console.error('Error fetching booking data:', error)
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải thông tin đặt lịch. Vui lòng thử lại sau.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchBookingData()
+  }, [searchParams, router, toast])
+
   const handleShare = async () => {
+    if (!booking) return
+
     if (navigator.share) {
       try {
         await navigator.share({
           title: "Đặt lịch chụp ảnh thành công",
-          text: `Tôi đã đặt lịch chụp ảnh vào ngày ${format(mockBookingData.booking_date, "dd/MM/yyyy", { locale: vi })}. Dịch vụ: ${mockBookingData.service.title}`,
+          text: `Tôi đã đặt lịch chụp ảnh vào ngày ${format(new Date(booking.booking_date), "dd/MM/yyyy", { locale: vi })}. Dịch vụ: ${service?.title || 'Chụp ảnh'}`,
           url: window.location.href,
         })
       } catch (error) {
@@ -58,6 +82,28 @@ export function BookingSuccessContent() {
         description: "Đường dẫn đã được sao chép vào clipboard",
       })
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container px-4 py-16 mx-auto">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Đang tải thông tin đặt lịch...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!booking) {
+    return (
+      <div className="container px-4 py-16 mx-auto">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="text-3xl font-bold mb-4">Không tìm thấy thông tin đặt lịch</h1>
+          <Button onClick={() => router.push('/')}>Trở về trang chủ</Button>
+        </div>
+      </div>
+    )
   }
 
   const containerVariants = {
@@ -119,7 +165,7 @@ export function BookingSuccessContent() {
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Chi tiết đặt lịch</h2>
                 <div className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-sm font-medium">
-                  {mockBookingData.booking_id}
+                  {booking.booking_code}
                 </div>
               </div>
             </CardHeader>
@@ -140,7 +186,7 @@ export function BookingSuccessContent() {
                   <CalendarCheck className="h-5 w-5 mr-3 mt-0.5 text-primary" />
                   <div>
                     <h3 className="font-medium">Ngày chụp</h3>
-                    <p>{format(mockBookingData.booking_date, "EEEE, dd MMMM yyyy", { locale: vi })}</p>
+                    <p>{format(new Date(booking.booking_date), "EEEE, dd MMMM yyyy", { locale: vi })}</p>
                   </div>
                 </motion.div>
 
@@ -150,15 +196,17 @@ export function BookingSuccessContent() {
                   <Camera className="h-5 w-5 mr-3 mt-0.5 text-primary" />
                   <div>
                     <h3 className="font-medium">Dịch vụ</h3>
-                    <p>{mockBookingData.service.title}</p>
-                    <p className="text-sm text-muted-foreground">Số lượng: {mockBookingData.service.quantity} người</p>
+                    <p>{service?.title || 'Chụp ảnh'}</p>
+                    {booking.quantity > 1 && (
+                      <p className="text-sm text-muted-foreground">Số lượng: {booking.quantity} người</p>
+                    )}
                   </div>
                 </motion.div>
 
                 <Separator />
 
                 <motion.div variants={itemVariants} className="flex items-start">
-                  {mockBookingData.shooting_type === "studio" ? (
+                  {booking.shooting_type === "studio" ? (
                     <Home className="h-5 w-5 mr-3 mt-0.5 text-primary" />
                   ) : (
                     <MapPin className="h-5 w-5 mr-3 mt-0.5 text-primary" />
@@ -166,31 +214,48 @@ export function BookingSuccessContent() {
                   <div>
                     <h3 className="font-medium">Loại chụp & Địa điểm</h3>
                     <p>
-                      {mockBookingData.shooting_type === "studio" ? "Studio" : "Outdoor"} - {mockBookingData.location}
+                      {booking.shooting_type === "studio" ? "Studio" : "Outdoor"} - {booking.custom_location}
                     </p>
                   </div>
                 </motion.div>
 
                 <Separator />
 
-                <motion.div variants={itemVariants} className="flex items-start">
-                  <div className="w-full">
-                    <h3 className="font-medium">Tổng tiền</h3>
-                    <p className="text-lg font-bold text-primary">
-                      {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(mockBookingData.total_price)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(mockBookingData.service.price)} x {mockBookingData.service.quantity} người)
-                    </p>
-                  </div>
-                </motion.div>
+                {service && (
+                  <motion.div variants={itemVariants} className="flex items-start">
+                    <div className="w-full">
+                      <h3 className="font-medium">Tổng tiền</h3>
+                      <p className="text-lg font-bold text-primary">
+                        {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price * booking.quantity)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)} x {booking.quantity} người)
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
 
                 <Separator />
 
-                <motion.div variants={itemVariants}>
-                  <h3 className="font-medium mb-2">Concept</h3>
-                  <p className="text-sm">{mockBookingData.concept}</p>
-                </motion.div>
+                {booking.concept && (
+                  <motion.div variants={itemVariants}>
+                    <h3 className="font-medium mb-2">Concept</h3>
+                    <p className="text-sm">{booking.concept}</p>
+                  </motion.div>
+                )}
+
+                {booking.illustration_url && (
+                  <motion.div variants={itemVariants} className="mt-4">
+                    <h3 className="font-medium mb-2">Hình ảnh minh họa</h3>
+                    <div className="relative aspect-video rounded-lg overflow-hidden">
+                      <img
+                        src={booking.illustration_url}
+                        alt="Concept illustration"
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
 
               <motion.div

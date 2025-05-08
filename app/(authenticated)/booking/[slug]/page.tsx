@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { BookingStepIndicator } from "@/components/booking/booking-step-indicator";
 import type { BookingFormData } from "@/services/booking.service";
+import { createBooking } from "@/services/booking.service";
+import { uploadImage } from "@/services/cloudinary.service";
 
 import {
   photographerService,
@@ -24,6 +26,7 @@ export default function BookingForm() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const params = useParams();
   const [formData, setFormData] = useState<BookingFormData>({
@@ -87,16 +90,23 @@ export default function BookingForm() {
 
   const handleSubmit = async () => {
     try {
+      setIsSubmitting(true);
       console.log('Form data before submit:', formData);
       
-      localStorage.setItem('bookingData', JSON.stringify(formData));
+      if (formData.illustration_url && formData.illustration_url.startsWith('data:')) {
+        const response = await fetch(formData.illustration_url);
+        const blob = await response.blob();
+        const file = new File([blob], 'illustration.jpg', { type: 'image/jpeg' });
+        
+        const imageUrl = await uploadImage(file, 'photos');
+        formData.illustration_url = imageUrl;
+      }
       
-      toast({
-        title: "Đặt lịch thành công",
-        description: "Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.",
-      });
-      
-      router.push("/booking/success");
+      const response = await createBooking(formData);
+      console.log('Booking response:', response);
+
+      router.push(`/booking/success?code=${response.data.booking_code}`);
+    
       
     } catch (error) {
       console.error("Error submitting booking:", error);
@@ -105,6 +115,9 @@ export default function BookingForm() {
         description: "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
         variant: "destructive",
       });
+      router.push("/booking/fail");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,6 +179,7 @@ export default function BookingForm() {
                 formData={formData}
                 prevStep={prevStep}
                 handleSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
               />
             )}
           </motion.div>

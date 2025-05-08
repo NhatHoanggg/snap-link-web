@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { FileUploader } from "./file-uploader"
 import { Lightbulb, X } from "lucide-react"
-import Image from "next/image"
 import type { BookingFormData } from "@/services/booking.service"
 
 interface BookingStep4Props {
@@ -19,55 +18,74 @@ interface BookingStep4Props {
 
 export function BookingStep4({ formData, updateFormData, nextStep, prevStep }: BookingStep4Props) {
   const [files, setFiles] = useState<File[]>([])
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
+  useEffect(() => {
+    // Create object URLs for preview
+    const urls = files.map(file => URL.createObjectURL(file))
+    setPreviewUrls(urls)
+
+    // Cleanup function to revoke object URLs
+    return () => {
+      urls.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [files])
 
   const handleFilesAdded = (newFiles: File[]) => {
-    const updatedFiles = [...files, ...newFiles]
-    setFiles(updatedFiles)
-
-    // Chuyển đổi File[] thành URL[] để lưu trong formData
-    const fileUrls = updatedFiles.map((file) => URL.createObjectURL(file))
-    updateFormData({ illustration_url: fileUrls[0] }) // Chỉ lưu URL đầu tiên
+    setFiles(newFiles)
+    
+    // Convert the first file to base64 for preview
+    if (newFiles.length > 0) {
+      const file = newFiles[0]
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        updateFormData({ illustration_url: reader.result as string })
+      }
+      reader.readAsDataURL(file)
+    } else {
+      updateFormData({ illustration_url: "" })
+    }
   }
 
   const handleRemoveFile = (index: number) => {
-    const updatedFiles = [...files]
-    updatedFiles.splice(index, 1)
+    const updatedFiles = files.filter((_, i) => i !== index)
     setFiles(updatedFiles)
-
-    const fileUrls = updatedFiles.map((file) => URL.createObjectURL(file))
-    updateFormData({ illustration_url: fileUrls[0] || "" }) // Chỉ lưu URL đầu tiên hoặc xóa nếu không còn file
+    
+    if (updatedFiles.length === 0) {
+      updateFormData({ illustration_url: "" })
+    } else {
+      // Convert the first remaining file to base64
+      const file = updatedFiles[0]
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        updateFormData({ illustration_url: reader.result as string })
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   return (
     <>
       <CardHeader>
-        <CardTitle className="text-2xl">Concept và hình ảnh minh họa</CardTitle>
+        <CardTitle className="text-2xl">Thêm concept và hình ảnh tham khảo</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3">
-          <Label htmlFor="concept">Concept chụp ảnh</Label>
-          <Textarea
-            id="concept"
-            placeholder="Mô tả concept, ý tưởng chụp ảnh của bạn..."
-            value={formData.concept}
-            onChange={(e) => updateFormData({ concept: e.target.value })}
-            rows={5}
-          />
-        </div>
-
-        <div className="p-4 bg-muted rounded-md flex items-start">
-          <Lightbulb className="h-5 w-5 mr-2 mt-0.5 text-amber-500" />
-          <div className="text-sm">
-            <p className="font-medium">Gợi ý:</p>
-            <p className="text-muted-foreground mt-1">
-              Mô tả chi tiết concept, phong cách, màu sắc, bối cảnh, trang phục, đạo cụ... mà bạn mong muốn. Điều này sẽ
-              giúp chúng tôi chuẩn bị tốt nhất cho buổi chụp của bạn.
-            </p>
+          <Label htmlFor="concept">Concept</Label>
+          <div className="relative">
+            <Lightbulb className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+            <Textarea
+              id="concept"
+              placeholder="Mô tả concept chụp ảnh của bạn..."
+              className="pl-10"
+              value={formData.concept}
+              onChange={(e) => updateFormData({ concept: e.target.value })}
+            />
           </div>
         </div>
 
         <div className="space-y-3">
-          <Label>Hình ảnh minh họa (nếu có)</Label>
+          <Label>Hình ảnh tham khảo</Label>
           <FileUploader onFilesAdded={handleFilesAdded} />
 
           {files.length > 0 && (
@@ -75,11 +93,10 @@ export function BookingStep4({ formData, updateFormData, nextStep, prevStep }: B
               {files.map((file, index) => (
                 <div key={index} className="relative group">
                   <div className="aspect-square rounded-md overflow-hidden border">
-                    <Image
-                      src={URL.createObjectURL(file) || "/placeholder.svg"}
+                    <img
+                      src={previewUrls[index]}
                       alt={`Illustration ${index + 1}`}
-                      fill
-                      className="object-cover"
+                      className="object-cover w-full h-full"
                     />
                   </div>
                   <Button
