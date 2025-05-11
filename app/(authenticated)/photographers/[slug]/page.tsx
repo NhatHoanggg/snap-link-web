@@ -78,7 +78,7 @@ export default function PhotographerDetail() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Photographer not found</h1>
-          <p className="text-muted-foreground mb-4">The photographer you&apos;re looking for doesn&apos;t exist.</p>
+          <p className="text-muted-foreground mb-4">The photographer you are looking for doesn&apos;t exist.</p>
           <Button asChild>
             <Link href="/photographers">Back to Photographers</Link>
           </Button>
@@ -141,7 +141,6 @@ export default function PhotographerDetail() {
               {photographer.social_media_links?.tiktok && (
                 <Button variant="outline" size="icon" className="bg-white/10 hover:bg-white/20 border-white/20">
                   <Link href={photographer.social_media_links.tiktok} target="_blank">
-                    {/* <tiktok className="h-4 w-4" /> */}
                     <Image src="/media/tiktok.svg" alt="tiktok" width={20} height={20} />
                   </Link>
                 </Button>
@@ -149,7 +148,6 @@ export default function PhotographerDetail() {
               {photographer.social_media_links?.zalo && (
                 <Button variant="outline" size="icon" className="bg-white/10 hover:bg-white/20 border-white/20">
                   <Link href={photographer.social_media_links.zalo} target="_blank">
-                    {/* <zalo className="h-4 w-4" /> */}
                     <Image src="/media/zalo.svg" alt="zalo" width={20} height={20} />
                   </Link>
                 </Button>
@@ -157,7 +155,6 @@ export default function PhotographerDetail() {
               {photographer.social_media_links?.linkedin && (
                 <Button variant="outline" size="icon" className="bg-white/10 hover:bg-white/20 border-white/20">
                   <Link href={photographer.social_media_links.linkedin} target="_blank">
-                    {/* <linkedin className="h-4 w-4" /> */}
                     <Image src="/media/linkedin.svg" alt="linkedin" width={20} height={20} />
                   </Link>
                 </Button>
@@ -165,7 +162,6 @@ export default function PhotographerDetail() {
               {photographer.social_media_links?.twitter && (
                 <Button variant="outline" size="icon" className="bg-white/10 hover:bg-white/20 border-white/20">
                   <Link href={photographer.social_media_links.twitter} target="_blank">
-                    {/* <twitter className="h-4 w-4" /> */}
                     <Image src="/media/twitter.svg" alt="twitter" width={20} height={20} />
                   </Link>
                 </Button>
@@ -173,7 +169,6 @@ export default function PhotographerDetail() {
               {photographer.social_media_links?.youtube && (
                 <Button variant="outline" size="icon" className="bg-white/10 hover:bg-white/20 border-white/20">
                   <Link href={photographer.social_media_links.youtube} target="_blank">
-                    {/* <Youtube className="h-4 w-4" /> */}
                     <Image src="/media/youtube.svg" alt="Youtube" width={20} height={20} />
                   </Link>
                 </Button>
@@ -181,12 +176,10 @@ export default function PhotographerDetail() {
               {photographer.social_media_links?.reddit && (
                 <Button variant="outline" size="icon" className="bg-white/10 hover:bg-white/20 border-white/20">
                   <Link href={photographer.social_media_links.reddit} target="_blank">
-                    {/* <reddit className="h-4 w-4" /> */}
                     <Image src="/media/reddit.svg" alt="reddit" width={20} height={20} />
                   </Link>
                 </Button>
               )}
-
             </div>
           </div>
         </div>
@@ -245,25 +238,28 @@ export default function PhotographerDetail() {
             </TabsList>
             <TabsContent value="photos" className="mt-4">
               {photographer.featured_photos && photographer.featured_photos.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {photographer.featured_photos.map((photo) => (
-                    <div key={photo.featured_photo_id} className="relative aspect-square rounded-lg overflow-hidden group">
+                    <div
+                      key={photo.featured_photo_id}
+                      className="relative aspect-square rounded-lg overflow-hidden group shadow-md"
+                    >
                       <Image
                         src={photo.image_url || "/placeholder.svg"}
                         alt={photo.title}
                         fill
-                        className="object-cover transition-transform group-hover:scale-105"
+                        className="object-cover transition-transform duration-300 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
-                        <h3 className="text-white font-medium">{photo.title}</h3>
-                        <p className="text-white/80 text-sm">{photo.description}</p>
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 flex flex-col justify-end">
+                        <h3 className="text-white text-lg font-semibold">{photo.title}</h3>
+                        <p className="text-white/90 text-sm line-clamp-2">{photo.description}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No featured photos available
+                  Không có ảnh nổi bật
                 </div>
               )}
             </TabsContent>
@@ -336,4 +332,4 @@ export default function PhotographerDetail() {
       </div>
     </div>
   )
-} 
+}

@@ -22,3 +22,7 @@ export function formatDate(dateString: string): string {
     year: "numeric",
   }).format(date)
 }
+
+export function formatLocation(location: string): string {
+  return location.split(",").map(part => part.trim()).join(", ")
+}
