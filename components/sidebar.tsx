@@ -44,7 +44,7 @@ const customerItems = [
   },
   {
     title: "My Bookings",
-    href: "/booking",
+    href: "/my-booking",
     icon: CalendarCheck,
   },
   {

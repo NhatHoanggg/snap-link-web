@@ -44,3 +44,8 @@ export async function getBookingByCode(code: string) {
   const response = await axiosInstance.get(`/bookings/${code}`)
   return response.data
 }
+
+export async function getMyBookings() {
+  const response = await axiosInstance.get(`/bookings/me/all`)
+  return response.data
+}
