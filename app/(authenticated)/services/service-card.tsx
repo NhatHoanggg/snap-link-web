@@ -91,7 +91,7 @@ export function ServiceCard({ service, onEdit, onDelete, onUpdate }: ServiceCard
                   <Switch checked={isActive} onCheckedChange={handleToggleActive} />
                 </div>
               </div>
-              <p className="text-muted-foreground line-clamp-2 mb-4">{service.description}</p>
+              <p className="text-muted-foreground line-clamp-2 mb-4 whitespace-pre-line break-words">{service.description}</p>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -134,7 +134,7 @@ export function ServiceCard({ service, onEdit, onDelete, onUpdate }: ServiceCard
                     </div>
                     <div className="grid gap-2">
                       <div className="font-medium">Mô tả:</div>
-                      <p className="text-sm text-muted-foreground">{service.description}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line break-words">{service.description}</p>
                     </div>
                     <div className="grid gap-2">
                       <div className="font-medium">Giá:</div>

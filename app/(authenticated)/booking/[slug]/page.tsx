@@ -40,6 +40,8 @@ export default function BookingForm() {
     concept: "",
     illustration_url: "",
     availability_id: 0,
+    discount_code: "",
+    total_price: 0,
   });
   const { toast } = useToast();
 
@@ -105,7 +107,7 @@ export default function BookingForm() {
       const response = await createBooking(formData);
       console.log('Booking response:', response);
 
-      router.push(`/booking/success?code=${response.data.booking_code}`);
+      router.push(`/booking/success?code=${response.booking_code}`);
     
       
     } catch (error) {
@@ -180,6 +182,7 @@ export default function BookingForm() {
                 prevStep={prevStep}
                 handleSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
+                updateFormData={updateFormData}
               />
             )}
           </motion.div>

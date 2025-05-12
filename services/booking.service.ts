@@ -10,6 +10,8 @@ export interface BookingFormData {
   concept: string
   illustration_url: string
   availability_id: number
+  discount_code: string
+  total_price: number
 }
 
 export interface BookingResponse {
@@ -28,8 +30,10 @@ export interface BookingResponse {
   illustration_url: string
   availability_id: number
   booking_code: string
+  total_price: number
+  discount_code: string
 }
-  
+
 
 export async function createBooking(booking: BookingFormData) {
   const response = await axiosInstance.post('/bookings', booking)

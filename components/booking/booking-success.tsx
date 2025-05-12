@@ -10,14 +10,14 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { ConfettiEffect } from "@/components/booking/confetti-effect"
 import { CalendarCheck, Camera, Home, MapPin, ArrowLeft, Share2, Clock, Phone, Mail } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
 import { getBookingByCode, type BookingResponse } from "@/services/booking.service"
 import { getServiceByIdPublic, type Service } from "@/services/services.service"
+
+import toast, { Toaster, ToastBar } from "react-hot-toast";
 
 export function BookingSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { toast } = useToast()
   const [showConfetti, setShowConfetti] = useState(true)
   const [booking, setBooking] = useState<BookingResponse | null>(null)
   const [service, setService] = useState<Service | null>(null)
@@ -45,17 +45,15 @@ export function BookingSuccessContent() {
 
         if (bookingData.service_id) {
           const serviceData = await getServiceByIdPublic(bookingData.service_id)
+          console.log(serviceData)
           setService(serviceData)
         }
       } catch (error) {
         console.error('Error fetching booking data:', error)
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải thông tin đặt lịch. Vui lòng thử lại sau.",
-          variant: "destructive",
-        })
+        toast.error("Không thể tải thông tin đặt lịch. Vui lòng thử lại sau.")
       } finally {
         setIsLoading(false)
+        toast.success("Đã tải thông tin đặt lịch thành công")
       }
     }
 
@@ -77,10 +75,7 @@ export function BookingSuccessContent() {
       }
     } else {
       navigator.clipboard.writeText(window.location.href)
-      toast({
-        title: "Đã sao chép",
-        description: "Đường dẫn đã được sao chép vào clipboard",
-      })
+      toast.success("Đã sao chép đường dẫn")
     }
   }
 
@@ -224,9 +219,10 @@ export function BookingSuccessContent() {
                 {service && (
                   <motion.div variants={itemVariants} className="flex items-start">
                     <div className="w-full">
-                      <h3 className="font-medium">Tổng tiền</h3>
+                      <h3 className="font-medium">Tổng tiền (chưa áp dụng mã giảm giá)</h3>
                       <p className="text-lg font-bold text-primary">
                         {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price * booking.quantity)}
+                        {/* {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(booking.total_price)} */}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)} x {booking.quantity} người)
@@ -236,6 +232,17 @@ export function BookingSuccessContent() {
                 )}
 
                 <Separator />
+
+                {booking.discount_code && (
+                    <motion.div variants={itemVariants} className="flex items-start">
+                      <div className="w-full">
+                        <h3 className="font-medium">Mã giảm giá</h3>
+                        <p className="text-sm">{booking.discount_code}</p>
+                      </div>
+                    </motion.div>
+                )}
+                <Separator />
+                {/* render sau khi ap dung ma giam gia */}
 
                 {booking.concept && (
                   <motion.div variants={itemVariants}>
@@ -304,6 +311,21 @@ export function BookingSuccessContent() {
           </div>
         </motion.div>
       </motion.div>
+      <Toaster position="bottom-right">
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== "loading" && (
+                  <button onClick={() => toast.dismiss(t.id)}>X</button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
     </div>
   )
 }

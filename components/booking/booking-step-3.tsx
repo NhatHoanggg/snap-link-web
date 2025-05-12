@@ -86,7 +86,7 @@ export function BookingStep3({ formData, updateFormData, nextStep, prevStep }: B
                           {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)}
                         </div>
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{service.description}</p>
+                      <p className="mt-1 text-sm text-muted-foreground whitespace-pre-line break-words">{service.description}</p>
                     </div>
                   </Label>
                 </div>

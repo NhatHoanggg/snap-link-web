@@ -280,7 +280,7 @@ export default function PhotographerDetail() {
                           </div>
                           <div className="flex-1">
                             <h3 className="font-semibold mb-1">{service.title}</h3>
-                            <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
+                            <p className="text-sm text-muted-foreground mb-2 whitespace-pre-line break-words">{service.description}</p>
                             <div className="flex justify-between items-center">
                               <Badge variant="outline" className="bg-primary/10 text-primary">
                                 {formatPrice(service.price)}
@@ -295,7 +295,7 @@ export default function PhotographerDetail() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No services available
+                  Không có dịch vụ nào
                 </div>
               )}
             </TabsContent>

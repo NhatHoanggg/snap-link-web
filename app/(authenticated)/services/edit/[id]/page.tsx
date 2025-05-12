@@ -143,7 +143,7 @@ export default function EditServicePage({ params }: EditServicePageProps) {
           />
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="description">Mô tả</Label>
           <Textarea
             id="description"
@@ -153,6 +153,17 @@ export default function EditServicePage({ params }: EditServicePageProps) {
             placeholder="Nhập mô tả dịch vụ"
             required
             rows={4}
+          />
+        </div> */}
+        <div className="space-y-2">
+          <Label htmlFor="description">Mô tả</Label>
+          <Textarea
+            className="h-48 whitespace-pre-line break-words"
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Nhập mô tả dịch vụ"
           />
         </div>
 
