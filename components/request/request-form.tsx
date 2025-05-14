@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -28,12 +28,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { CreateRequest } from "@/services/request.service";
 import { uploadImage } from "@/services/cloudinary.service";
-import { Loader2, Upload, CheckCircle2 } from "lucide-react";
+import { Loader2, Upload, CheckCircle2, Check, ChevronsUpDown } from "lucide-react";
 import toast, { Toaster, ToastBar } from "react-hot-toast";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+interface Province {
+  name: string;
+  code: number;
+}
 
 interface RequestFormProps {
   selectedDate: Date | null;
@@ -58,6 +77,17 @@ export function RequestForm({
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
+  const [openCityPopover, setOpenCityPopover] = useState(false);
+
+  useEffect(() => {
+    fetch("/data/vietnam.json")
+      .then((res) => res.json())
+      .then((data: Province[]) => {
+        setProvinces(data);
+      });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,15 +256,54 @@ export function RequestForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="city">Thành phố</Label>
-            <Input
-              id="city"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              placeholder="Nhập thành phố..."
-              required
-            />
+            <Label>Thành phố</Label>
+            <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCityPopover}
+                  className="w-full justify-between"
+                >
+                  {selectedProvince?.name || "Chọn thành phố..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Tìm thành phố..." />
+                  <CommandList>
+                    <CommandEmpty>Không tìm thấy thành phố.</CommandEmpty>
+                    <CommandGroup>
+                      {provinces.map((province) => (
+                        <CommandItem
+                          key={province.code}
+                          value={province.name}
+                          onSelect={() => {
+                            setSelectedProvince(province);
+                            setFormData((prev) => ({
+                              ...prev,
+                              city: province.name,
+                            }));
+                            setOpenCityPopover(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedProvince?.code === province.code
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {province.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardContent>
 
@@ -257,7 +326,7 @@ export function RequestForm({
               Yêu cầu của bạn đã được gửi thành công. Bạn muốn làm gì tiếp theo?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex gap-3 ">
+          <DialogFooter className="flex gap-3">
             <Button
               variant="outline"
               onClick={handleGoHome}
