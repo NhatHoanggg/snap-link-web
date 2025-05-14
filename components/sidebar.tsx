@@ -19,6 +19,7 @@ import {
   BookImage,
   Package,
   ReceiptText,
+  Shell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,6 +47,11 @@ const customerItems = [
     title: "My Bookings",
     href: "/my-booking",
     icon: CalendarCheck,
+  },
+  {
+    title: "Request",
+    href: "/request",
+    icon: Shell,
   },
   {
     title: "Profile",

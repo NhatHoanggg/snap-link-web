@@ -5,7 +5,7 @@ import { getBookingByCode } from "@/services/booking.service"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, ImageIcon, MapPin, ArrowLeft } from "lucide-react"
+import { Calendar, Clock, ImageIcon, MapPin, ArrowLeft , CreditCard } from "lucide-react"
 import Image from "next/image"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
@@ -135,9 +135,9 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-3">
+            <div className="grid gap-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>{format(new Date(booking.booking_date), "EEEE, dd/MM/yyyy", { locale: vi })}</span>
@@ -151,7 +151,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                     <span>{booking.custom_location || "Chưa xác định địa điểm"}</span>
                   </div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div>
                     <span className="text-sm text-muted-foreground">Concept</span>
                     <p className="font-medium">{booking.concept}</p>
@@ -163,6 +163,28 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                   <div>
                     <span className="text-sm text-muted-foreground">Số lượng</span>
                     <p className="font-medium">{booking.quantity} người</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Thông tin thanh toán</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Tổng tiền:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+                        booking.total_price
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Ngày đặt:</span>
+                    <span className="font-medium">
+                      {format(new Date(booking.created_at), "dd/MM/yyyy", { locale: vi })}
+                    </span>
                   </div>
                 </div>
               </div>

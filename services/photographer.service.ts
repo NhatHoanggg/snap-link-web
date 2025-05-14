@@ -134,4 +134,28 @@ export const photographerService = {
       throw new Error('An unexpected error occurred');
     }
   },
-}; 
+
+  async getPhotographersByDate(
+    availableDate: string,
+    skip: number = 0,
+    limit: number = 100
+  ): Promise<PhotographersResponse> {
+    try {
+      const params = new URLSearchParams({
+        available_date: availableDate,
+        skip: skip.toString(),
+        limit: limit.toString(),
+      });
+
+      const response = await axios.get<PhotographersResponse>(
+        `${API_URL}/photographers/availability/search?${params.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch photographers by date');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+};
