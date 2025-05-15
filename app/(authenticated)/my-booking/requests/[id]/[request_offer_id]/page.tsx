@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getOfferDetail, type OfferDetailResponse } from "@/services/offer.service"
+import { getOfferDetail, type OfferDetailResponse, changeOfferStatus } from "@/services/offer.service"
 import { format } from "date-fns"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Camera, CheckCircle, Clock, MessageSquare, Package, Tag, AlertCircle } from "lucide-react"
+import { ArrowLeft, Camera, CheckCircle, Clock, MessageSquare, Package, Tag, AlertCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +13,18 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 export default function OfferDetailPage() {
   const params = useParams()
@@ -20,6 +32,7 @@ export default function OfferDetailPage() {
   const [offer, setOffer] = useState<OfferDetailResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
     const fetchOfferDetail = async () => {
@@ -66,6 +79,22 @@ export default function OfferDetailPage() {
       {line}
     </span>
   ))
+
+  const handleStatusChange = async (status: "accepted" | "rejected") => {
+    if (!offer) return;
+    
+    setIsUpdating(true);
+    try {
+      await changeOfferStatus(offer.request_offer_id, { status });
+      toast.success(status === "accepted" ? "Đã chấp nhận đề xuất" : "Đã từ chối đề xuất");
+      router.push(`/my-booking/requests/${params.id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div className="container max-w-5xl mx-auto px-4 py-8">
@@ -228,10 +257,58 @@ export default function OfferDetailPage() {
             <Button variant="outline" onClick={() => router.back()}>
               Quay lại
             </Button>
-            <Button className="gap-2">
-              <CheckCircle className="w-4 h-4" />
-              Chấp nhận đề xuất
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="gap-2">
+                  <XCircle className="w-4 h-4" />
+                  Từ chối
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xác nhận từ chối đề xuất</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bạn có chắc chắn muốn từ chối đề xuất này? Hành động này không thể hoàn tác.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Hủy</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleStatusChange("rejected")}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isUpdating}
+                  >
+                    Xác nhận từ chối
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button className="gap-2" disabled={isUpdating}>
+                  <CheckCircle className="w-4 h-4" />
+                  Chấp nhận đề xuất
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xác nhận chấp nhận đề xuất</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bạn có chắc chắn muốn chấp nhận đề xuất này? 
+                    {/* Sau khi chấp nhận, bạn sẽ được chuyển đến trang thanh toán. */}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Hủy</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleStatusChange("accepted")}
+                    disabled={isUpdating}
+                  >
+                    Xác nhận chấp nhận
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardFooter>
         </Card>
       </div>

@@ -9,13 +9,25 @@ import { ArrowLeft, Eye, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { photographerService } from '@/services/photographer.service';
 import { Button } from '@/components/ui/button';
-import { getOfferDetail, OfferDetailResponse } from '@/services/offer.service';
+import { getOfferDetail, OfferDetailResponse, changeOfferStatus } from '@/services/offer.service';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
 
 export default function RequestDetailPage() {
     const params = useParams();
@@ -26,6 +38,7 @@ export default function RequestDetailPage() {
     const [photographerNames, setPhotographerNames] = useState<{[key: number]: string}>({});
     const [selectedOffer, setSelectedOffer] = useState<OfferDetailResponse | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         const fetchRequest = async () => {
@@ -67,6 +80,22 @@ export default function RequestDetailPage() {
         } catch (err) {
             console.error('Failed to fetch offer details:', err);
             // You might want to show an error toast here
+        }
+    };
+
+    const handleStatusChange = async (offerId: number, status: "accepted" | "rejected") => {
+        setIsUpdating(true);
+        try {
+            await changeOfferStatus(offerId, { status });
+            toast.success(status === "accepted" ? "Đã chấp nhận đề xuất" : "Đã từ chối đề xuất");
+            // Refresh request data
+            const data = await getRequestById(Number(params.id));
+            setRequest(data);
+        } catch (err) {
+            console.error(err);
+            toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -193,18 +222,75 @@ export default function RequestDetailPage() {
                                             <Eye className="w-4 h-4" />
                                             Chi tiết
                                         </Button>
-                                        <Button 
-                                            variant="default" 
-                                            size="sm" 
-                                            className="gap-1"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                // Handle accept offer
-                                            }}
-                                        >
-                                            <Check className="w-4 h-4" />
-                                            Chấp nhận
-                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button 
+                                                    variant="destructive" 
+                                                    size="sm" 
+                                                    className="gap-1"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    disabled={isUpdating || request.status === 'matched'}
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                    Từ chối
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Xác nhận từ chối đề xuất</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Bạn có chắc chắn muốn từ chối đề xuất này? Hành động này không thể hoàn tác.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleStatusChange(offer.request_offer_id, "rejected");
+                                                        }}
+                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                        disabled={isUpdating}
+                                                    >
+                                                        Xác nhận từ chối
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button 
+                                                    variant="default" 
+                                                    size="sm" 
+                                                    className="gap-1"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    disabled={isUpdating || request.status === 'matched'}
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                    Chấp nhận
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Xác nhận chấp nhận đề xuất</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Bạn có chắc chắn muốn chấp nhận đề xuất này?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleStatusChange(offer.request_offer_id, "accepted");
+                                                        }}
+                                                        disabled={isUpdating}
+                                                    >
+                                                        Xác nhận chấp nhận
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
                                 </div>
                             </div>

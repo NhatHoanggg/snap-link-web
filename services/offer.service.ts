@@ -34,7 +34,9 @@ export interface OfferDetailResponse {
     service_thumbnail_url: string;
 }
 
-
+export interface OfferStatus {
+    status: string; // "pending" | "accepted" | "rejected"
+}
 
 
 export const createOffer = async (offer: OfferCreate) => {
@@ -67,6 +69,15 @@ export const getOfferByRequestId = async (request_id: number) => {
 export const getOfferDetail = async (request_offer_id: number) => {
     try {
         const response = await axiosInstance.get(`/requests/offers/${request_offer_id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const changeOfferStatus = async (offer_id: number, status: OfferStatus) => {
+    try {
+        const response = await axiosInstance.patch(`/requests/offers/${offer_id}/status`, status);
         return response.data;
     } catch (error) {
         throw error;
