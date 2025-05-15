@@ -19,7 +19,8 @@ import {
   BookImage,
   Package,
   ReceiptText,
-  Shell
+  Shell,
+  ListTodo 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -75,6 +76,11 @@ const photographerItems = [
     title: "Posts",
     href: "/posts",
     icon: BookImage,
+  },
+  {
+    title: "Requests",
+    href: "/requests",
+    icon: ListTodo,
   },
   {
     title: "My Bookings",

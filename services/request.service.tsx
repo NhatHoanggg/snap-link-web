@@ -1,5 +1,5 @@
 import axiosInstance from './axios'
-
+import { OfferResponse } from './offer.service'
 export interface CreateRequest {
     request_date: string;
     concept: string;
@@ -23,6 +23,7 @@ export interface RequestResponse {
     status: string;
     created_at: string;
     request_code: string;
+    offers: OfferResponse[];
 }
 
 export const createRequest = async (data: CreateRequest) => {
@@ -44,3 +45,38 @@ export const getRequests = async (skip: number = 0, limit: number = 100) => {
     }
 }
 
+export const getRequestById = async (requestId: number) => {
+    try {
+        const response = await axiosInstance.get(`/requests/${requestId}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const getMyRequests = async () => {
+    try {
+        const response = await axiosInstance.get(`/requests/me`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const getRequestByCode = async (requestCode: string) => {
+    try {
+        const response = await axiosInstance.get(`/requests/code/${requestCode}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteRequest = async (requestId: number) => {
+    try {
+        const response = await axiosInstance.delete(`/requests/${requestId}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
