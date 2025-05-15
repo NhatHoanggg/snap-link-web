@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Service } from './services.service';
+import {type Service } from './services.service';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
@@ -110,6 +110,32 @@ export const photographerService = {
       throw new Error('An unexpected error occurred');
     }
   },
+
+  async getPhotographerById(id: number): Promise<Photographer>{
+    try {
+      const response = await axios.get<Photographer>(`${API_URL}/photographers/${id}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch photographer');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  async getPhotographerName(id: number): Promise<string>{
+    try {
+      const response = await axios.get<Photographer>(`${API_URL}/photographers/${id}`);
+      return response.data.full_name;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch photographer');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+
 
   async updatePhotographerProfile(
     photographerId: number,

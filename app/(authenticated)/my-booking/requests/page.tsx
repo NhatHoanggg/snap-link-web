@@ -92,14 +92,14 @@ export default function MyRequestsPage() {
                                         <Badge 
                                             variant="secondary"
                                             className={`${
-                                                request.status === 'pending' ? 'bg-accent text-accent-foreground' : 
-                                                request.status === 'approved' ? 'bg-secondary text-secondary-foreground' : 
+                                                request.status === 'open' ? 'bg-accent text-accent-foreground' : 
+                                                request.status === 'matched' ? 'bg-secondary text-secondary-foreground' : 
                                                 'bg-destructive text-destructive-foreground'
                                             }`}
                                         >
-                                            {request.status === 'pending' ? 'Đang Chờ' :
-                                             request.status === 'approved' ? 'Đã Duyệt' :
-                                             'Từ Chối'}
+                                            {request.status === 'open' ? 'Mở' :
+                                             request.status === 'matched' ? 'Đã Ghép Cặp' :
+                                             'Đã Đóng'}
                                         </Badge>
                                     </td>
                                 </tr>
