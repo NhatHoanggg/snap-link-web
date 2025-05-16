@@ -47,6 +47,23 @@ export interface ChangePasswordData {
   confirm_password: string;
 }
 
+export interface UserProfileResponse {
+  user_id: number;
+  email: string;
+  full_name: string;
+  phone_number: string;
+  role: 'customer' | 'photographer' | 'admin';
+  created_at: string;
+  slug: string;
+  avatar: string;
+  background_image: string | null;
+  is_active: boolean;
+  province: string | null;
+  district: string | null;
+  ward: string | null;
+  address_detail: string | null;
+}  
+
 export const userService = {
   async getProfile(): Promise<UserProfile> {
     try {
@@ -93,4 +110,16 @@ export const userService = {
       throw new Error('An unexpected error occurred');
     }
   },
+
+  async getUserById(userId: number): Promise<UserProfileResponse> {
+    try {
+      const response = await axiosInstance.get<UserProfileResponse>(`/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch user profile');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
 }; 

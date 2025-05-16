@@ -39,9 +39,9 @@ export interface OfferStatus {
 }
 
 
-export const createOffer = async (offer: OfferCreate) => {
+export const createOffer = async (request_id: number, offer: OfferCreate) => {
     try {
-        const response = await axiosInstance.post('/offers', offer);
+        const response = await axiosInstance.post(`requests/${request_id}/offers`, offer);
         return response.data;
     } catch (error) {
         throw error;

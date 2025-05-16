@@ -313,7 +313,7 @@ export default function RequestsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRequests.map((request) => (
-            <Link href={`/my-booking/requests/${request.request_id}`} key={request.request_id}>
+            <Link href={`/requests/${request.request_code}/offer`} key={request.request_id}>
               <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-border hover:border-primary/20">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
