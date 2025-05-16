@@ -24,7 +24,9 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { toast } from "sonner"
+// import { toast } from "sonner"
+import toast, { Toaster, ToastBar } from "react-hot-toast";
+
 
 export default function OfferDetailPage() {
   const params = useParams()
@@ -114,15 +116,24 @@ export default function OfferDetailPage() {
                 variant="outline"
                 className={cn(
                   "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200",
-                  "flex items-center gap-1.5",
+                  "flex items-center gap-1.5",  
                 )}
               >
                 <AlertCircle className="w-3.5 h-3.5" />
-                Đang chờ xác nhận
+                {/* Đang chờ xác nhận  */}
+                <p>
+                  {offer.status === 'rejected' && 'Trạng thái: Từ chối'}
+                  {offer.status === 'matched' && 'Trạng thái: Đã ghép'} 
+                  {offer.status === 'pending' && 'Trạng thái: Đang chờ xác nhận'}
+                </p>
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Trạng thái: {offer.status}</p>
+                <p>
+                  {offer.status === 'rejected' && 'Từ chối'}
+                  {offer.status === 'matched' && 'Đã ghép'} 
+                  {offer.status === 'pending' && 'Đang chờ xác nhận'}
+                </p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -312,6 +323,21 @@ export default function OfferDetailPage() {
           </CardFooter>
         </Card>
       </div>
+      <Toaster position="bottom-right">
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== "loading" && (
+                  <button onClick={() => toast.dismiss(t.id)}>X</button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
     </div>
   )
 }

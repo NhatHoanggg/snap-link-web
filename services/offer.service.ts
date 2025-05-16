@@ -75,9 +75,9 @@ export const getOfferDetail = async (request_offer_id: number) => {
     }
 }
 
-export const changeOfferStatus = async (offer_id: number, status: OfferStatus) => {
+export const changeOfferStatus = async (request_offer_id: number, status: OfferStatus) => {
     try {
-        const response = await axiosInstance.patch(`/requests/offers/${offer_id}/status`, status);
+        const response = await axiosInstance.patch(`/requests/offers/${request_offer_id}/status`, status);
         return response.data;
     } catch (error) {
         throw error;

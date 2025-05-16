@@ -27,7 +27,9 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
+import toast, { Toaster, ToastBar } from "react-hot-toast";
+
 
 export default function RequestDetailPage() {
     const params = useParams();
@@ -83,10 +85,10 @@ export default function RequestDetailPage() {
         }
     };
 
-    const handleStatusChange = async (offerId: number, status: "accepted" | "rejected") => {
+    const handleStatusChange = async (request_offer_id: number, status: "accepted" | "rejected") => {
         setIsUpdating(true);
         try {
-            await changeOfferStatus(offerId, { status });
+            await changeOfferStatus(request_offer_id, { status });
             toast.success(status === "accepted" ? "Đã chấp nhận đề xuất" : "Đã từ chối đề xuất");
             // Refresh request data
             const data = await getRequestById(Number(params.id));
@@ -229,7 +231,7 @@ export default function RequestDetailPage() {
                                                     size="sm" 
                                                     className="gap-1"
                                                     onClick={(e) => e.stopPropagation()}
-                                                    disabled={isUpdating || request.status === 'matched'}
+                                                    disabled={isUpdating || request.status === 'matched' || offer.status == "rejected"}
                                                 >
                                                     <X className="w-4 h-4" />
                                                     Từ chối
@@ -250,7 +252,7 @@ export default function RequestDetailPage() {
                                                             handleStatusChange(offer.request_offer_id, "rejected");
                                                         }}
                                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                        disabled={isUpdating}
+                                                        disabled={isUpdating || request.status === 'matched' || offer.status == "rejected"}
                                                     >
                                                         Xác nhận từ chối
                                                     </AlertDialogAction>
@@ -378,6 +380,21 @@ export default function RequestDetailPage() {
                     )}
                 </DialogContent>
             </Dialog>
+            <Toaster position="bottom-right">
+                {(t) => (
+                <ToastBar toast={t}>
+                    {({ icon, message }) => (
+                    <>
+                        {icon}
+                        {message}
+                        {t.type !== "loading" && (
+                        <button onClick={() => toast.dismiss(t.id)}>X</button>
+                        )}
+                    </>
+                    )}
+                </ToastBar>
+                )}
+            </Toaster>
         </div>
     );
 } 
