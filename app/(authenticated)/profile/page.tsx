@@ -477,8 +477,7 @@ export default function ProfilePage() {
                 profile.social_media_links && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-primary" /> Liên kết mạng
-                      xã hội
+                      <Globe className="h-4 w-4 text-primary" /> Liên kết mạng xã hội
                     </h3>
                     {Object.keys(profile.social_media_links).length > 0 ? (
                       <div className="flex flex-wrap gap-2">
