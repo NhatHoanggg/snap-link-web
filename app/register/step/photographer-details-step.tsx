@@ -1,11 +1,12 @@
 "use client"
 
 import type React from "react"
-
+import { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { getTags, Tag } from "@/services/tags.service"
 
 interface PhotographerDetailsStepProps {
   formData: {
@@ -24,16 +25,19 @@ export default function PhotographerDetailsStep({
   onNext,
   onPrev,
 }: PhotographerDetailsStepProps) {
-  const tagOptions = [
-    "Portrait Photography",
-    "Wedding Photography",
-    "Landscape Photography",
-    "Event Photography",
-    "Fashion Photography",
-    "Product Photography",
-    "Street Photography",
-    "Wildlife Photography",
-  ]
+  const [tagOptions, setTagOptions] = useState<Tag[]>([])
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const tags = await getTags("photographer")
+        setTagOptions(tags)
+      } catch (error) {
+        console.error("Failed to fetch tags:", error)
+      }
+    }
+    fetchTags()
+  }, [])
 
   const handleTagChange = (value: string) => {
     updateFormData({
@@ -54,15 +58,15 @@ export default function PhotographerDetailsStep({
             Photography Specialties
           </Label>
           <div className="grid grid-cols-2 gap-2">
-            {tagOptions.map((option) => (
-              <div key={option} className="flex items-center space-x-2">
+            {tagOptions.map((tag) => (
+              <div key={tag.name} className="flex items-center space-x-2">
                 <Checkbox
-                  id={option}
-                  checked={formData.tags.includes(option)}
-                  onCheckedChange={() => handleTagChange(option)}
+                  id={tag.name}
+                  checked={formData.tags.includes(tag.name)}
+                  onCheckedChange={() => handleTagChange(tag.name)}
                 />
-                <Label htmlFor={option} className="text-sm">
-                  {option}
+                <Label htmlFor={tag.name} className="text-sm">
+                  {tag.name}
                 </Label>
               </div>
             ))}

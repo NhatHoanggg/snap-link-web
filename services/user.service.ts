@@ -24,6 +24,7 @@ export interface UserProfile {
   average_rating: number;
   total_reviews: number;
   total_bookings: number;
+  social_media_links?: { [key: string]: string };
 }
 
 export interface UpdateProfileData {

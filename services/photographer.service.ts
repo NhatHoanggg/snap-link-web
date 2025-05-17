@@ -54,7 +54,7 @@ export interface Photographer {
   is_active: boolean;
   slug: string;
   avatar_url: string;
-  social_media_links: SocialMediaLinks;
+  social_media_links: string;
   tags: string[];
   services: Service[];
   featured_photos: FeaturedPhoto[];
