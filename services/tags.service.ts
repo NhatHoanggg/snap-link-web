@@ -5,7 +5,10 @@ export interface Tag {
     name: string;
 }
 
-export async function getTags(type: string){
-    const response = await axiosInstance.get(`/tags?skip=0&limit=100&type=${type}`)
-    return response.data
+export async function getTags(type: string | null) {
+    const baseUrl = '/tags?skip=0&limit=100';
+    const url = type ? `${baseUrl}&type=${type}` : baseUrl;
+    
+    const response = await axiosInstance.get(url);
+    return response.data;
 }

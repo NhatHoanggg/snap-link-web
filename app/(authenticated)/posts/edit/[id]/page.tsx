@@ -1,13 +1,13 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { X, ImageIcon, TagIcon, MessageSquare, Loader2 } from "lucide-react"
+import { X, Upload, ImageIcon, TagIcon, MessageSquare, Loader2 } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { postsService, type Post, type UpdatePostRequest } from "@/services/posts.service"
+import { getTags, type Tag } from "@/services/tags.service"
+import { uploadImage } from "@/services/cloudinary.service"
 
 // Định nghĩa schema validation
 const formSchema = z.object({
@@ -28,26 +30,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-// Danh sách tag mẫu (trong thực tế có thể lấy từ API)
-const availableTags = [
-  "photography",
-  "travel",
-  "nature",
-  "portrait",
-  "food",
-  "fashion",
-  "art",
-  "music",
-  "technology",
-  "sports",
-  "lifestyle",
-  "animals",
-  "architecture",
-  "beauty",
-  "business",
-  "education",
-]
-
 export default function EditPostPage() {
   const router = useRouter()
   const params = useParams()
@@ -55,7 +37,12 @@ export default function EditPostPage() {
   const [post, setPost] = useState<Post | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [customTag, setCustomTag] = useState("")
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [isLoadingTags, setIsLoadingTags] = useState(false)
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   const {
@@ -80,6 +67,7 @@ export default function EditPostPage() {
       try {
         const postData = await postsService.getPostById(postId)
         setPost(postData)
+        setCurrentImageUrl(postData.image_url)
         setValue("image_url", postData.image_url)
         setValue("caption", postData.caption)
         setValue("tags", postData.tags)
@@ -96,10 +84,59 @@ export default function EditPostPage() {
       }
     }
 
+    const fetchTags = async () => {
+      try {
+        setIsLoadingTags(true)
+        const tags = await getTags(null)
+        setAvailableTags(tags)
+      } catch (error) {
+        console.error("Error fetching tags:", error)
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách tags",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingTags(false)
+      }
+    }
+
     if (postId) {
       fetchPost()
+      fetchTags()
     }
   }, [postId, router, setValue, toast])
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Kiểm tra loại file
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng chọn file hình ảnh",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsUploading(true)
+      const imageUrl = await uploadImage(file, "snaplink")
+      setCurrentImageUrl(imageUrl)
+      setValue("image_url", imageUrl, { shouldValidate: true })
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải lên ảnh. Vui lòng thử lại sau.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const toggleTag = (tag: string) => {
     const currentTags = [...selectedTags]
@@ -180,28 +217,41 @@ export default function EditPostPage() {
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-6">
-          {/* Preview ảnh */}
+          {/* Upload ảnh */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
+            <Label htmlFor="image" className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
-              Hình ảnh hiện tại
+              Hình ảnh
             </Label>
-            <div className="relative rounded-lg overflow-hidden aspect-video">
-              <Image src={post.image_url} alt="Current post image" fill className="object-cover" />
-            </div>
-          </div>
 
-          {/* URL ảnh mới */}
-          <div className="space-y-2">
-            <Label htmlFor="image_url" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" />
-              URL ảnh mới
-            </Label>
-            <Input
-              id="image_url"
-              placeholder="https://example.com/image.jpg"
-              {...register("image_url")}
-            />
+            <div className="grid gap-4">
+              <div className="relative rounded-lg overflow-hidden aspect-video">
+                <Image src={currentImageUrl} alt="Current post image" fill className="object-cover" />
+              </div>
+
+              <div className="flex items-center gap-4">
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                />
+                <Label
+                  htmlFor="image"
+                  className="flex items-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-muted"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )}
+                  <span>{isUploading ? "Đang tải lên..." : "Thay đổi ảnh"}</span>
+                </Label>
+              </div>
+            </div>
             {errors.image_url && <p className="text-sm text-destructive">{errors.image_url.message}</p>}
           </div>
 
@@ -276,16 +326,23 @@ export default function EditPostPage() {
             <div>
               <Label className="text-sm text-muted-foreground mb-2 block">Hoặc chọn từ danh sách có sẵn:</Label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {availableTags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
+                {isLoadingTags ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">Đang tải tags...</span>
+                  </div>
+                ) : (
+                  availableTags.map((tag) => (
+                    <Badge
+                      key={tag.name}
+                      variant={selectedTags.includes(tag.name) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleTag(tag.name)}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))
+                )}
               </div>
             </div>
 
@@ -293,11 +350,11 @@ export default function EditPostPage() {
           </div>
         </CardContent>
 
-        <CardFooter className="flex justify-end gap-2">
+        <CardFooter className="flex justify-end gap-2 mt-4">
           <Button type="button" variant="outline" onClick={() => router.push("/posts")}>
             Hủy
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || isUploading}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

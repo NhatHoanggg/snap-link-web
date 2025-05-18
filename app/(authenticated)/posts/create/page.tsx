@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { useForm } from "react-hook-form"
@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { postsService, type CreatePostRequest } from "@/services/posts.service"
+import { getTags, type Tag } from "@/services/tags.service"
+import { uploadImage } from "@/services/cloudinary.service"
 
 // Định nghĩa schema validation
 const formSchema = z.object({
@@ -28,32 +30,14 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-// Danh sách tag mẫu (trong thực tế có thể lấy từ API)
-const availableTags = [
-  "photography",
-  "travel",
-  "nature",
-  "portrait",
-  "food",
-  "fashion",
-  "art",
-  "music",
-  "technology",
-  "sports",
-  "lifestyle",
-  "animals",
-  "architecture",
-  "beauty",
-  "business",
-  "education",
-]
-
 export default function CreatePostForm() {
   const router = useRouter()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [customTag, setCustomTag] = useState("")
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [isLoadingTags, setIsLoadingTags] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
@@ -74,7 +58,28 @@ export default function CreatePostForm() {
 
   const selectedTags = watch("tags")
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        setIsLoadingTags(true)
+        const tags = await getTags(null)
+        setAvailableTags(tags)
+      } catch (error) {
+        console.error("Error fetching tags:", error)
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách tags",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingTags(false)
+      }
+    }
+
+    fetchTags()
+  }, [toast])
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -88,19 +93,21 @@ export default function CreatePostForm() {
       return
     }
 
-    setIsUploading(true)
-
-    // Tạo URL preview
-    const previewUrl = URL.createObjectURL(file)
-    setImagePreview(previewUrl)
-
-    // Mô phỏng upload ảnh lên server
-    setTimeout(() => {
-      // Trong thực tế, đây là nơi bạn sẽ upload ảnh lên server và nhận về URL
-      const fakeImageUrl = previewUrl
-      setValue("image_url", fakeImageUrl, { shouldValidate: true })
+    try {
+      setIsUploading(true)
+      const imageUrl = await uploadImage(file, "snaplink")
+      setImagePreview(imageUrl)
+      setValue("image_url", imageUrl, { shouldValidate: true })
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải lên ảnh. Vui lòng thử lại sau.",
+        variant: "destructive",
+      })
+    } finally {
       setIsUploading(false)
-    }, 1500)
+    }
   }
 
   const handleRemoveImage = () => {
@@ -196,30 +203,28 @@ export default function CreatePostForm() {
                     </div>
                     <div className="mb-2 text-lg font-medium">Kéo thả hoặc nhấp để tải lên</div>
                     <div className="text-sm text-muted-foreground mb-4">Hỗ trợ JPG, PNG hoặc GIF (tối đa 5MB)</div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                    >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Đang tải lên...
-                        </>
-                      ) : (
-                        "Chọn file"
-                      )}
-                    </Button>
-                    <input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
-                      disabled={isUploading}
-                    />
+                    <div className="flex items-center gap-4">
+                      <input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleImageUpload}
+                        disabled={isUploading}
+                      />
+                      <Label
+                        htmlFor="image"
+                        className="flex items-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-muted"
+                      >
+                        {isUploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4" />
+                        )}
+                        <span>{isUploading ? "Đang tải lên..." : "Chọn ảnh"}</span>
+                      </Label>
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -228,7 +233,7 @@ export default function CreatePostForm() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     className="relative rounded-lg overflow-hidden aspect-video"
                   >
-                    <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
+                    <Image src={imagePreview} alt="Preview" fill className="object-cover" />
                     <Button
                       type="button"
                       size="icon"
@@ -317,16 +322,23 @@ export default function CreatePostForm() {
             <div>
               <Label className="text-sm text-muted-foreground mb-2 block">Hoặc chọn từ danh sách có sẵn:</Label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {availableTags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
+                {isLoadingTags ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">Đang tải tags...</span>
+                  </div>
+                ) : (
+                  availableTags.map((tag) => (
+                    <Badge
+                      key={tag.name}
+                      variant={selectedTags.includes(tag.name) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleTag(tag.name)}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))
+                )}
               </div>
             </div>
 
@@ -334,7 +346,7 @@ export default function CreatePostForm() {
           </div>
         </CardContent>
 
-        <CardFooter className="flex justify-end gap-2">
+        <CardFooter className="flex justify-end gap-2 mt-4">
           <Button type="button" variant="outline" onClick={() => router.push("/posts")}>
             Hủy
           </Button>
