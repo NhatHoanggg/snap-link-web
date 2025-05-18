@@ -18,6 +18,7 @@ export interface Post {
     image_url: string
     caption: string
     created_at: string
+    updated_at: string
     like_count: number
     comment_count: number
     tags: string[]

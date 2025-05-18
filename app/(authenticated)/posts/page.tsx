@@ -5,6 +5,8 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import { format } from "date-fns"
+import { vi } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -257,8 +259,15 @@ export default function PostsManagement() {
                             ))}
                           </div>
                         )}
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          {new Date(post.created_at).toLocaleDateString()}
+                        <div className="mt-2 space-y-1">
+                          <div className="text-xs text-muted-foreground">
+                            Tạo lúc: {format(new Date(post.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
+                          </div>
+                          {post.updated_at && post.updated_at !== post.created_at && (
+                            <div className="text-xs text-muted-foreground">
+                              Cập nhật: {format(new Date(post.updated_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                       <CardFooter className="p-4 pt-0 flex justify-between">
@@ -309,8 +318,15 @@ export default function PostsManagement() {
                                 ))}
                               </div>
                             )}
-                            <div className="mt-2 text-xs text-muted-foreground">
-                              {new Date(post.created_at).toLocaleDateString()}
+                            <div className="mt-2 space-y-1">
+                              <div className="text-xs text-muted-foreground">
+                                Tạo lúc: {format(new Date(post.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
+                              </div>
+                              {post.updated_at && post.updated_at !== post.created_at && (
+                                <div className="text-xs text-muted-foreground">
+                                  Cập nhật: {format(new Date(post.updated_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="flex justify-end gap-2 mt-4">
