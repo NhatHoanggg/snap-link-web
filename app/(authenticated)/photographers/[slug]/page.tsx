@@ -10,12 +10,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MapPin, Star, Loader2, Tag, Globe } from "lucide-react"
 import { photographerService, type Photographer } from "@/services/photographer.service"
+import { checkFollowStatus, followPhotographer, unfollowPhotographer } from "@/services/follow.service"
+import { useAuth } from "@/services/auth"
+import toast, { Toaster, ToastBar } from "react-hot-toast"
 
 export default function PhotographerDetail() {
   const params = useParams()
   const [photographer, setPhotographer] = useState<Photographer | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [isFollowLoading, setIsFollowLoading] = useState(false)
+  const { user, isAuthenticated } = useAuth()
 
   useEffect(() => {
     const fetchPhotographer = async () => {
@@ -25,9 +31,17 @@ export default function PhotographerDetail() {
         const response = await photographerService.getPhotographerBySlug(params.slug as string)
         setPhotographer(response)
         // console.log(response)
+
+        if (isAuthenticated && user) {
+          const followStatus = await checkFollowStatus(response.photographer_id)
+          setIsFollowing(followStatus.is_following)
+          console.log(followStatus)
+        }
+
       } catch (err) {
         setError("Failed to load photographer details. Please try again later.")
         console.error("Error fetching photographer:", err)
+        toast.error("Lỗi khi tải thông tin nhiếp ảnh gia. Vui lòng thử lại sau.")
       } finally {
         setLoading(false)
       }
@@ -53,6 +67,27 @@ export default function PhotographerDetail() {
       photographer.province
     ].filter(Boolean);
     return parts.length > 0 ? parts.join(', ') : "Chưa cập nhật";
+  }
+
+  const handleFollowToggle = async () => {
+    if (!isAuthenticated || !user || !photographer) return;
+    
+    try {
+      setIsFollowLoading(true)
+      if (isFollowing) {
+        await unfollowPhotographer(photographer.photographer_id)
+        setIsFollowing(false)
+        toast.success("Đã hủy theo dõi nhiếp ảnh gia.")
+      } else {
+        await followPhotographer(photographer.photographer_id)
+        setIsFollowing(true)
+        toast.success("Đã theo dõi nhiếp ảnh gia.")
+      }
+    } catch (error) {
+      console.error("Error toggling follow status:", error)
+    } finally {
+      setIsFollowLoading(false)
+    }
   }
 
   if (loading) {
@@ -110,7 +145,22 @@ export default function PhotographerDetail() {
               />
             </div>
             <div className="flex-1 text-white">
-              <h1 className="text-4xl font-bold mb-2">{photographer.full_name}</h1>
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-4xl font-bold">{photographer.full_name}</h1>
+                {isAuthenticated && user && (
+                  <Button
+                    variant={isFollowing ? "secondary" : "default"}
+                    onClick={handleFollowToggle}
+                    disabled={isFollowLoading}
+                    className="min-w-[120px]"
+                  >
+                    {isFollowLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    {isFollowing ? "Đã theo dõi" : "Theo dõi"}
+                  </Button>
+                )}
+              </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-1" />
@@ -305,6 +355,21 @@ export default function PhotographerDetail() {
           </Card>
         </div>
       </div>
+      <Toaster position="bottom-right">
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== "loading" && (
+                  <button onClick={() => toast.dismiss(t.id)}>X</button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
     </div>
   )
 }

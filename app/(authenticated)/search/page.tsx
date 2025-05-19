@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, MapPin, MapPinned, Star, Calendar, Users, Clock, Loader2 } from "lucide-react"
+import { Search, MapPin, MapPinned, Star, Calendar, Users, Clock, Loader2, LayoutGrid, List } from "lucide-react"
 import { photographerService, type Photographer } from "@/services/photographer.service"
 import { useDebounce } from "@/hooks/use-debounce"
 import { formatCurrency } from "@/lib/utils"
@@ -40,7 +40,7 @@ const SearchFilters = ({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, location or specialty..."
+            placeholder="Tìm kiếm theo tên, vị trí hoặc chuyên môn..."
             className="pl-10"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -52,12 +52,12 @@ const SearchFilters = ({
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="rating">Highest Rated</SelectItem>
-              <SelectItem value="price_low">Price: Low to High</SelectItem>
-              <SelectItem value="price_high">Price: High to Low</SelectItem>
-              <SelectItem value="bookings">Most Bookings</SelectItem>
-              <SelectItem value="experience">Most Experience</SelectItem>
-              <SelectItem value="name">Name (A-Z)</SelectItem>
+              <SelectItem value="rating">Đánh giá cao nhất</SelectItem>
+              <SelectItem value="price_low">Giá: Thấp đến cao</SelectItem>
+              <SelectItem value="price_high">Giá: Cao đến thấp</SelectItem>
+              <SelectItem value="bookings">Số lượng đặt lịch</SelectItem>
+              <SelectItem value="experience">Kinh nghiệm</SelectItem>
+              <SelectItem value="name">Tên (A-Z)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -65,13 +65,19 @@ const SearchFilters = ({
 
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium">{totalPhotographers}</span> photographers
+          Có <span className="font-medium">{totalPhotographers}</span> nhiếp ảnh gia được tìm thấy
         </p>
 
         <Tabs value={viewMode} onValueChange={onViewModeChange} className="w-auto">
-          <TabsList className="grid w-[160px] grid-cols-2">
-            <TabsTrigger value="grid">Grid View</TabsTrigger>
-            <TabsTrigger value="list">List View</TabsTrigger>
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="grid">
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Hiển thị theo lưới
+            </TabsTrigger>
+            <TabsTrigger value="list">
+              <List className="h-4 w-4 mr-2" />
+              Hiển thị theo danh sách
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -165,7 +171,7 @@ const PhotographersList = ({
               <CardContent className="p-4">
                 <div className="flex justify-between items-center mb-3">
                   <Badge variant="outline" className="bg-primary/10 text-primary">
-                    {formatPrice(photographer.price_per_hour)}/hour
+                    {formatPrice(photographer.price_per_hour)}/giờ
                   </Badge>
                   {photographer.experience_years > 0 && (
                     <div className="flex items-center text-xs text-muted-foreground">
@@ -249,8 +255,8 @@ const PhotographersList = ({
     return (
       <div className="text-center py-12">
         <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-        <h3 className="text-lg font-medium mb-2">No photographers found</h3>
-        <p className="text-muted-foreground">Try adjusting your search or filters</p>
+        <h3 className="text-lg font-medium mb-2">Không tìm thấy nhiếp ảnh gia</h3>
+        <p className="text-muted-foreground">Hãy điều chỉnh tìm kiếm hoặc bộ lọc</p>
       </div>
     )
   }
@@ -355,7 +361,7 @@ const PhotographerModal = ({
 
             <div className="pt-4">
               <Button asChild className="w-full">
-                <Link href={`/photographers/${photographer.slug}`}>View Full Profile</Link>
+                <Link href={`/photographers/${photographer.slug}`}>Chi tiết</Link>
               </Button>
             </div>
           </div>

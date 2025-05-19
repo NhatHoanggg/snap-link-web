@@ -84,7 +84,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
           <p className="text-muted-foreground mb-6">
             Lịch hẹn bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.
           </p>
-          <Button onClick={() => router.push("/my-booking")}>
+          <Button onClick={() => router.push("/my-booking/bookings")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại danh sách
           </Button>

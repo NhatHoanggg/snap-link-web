@@ -83,16 +83,14 @@ export default function BookingsPage() {
   }
 
   const handleViewDetails = (bookingCode: string) => {
-    window.location.href = `/my-booking/${bookingCode}`
+    window.location.href = `/my-booking/bookings/${bookingCode}`
   }
 
   const handleEdit = (bookingCode: string) => {
-    // TODO: Implement edit functionality
     console.log("Edit booking:", bookingCode)
   }
 
   const handleDelete = (bookingCode: string) => {
-    // TODO: Implement delete functionality
     console.log("Delete booking:", bookingCode)
   }
 
