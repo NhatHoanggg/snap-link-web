@@ -13,14 +13,15 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarCheck,
-  Camera,
   Users,
   BookOpen,
+  Key,
   BookImage,
   Package,
-  ReceiptText,
+  // Camera,
+  // ReceiptText,
+  ListTodo, 
   Shell,
-  ListTodo 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,32 +36,32 @@ import { ModeToggle } from "@/components/mode-toggle"
 
 const customerItems = [
   {
-    title: "Home",
+    title: "Trang chủ",
     href: "/home",
     icon: House,
   },
   {
-    title: "Search",
+    title: "Tìm kiếm",
     href: "/search",
     icon: Search,
   },
   {
-    title: "My Bookings",
+    title: "Đặt lịch",
     href: "/my-booking",
     icon: CalendarCheck,
   },
   {
-    title: "Request",
+    title: "Yêu cầu",
     href: "/request",
     icon: Shell,
   },
   {
-    title: "Profile",
+    title: "Hồ sơ",
     href: "/profile",
     icon: User,
   },
   {
-    title: "Settings",
+    title: "Cài đặt",
     href: "/settings",
     icon: Settings,
   },
@@ -68,47 +69,53 @@ const customerItems = [
 
 const photographerItems = [
   {
-    title: "Home",
+    title: "Trang chủ",
     href: "/home",
     icon: House,
   },
   {
-    title: "Posts",
+    title: "Quản lý",
+    href: "/manage",
+    icon: Key,
+  },
+  {
+    title: "Bài viết",
     href: "/posts",
     icon: BookImage,
   },
   {
-    title: "Requests",
+    title: "Yêu cầu",
     href: "/requests",
     icon: ListTodo,
   },
+  // {
+  //   title: "My Bookings",
+  //   href: "/booking", x
+  //   icon: ReceiptText ,
+  // },
   {
-    title: "My Bookings",
-    href: "/booking",
-    icon: ReceiptText ,
-  },
-  {
-    title: "Services",
-    href: "/services",
+    title: "Dịch vụ",
+    href: "/services", 
     icon: Package ,
   },
   {
-    title: "Schedule",
-    href: "/schedule",
+    title: "Lịch làm việc",
+    href: "/schedule", 
     icon: CalendarCheck ,
   },
+  // {
+  //   title: "My Portfolio",
+  //   href: "/portfolio/featured-photos", x
+  //   icon: Camera,
+  // },
+
   {
-    title: "My Portfolio",
-    href: "/portfolio/featured-photos",
-    icon: Camera,
-  },
-  {
-    title: "Profile",
+    title: "Hồ sơ",
     href: "/profile",
     icon: User,
   },
   {
-    title: "Settings",
+    title: "Cài đặt",
     href: "/settings",
     icon: Settings,
   },
@@ -284,11 +291,11 @@ export function Sidebar({ isCollapsed, onCollapse }: SidebarProps) {
                 )}
               >
                 <LogOut className="h-4 w-4" />
-                {!isCollapsed && "Sign out"}
+                {!isCollapsed && "Đăng xuất"}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className={cn(isCollapsed ? "" : "hidden")}>
-              Sign out
+              Đăng xuất
             </TooltipContent>
           </Tooltip>
         </div>

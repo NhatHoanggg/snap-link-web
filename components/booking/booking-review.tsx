@@ -171,7 +171,7 @@ export function BookingReview({ formData, prevStep, handleSubmit, isSubmitting, 
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between mt-4">
         <Button variant="outline" onClick={prevStep}>
           Quay lại
         </Button>

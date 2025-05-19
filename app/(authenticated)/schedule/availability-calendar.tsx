@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight, CalendarIcon, CheckCircle, XCircle, Trash2, 
 import { getAvailabilities, createAvailability, deleteAvailability } from "@/services/availability.service"
 import type { Availability } from "@/services/availability.service"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
+import toast, { Toaster, ToastBar } from "react-hot-toast"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,6 @@ export function AvailabilityCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(true)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const { toast } = useToast()
 
   console.log(selectedDate)
 
@@ -45,11 +44,7 @@ export function AvailabilityCalendar() {
       setAvailabilities(data)
     } catch (error) {
       console.error("Error fetching availabilities:", error)
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải lịch làm việc. Vui lòng thử lại sau.",
-        variant: "destructive",
-      })
+      toast.error("Không thể tải lịch làm việc. Vui lòng thử lại sau.")
     } finally {
       setIsLoading(false)
     }
@@ -70,19 +65,12 @@ export function AvailabilityCalendar() {
   const handleCreateAvailability = async () => {
     if (selectedDate) {
       try {
-        await createAvailability(format(selectedDate, "yyyy-MM-dd"))
-        await fetchAvailabilities()
-        toast({
-          title: "Thành công",
-          description: "Đã thêm ngày làm việc mới.",
-        })
+        const newAvailability = await createAvailability(format(selectedDate, "yyyy-MM-dd"))
+        setAvailabilities(prev => [...prev, newAvailability])
+        toast.success("Đã thêm ngày làm việc mới.")
       } catch (error) {
         console.error("Error creating availability:", error)
-        toast({
-          title: "Lỗi",
-          description: "Không thể thêm ngày làm việc. Vui lòng thử lại sau.",
-          variant: "destructive",
-        })
+        toast.error("Không thể thêm ngày làm việc. Vui lòng thử lại sau.")
       }
     }
   }
@@ -95,20 +83,13 @@ export function AvailabilityCalendar() {
         )
         if (availability) {
           await deleteAvailability(availability.availability_id)
-          await fetchAvailabilities()
-          toast({
-            title: "Thành công",
-            description: "Đã xóa ngày làm việc.",
-          })
+          setAvailabilities(prev => prev.filter(a => a.availability_id !== availability.availability_id))
+          toast.success("Đã xóa ngày làm việc.")
           setSelectedDate(undefined)
         }
       } catch (error) {
         console.error("Error deleting availability:", error)
-        toast({
-          title: "Lỗi",
-          description: "Không thể xóa ngày làm việc. Vui lòng thử lại sau.",
-          variant: "destructive",
-        })
+        toast.error("Không thể xóa ngày làm việc. Vui lòng thử lại sau.")
       }
     }
   }
@@ -184,6 +165,22 @@ export function AvailabilityCalendar() {
             </Badge>
             <span className="text-sm">Đã đặt</span>
           </div>
+           {/* Add Toaster component at the end of the component */}
+          <Toaster position="bottom-right">
+            {(t) => (
+              <ToastBar toast={t}>
+                {({ icon, message }) => (
+                  <>
+                    {icon}
+                    {message}
+                    {t.type !== "loading" && (
+                      <button onClick={() => toast.dismiss(t.id)}>X</button>
+                    )}
+                  </>
+                )}
+              </ToastBar>
+            )}
+          </Toaster>
         </div>
 
         {selectedDate && (

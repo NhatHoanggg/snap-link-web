@@ -49,3 +49,23 @@ export async function getMyBookings() {
   const response = await axiosInstance.get(`/bookings/me/all`)
   return response.data
 }
+
+export async function getBookingById(id: number) {
+  const response = await axiosInstance.get(`/bookings/${id}`)
+  return response.data
+}
+
+export async function updateBooking(id: number, booking: BookingFormData) {
+  const response = await axiosInstance.put(`/bookings/${id}`, booking)
+  return response.data
+}
+
+export async function updateBookingStatus(id: number, status: string) {
+  const response = await axiosInstance.patch(`/bookings/${id}/status`, { status })
+  return response.data
+}
+
+export async function deleteBooking(id: number) {
+  const response = await axiosInstance.delete(`/bookings/${id}`)
+  return response.data
+}
