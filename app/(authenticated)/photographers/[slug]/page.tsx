@@ -418,8 +418,12 @@ export default function PhotographerDetail() {
                 <CardHeader className="pt-20 pb-6 text-center">
                   <CardTitle className="text-3xl font-bold">{photographer.full_name}</CardTitle>
                   <div className="flex items-center justify-center gap-1 mt-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
+                    {/* <span><MapPin className="h-4 w-4" /></span> */}
                     <span className="text-sm">{formatLocation(photographer)}</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mt-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm">Địa chỉ: {photographer.address_detail}</span>
                   </div>
                   {photographer.average_rating > 0 && (
                     <div className="flex items-center justify-center gap-1 mt-2">

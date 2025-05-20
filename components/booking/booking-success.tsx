@@ -8,12 +8,13 @@ import { vi } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 import { ConfettiEffect } from "@/components/booking/confetti-effect"
-import { CalendarCheck, Camera, Home, MapPin, ArrowLeft, Share2, Clock, Phone, Mail } from "lucide-react"
+import { CalendarCheck, Camera, Home, MapPin, ArrowLeft, Share2, Clock, Phone, Mail, Percent } from "lucide-react"
 import { getBookingByCode, type BookingResponse } from "@/services/booking.service"
 import { getServiceByIdPublic, type Service } from "@/services/services.service"
-
-import toast, { Toaster, ToastBar } from "react-hot-toast";
+import { getSavedDiscounts, type SavedDiscount } from "@/services/discount.service"
+import toast, { Toaster, ToastBar } from "react-hot-toast"
 
 export function BookingSuccessContent() {
   const router = useRouter()
@@ -21,6 +22,7 @@ export function BookingSuccessContent() {
   const [showConfetti, setShowConfetti] = useState(true)
   const [booking, setBooking] = useState<BookingResponse | null>(null)
   const [service, setService] = useState<Service | null>(null)
+  const [discount, setDiscount] = useState<SavedDiscount | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -45,8 +47,22 @@ export function BookingSuccessContent() {
 
         if (bookingData.service_id) {
           const serviceData = await getServiceByIdPublic(bookingData.service_id)
-          console.log(serviceData)
           setService(serviceData)
+
+          // Fetch discount information if there's a discount code
+          if (bookingData.discount_code) {
+            try {
+              const discountResponse = await getSavedDiscounts()
+              const foundDiscount = discountResponse.user_discounts.find(
+                d => d.discount.code === bookingData.discount_code
+              )
+              if (foundDiscount) {
+                setDiscount(foundDiscount)
+              }
+            } catch (error) {
+              console.error('Error fetching discount data:', error)
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching booking data:', error)
@@ -58,7 +74,20 @@ export function BookingSuccessContent() {
     }
 
     fetchBookingData()
-  }, [searchParams, router, toast])
+  }, [searchParams, router])
+
+  // Calculate prices
+  const basePrice = service ? service.price * (booking?.quantity || 1) : 0
+  const discountAmount = discount ? calculateDiscountAmount(basePrice, discount.discount) : 0
+  const totalPrice = basePrice - discountAmount
+
+  function calculateDiscountAmount(price: number, discount: SavedDiscount["discount"]) {
+    if (discount.discount_type === "percent") {
+      return (price * discount.value) / 100
+    } else {
+      return discount.value
+    }
+  }
 
   const handleShare = async () => {
     if (!booking) return
@@ -218,36 +247,53 @@ export function BookingSuccessContent() {
 
                 {service && (
                   <motion.div variants={itemVariants} className="flex items-start">
-                    <div className="w-full">
-                      <h3 className="font-medium">Tổng tiền (chưa áp dụng mã giảm giá)</h3>
-                      <p className="text-lg font-bold text-primary">
-                        {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price * booking.quantity)}
-                        {/* {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(booking.total_price)} */}
-                      </p>
+                    <div className="w-full space-y-2">
+                      <h3 className="font-medium">Chi tiết thanh toán</h3>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Giá gốc:</span>
+                          <span>{new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(basePrice)}</span>
+                        </div>
+
+                        {discount && (
+                          <>
+                            <div className="flex justify-between text-sm text-green-600">
+                              <span className="flex items-center gap-1">
+                                <Percent className="h-3 w-3" />
+                                Giảm giá ({discount.discount.discount_type === "percent" ? `${discount.discount.value}%` : "Cố định"}):
+                              </span>
+                              <span>-{new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(discountAmount)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Badge variant="outline" className="font-normal">
+                                {discount.discount.code}
+                              </Badge>
+                              {/* <span>{discount.discount.description}</span> */}
+                            </div>
+                          </>
+                        )}
+
+                        <Separator className="my-2" />
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>Thành tiền:</span>
+                          <span className="text-primary">
+                            {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(totalPrice)}
+                          </span>
+                        </div>
+                      </div>
                       <p className="text-sm text-muted-foreground">
-                        ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)} x {booking.quantity} người)
+                        ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)} x {booking?.quantity} người)
                       </p>
                     </div>
                   </motion.div>
                 )}
 
-                <Separator />
-
-                {booking.discount_code && (
-                    <motion.div variants={itemVariants} className="flex items-start">
-                      <div className="w-full">
-                        <h3 className="font-medium">Mã giảm giá</h3>
-                        <p className="text-sm">{booking.discount_code}</p>
-                      </div>
-                    </motion.div>
-                )}
-                <Separator />
-                {/* render sau khi ap dung ma giam gia */}
-
-                {booking.concept && (
-                  <motion.div variants={itemVariants}>
-                    <h3 className="font-medium mb-2">Concept</h3>
-                    <p className="text-sm">{booking.concept}</p>
+                {booking?.concept && (
+                  <motion.div variants={itemVariants} className="flex items-start">
+                    <div className="w-full">
+                      <h3 className="font-medium">Concept chụp ảnh</h3>
+                      <p className="text-sm">{booking.concept}</p>
+                    </div>
                   </motion.div>
                 )}
 

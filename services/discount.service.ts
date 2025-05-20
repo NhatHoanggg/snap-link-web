@@ -148,3 +148,13 @@ export async function getSavedDiscounts(): Promise<SavedDiscountResponse> {
         throw new Error("Failed to fetch saved discounts")
     }
 }
+
+export async function validateDiscount(code: string): Promise<Discount> {
+    try {
+        const response = await axiosInstance.post(`/api/user/discounts/validate`, { code })
+        return response.data
+    } catch (error) {
+        console.error("Error validating discount:", error)
+        throw new Error("Failed to validate discount")
+    }
+}
