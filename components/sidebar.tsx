@@ -22,6 +22,7 @@ import {
   // ReceiptText,
   ListTodo, 
   Shell,
+  Aperture,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,9 +47,9 @@ const customerItems = [
     icon: Search,
   },
   {
-    title: "Đặt lịch",
+    title: "Tiện ích",
     href: "/my-booking",
-    icon: CalendarCheck,
+    icon: Aperture,
   },
   {
     title: "Yêu cầu",

@@ -1,48 +1,49 @@
 "use client"
 
 import { useEffect, useState, use } from "react"
-import { getBookingByCode } from "@/services/booking.service"
+import { getBookingByCode, BookingResponse } from "@/services/booking.service"
+import { userService, UserProfileResponse } from "@/services/user.service"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, ImageIcon, MapPin, ArrowLeft , CreditCard } from "lucide-react"
+import { Calendar, Clock, MapPin, ArrowLeft, CreditCard, User } from "lucide-react"
 import Image from "next/image"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
-
-type BookingDetail = {
-  booking_id: number
-  booking_code: string
-  booking_date: string
-  concept: string
-  illustration_url: string
-  shooting_type: string
-  custom_location: string | null
-  status: string
-  total_price: number
-  photographer_id: number
-  service_id: number
-  quantity: number
-  created_at: string
-}
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 export default function BookingDetailPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params)
-  const [booking, setBooking] = useState<BookingDetail | null>(null)
+  const [booking, setBooking] = useState<BookingResponse | null>(null)
+  const [customer, setCustomer] = useState<UserProfileResponse | null>(null)
+  // const [photographer, setPhotographer] = useState<UserProfileResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userLoading, setUserLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    getBookingByCode(code)
-      .then((data) => {
-        setBooking(data)
-      })
-      .catch((error) => {
-        console.error("Error fetching booking:", error)
-      })
-      .finally(() => setLoading(false))
+    const fetchBookingAndUsers = async () => {
+      try {
+        const bookingData = await getBookingByCode(code)
+        setBooking(bookingData)
+        
+        // Fetch user information
+        const [customerData] = await Promise.all([
+          userService.getUserById(bookingData.customer_id),
+          // userService.getUserById(bookingData.photographer_id)
+        ])
+        setCustomer(customerData)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setLoading(false)
+        setUserLoading(false)
+      }
+    }
+
+    fetchBookingAndUsers()
   }, [code])
 
   const getStatusColor = (status: string) => {
@@ -65,7 +66,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
       <div className="container max-w-4xl mx-auto py-8 px-4">
         <Skeleton className="h-8 w-48 mb-8" />
         <div className="grid gap-6">
-          <Skeleton className="h-[300px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
           <div className="space-y-4">
             <Skeleton className="h-6 w-full max-w-[300px]" />
             <Skeleton className="h-6 w-full max-w-[250px]" />
@@ -105,21 +106,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
       </Button>
 
       <div className="grid gap-6">
-        <Card className="overflow-hidden">
-          <div className="relative w-full h-[300px] bg-muted/30">
-            {booking.illustration_url ? (
-              <Image
-                src={booking.illustration_url}
-                alt={booking.concept}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
-              </div>
-            )}
-          </div>
+        <Card>
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
@@ -134,6 +121,17 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                 )}
               </div>
             </div>
+
+            {booking.illustration_url && (
+              <div className="relative w-full h-[300px] bg-muted/30 rounded-lg overflow-hidden mb-6">
+                <Image
+                  src={booking.illustration_url}
+                  alt={booking.concept}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
 
             <div className="grid gap-6">
               <div className="grid md:grid-cols-2 gap-6">
@@ -163,6 +161,29 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                   <div>
                     <span className="text-sm text-muted-foreground">Số lượng</span>
                     <p className="font-medium">{booking.quantity} người</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Thông tin người dùng</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Khách hàng:</span>
+                    </div>
+                    {userLoading ? (
+                      <Skeleton className="h-6 w-48" />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Avatar>
+                          <AvatarImage src={customer?.avatar} />
+                          <AvatarFallback>{customer?.full_name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <p className="font-medium">{customer?.full_name}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

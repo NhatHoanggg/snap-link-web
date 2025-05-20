@@ -822,6 +822,7 @@ export default function DiscountsPage() {
                 {formErrors.max_uses && <p className="text-sm text-red-500">{formErrors.max_uses}</p>}
               </div>
             </div>
+            {/* Date */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Ngày bắt đầu</Label>

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sheet"
 import { getMyBookings, type BookingResponse, updateBookingStatus } from "@/services/booking.service"
 import toast, { Toaster, ToastBar } from "react-hot-toast"
+import Link from "next/link" 
 
 const translateStatus = (status: string) => {
   switch (status) {
@@ -492,6 +493,7 @@ export default function PhotographerBookingsPage() {
           <>
             <div className="space-y-4">
               {currentBookings.map((booking) => (
+                <Link href={`/manage/bookings/${booking.booking_code}`} key={booking.booking_code}>
                 <Card key={booking.booking_id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -618,6 +620,7 @@ export default function PhotographerBookingsPage() {
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               ))}
             </div>
 

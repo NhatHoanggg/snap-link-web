@@ -1,48 +1,46 @@
 "use client"
 
 import { useEffect, useState, use } from "react"
-import { getBookingByCode } from "@/services/booking.service"
+import { getBookingByCode, BookingResponse } from "@/services/booking.service"
+import { photographerService, Photographer } from "@/services/photographer.service"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, ImageIcon, MapPin, ArrowLeft , CreditCard } from "lucide-react"
+import { Calendar, Clock, MapPin, ArrowLeft, CreditCard } from "lucide-react"
 import Image from "next/image"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
-
-type BookingDetail = {
-  booking_id: number
-  booking_code: string
-  booking_date: string
-  concept: string
-  illustration_url: string
-  shooting_type: string
-  custom_location: string | null
-  status: string
-  total_price: number
-  photographer_id: number
-  service_id: number
-  quantity: number
-  created_at: string
-}
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import Link from "next/link"
 
 export default function BookingDetailPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params)
-  const [booking, setBooking] = useState<BookingDetail | null>(null)
+  const [booking, setBooking] = useState<BookingResponse | null>(null)
+  const [photographer, setPhotographer] = useState<Photographer | null>(null)
   const [loading, setLoading] = useState(true)
+  const [photographerLoading, setPhotographerLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    getBookingByCode(code)
-      .then((data) => {
-        setBooking(data)
-      })
-      .catch((error) => {
-        console.error("Error fetching booking:", error)
-      })
-      .finally(() => setLoading(false))
+    const fetchBookingAndPhotographer = async () => {
+      try {
+        const bookingData = await getBookingByCode(code)
+        setBooking(bookingData)
+        
+        // Fetch photographer information
+        const photographerData = await photographerService.getPhotographerById(bookingData.photographer_id)
+        setPhotographer(photographerData)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setLoading(false)
+        setPhotographerLoading(false)
+      }
+    }
+
+    fetchBookingAndPhotographer()
   }, [code])
 
   const getStatusColor = (status: string) => {
@@ -65,7 +63,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
       <div className="container max-w-4xl mx-auto py-8 px-4">
         <Skeleton className="h-8 w-48 mb-8" />
         <div className="grid gap-6">
-          <Skeleton className="h-[300px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
           <div className="space-y-4">
             <Skeleton className="h-6 w-full max-w-[300px]" />
             <Skeleton className="h-6 w-full max-w-[250px]" />
@@ -98,28 +96,14 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
       <Button
         variant="ghost"
         className="mb-8"
-        onClick={() => router.push("/my-booking")}
+        onClick={() => router.push("/my-booking/bookings")}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại danh sách
       </Button>
 
       <div className="grid gap-6">
-        <Card className="overflow-hidden">
-          <div className="relative w-full h-[300px] bg-muted/30">
-            {booking.illustration_url ? (
-              <Image
-                src={booking.illustration_url}
-                alt={booking.concept}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
-              </div>
-            )}
-          </div>
+        <Card>
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
@@ -134,6 +118,17 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                 )}
               </div>
             </div>
+
+            {booking.illustration_url && (
+              <div className="relative w-full h-[300px] bg-muted/30 rounded-lg overflow-hidden mb-6">
+                <Image
+                  src={booking.illustration_url}
+                  alt={booking.concept}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
 
             <div className="grid gap-6">
               <div className="grid md:grid-cols-2 gap-6">
@@ -163,6 +158,34 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                   <div>
                     <span className="text-sm text-muted-foreground">Số lượng</span>
                     <p className="font-medium">{booking.quantity} người</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Thông tin nhiếp ảnh gia</h3>
+                <div className="flex items-center gap-4">
+                  {photographerLoading ? (
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                  ) : (
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={photographer?.avatar} />
+                      <AvatarFallback>{photographer?.full_name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className="space-y-1">
+                    {photographerLoading ? (
+                      <Skeleton className="h-5 w-48" />
+                    ) : (
+                      <>
+                        <Link href={`/photographers/${photographer?.slug}`} className="font-medium">{photographer?.full_name}</Link>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>{photographer?.experience_years} năm kinh nghiệm</span>
+                          <span>•</span>
+                          <span>{photographer?.average_rating.toFixed(1)} ⭐ ({photographer?.total_reviews} đánh giá)</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

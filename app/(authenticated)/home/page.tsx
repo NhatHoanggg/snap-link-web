@@ -1,16 +1,10 @@
 import { Suspense } from "react"
 import PostFeed from "./post-feed"
 import { Skeleton } from "@/components/ui/skeleton"
-// import { AuthModal } from "@/components/auth-modal"
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       <div className="container max-w-4xl mx-auto px-4 py-8">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">For you</h1>
-          {/* <AuthModal /> */}
-        </header>
-
         <Suspense fallback={<FeedSkeleton />}>
           <PostFeed />
         </Suspense>
