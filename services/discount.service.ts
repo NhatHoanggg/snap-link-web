@@ -48,6 +48,19 @@ export interface DiscountResponse {
     discounts: Discount[]
 }
 
+
+export interface SavedDiscount {
+    id: number,
+    user_id: number,
+    discount_id: number,
+    times_used: number,
+    discount: Discount
+}
+export interface SavedDiscountResponse {
+    total: number,
+    user_discounts: SavedDiscount[]
+}
+
 export async function getMyDiscount(): Promise<DiscountResponse> {
     try {
         const response = await axiosInstance.get("/photographer/discounts")
@@ -107,11 +120,30 @@ export async function getPhotographerDiscounts(photographerId: number): Promise<
     }
 }
 
-export async function saveDiscount(discountId: number): Promise<void> {
+// export async function saveDiscount(discountId: number): Promise<void> {
+//     try {
+//         await axiosInstance.post(`/photographer/discounts/${discountId}/save`)
+//     } catch (error) {
+//         console.error("Error saving discount:", error)
+//         throw new Error("Failed to save discount")
+//     }
+// }
+
+export async function saveDiscount(discount_code: string): Promise<void> {
     try {
-        await axiosInstance.post(`/photographer/discounts/${discountId}/save`)
+        await axiosInstance.post(`/api/user/discounts`, { discount_code })
     } catch (error) {
         console.error("Error saving discount:", error)
         throw new Error("Failed to save discount")
+    }
+}
+
+export async function getSavedDiscounts(): Promise<SavedDiscountResponse> {
+    try {
+        const response = await axiosInstance.get(`/api/user/discounts`)
+        return response.data
+    } catch (error) {
+        console.error("Error fetching saved discounts:", error)
+        throw new Error("Failed to fetch saved discounts")
     }
 }

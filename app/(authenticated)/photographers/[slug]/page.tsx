@@ -45,7 +45,7 @@ import {
 import { photographerService, type Photographer } from "@/services/photographer.service"
 import { checkFollowStatus, followPhotographer, unfollowPhotographer } from "@/services/follow.service"
 import { useAuth } from "@/services/auth"
-import { getPhotographerDiscounts, type PhotographerDiscount } from "@/services/discount.service"
+import { getPhotographerDiscounts, type PhotographerDiscount, saveDiscount } from "@/services/discount.service"
 import { format, parseISO, isAfter } from "date-fns"
 import { vi } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -240,8 +240,30 @@ export default function PhotographerDetail() {
     toast.success(`Đã sao chép mã giảm giá ${code} vào clipboard`)
   }
 
-  const handleSaveDiscount = (code: string) => {
-    toast.success(`Đã lưu mã giảm giá ${code}`)
+  const handleSaveDiscount = async (code: string) => {
+    try {
+      // toast.loading(`Đang lưu mã giảm giá ${code}`)
+      await saveDiscount(code)
+      
+      // Update is_saved state for the discount in both lists
+      setDiscounts(prevDiscounts => 
+        prevDiscounts.map(discount => 
+          discount.code === code 
+            ? { ...discount, is_saved: true }
+            : discount
+        )
+      )
+      
+      // If this is the selected discount, update its state too
+      if (selectedDiscount?.code === code) {
+        setSelectedDiscount(prev => prev ? { ...prev, is_saved: true } : null)
+      }
+      
+      toast.success(`Đã lưu mã giảm giá ${code}`)
+    } catch (error) {
+      console.error("Error saving discount:", error)
+      toast.error("Không thể lưu mã giảm giá. Vui lòng thử lại sau.")
+    }
   }
 
   const handleShareProfile = async () => {
@@ -511,79 +533,91 @@ export default function PhotographerDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 px-6">
-                  {activeDiscounts.slice(0, 3).map((discount) => (
-                    <div
-                      key={discount.id}
-                      className="flex items-center justify-between p-4 bg-white dark:bg-background rounded-xl border border-green-100 dark:border-green-900 hover:shadow-md transition-all duration-300"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2.5 rounded-lg ${
-                            discount.discount_type === "percent"
-                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                              : "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                          }`}
-                        >
-                          {discount.discount_type === "percent" ? (
-                            <Percent className="h-5 w-5" />
-                          ) : (
-                            <Tag className="h-5 w-5" />
-                          )}
+                  {activeDiscounts.slice(0, 3).map((discount) => {
+                    const status = getDiscountStatus(discount)
+                    const isActive = status === "active"
+
+                    return (
+                      <div
+                        key={discount.id}
+                        className="flex items-center justify-between p-4 bg-white dark:bg-background rounded-xl border border-green-100 dark:border-green-900 hover:shadow-md transition-all duration-300"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`p-2.5 rounded-lg ${
+                              discount.discount_type === "percent"
+                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                                : "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                            }`}
+                          >
+                            {discount.discount_type === "percent" ? (
+                              <Percent className="h-5 w-5" />
+                            ) : (
+                              <Tag className="h-5 w-5" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{formatDiscountValue(discount)}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{discount.description}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{formatDiscountValue(discount)}</p>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{discount.description}</p>
+                        <div className="flex items-center gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleSaveDiscount(discount.code)}
+                                  disabled={!isActive || discount.is_saved}
+                                >
+                                  <Save className={`h-4 w-4 ${discount.is_saved ? "text-muted-foreground" : ""}`} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {discount.is_saved 
+                                  ? "Đã lưu mã giảm giá" 
+                                  : isActive 
+                                    ? "Lưu mã giảm giá" 
+                                    : "Mã giảm giá không khả dụng"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleCopyDiscountCode(discount.code)}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Sao chép mã</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleViewDiscount(discount)}
+                                >
+                                  <Info className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Xem chi tiết</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                      <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleSaveDiscount(discount.code)}
-                              >
-                                <Save className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Lưu mã</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleCopyDiscountCode(discount.code)}
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Sao chép mã</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleViewDiscount(discount)}
-                              >
-                                <Info className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Xem chi tiết</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                   {activeDiscounts.length > 3 && (
                     <Button
                       variant="ghost"
@@ -848,36 +882,42 @@ export default function PhotographerDetail() {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10"
-                                onClick={() => handleSaveDiscount(selectedDiscount.code)}
-                                disabled={!isActive}
-                              >
-                                <Save className="h-5 w-5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{isActive ? "Sao chép mã" : "Mã giảm giá không khả dụng"}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-10 w-10"
+                                  onClick={() => handleSaveDiscount(selectedDiscount.code)}
+                                  disabled={!isActive || selectedDiscount.is_saved}
+                                >
+                                  <Save className={`h-5 w-5 ${selectedDiscount.is_saved ? "text-muted-foreground" : ""}`} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {selectedDiscount.is_saved 
+                                  ? "Đã lưu mã giảm giá" 
+                                  : isActive 
+                                    ? "Lưu mã giảm giá" 
+                                    : "Mã giảm giá không khả dụng"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
 
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10"
-                                onClick={() => handleCopyDiscountCode(selectedDiscount.code)}
-                                disabled={!isActive}
-                              >
-                                <Copy className="h-5 w-5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{isActive ? "Sao chép mã" : "Mã giảm giá không khả dụng"}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-10 w-10"
+                                  onClick={() => handleCopyDiscountCode(selectedDiscount.code)}
+                                  disabled={!isActive}
+                                >
+                                  <Copy className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{isActive ? "Sao chép mã" : "Mã giảm giá không khả dụng"}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
 
@@ -969,7 +1009,7 @@ export default function PhotographerDetail() {
                         <div className="bg-background dark:bg-muted p-4 rounded-lg flex items-center justify-between mb-4">
                           <code className="font-mono font-semibold text-lg">{discount.code}</code>
                           <div className="flex items-center gap-2">
-                          <TooltipProvider>
+                            <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
@@ -977,12 +1017,18 @@ export default function PhotographerDetail() {
                                     size="icon"
                                     className="h-10 w-10"
                                     onClick={() => handleSaveDiscount(discount.code)}
-                                    disabled={!isActive}
+                                    disabled={!isActive || discount.is_saved}
                                   >
-                                    <Save className="h-5 w-5" />
+                                    <Save className={`h-5 w-5 ${discount.is_saved ? "text-muted-foreground" : ""}`} />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>{isActive ? "Sao chép mã" : "Mã giảm giá không khả dụng"}</TooltipContent>
+                                <TooltipContent>
+                                  {discount.is_saved 
+                                    ? "Đã lưu mã giảm giá" 
+                                    : isActive 
+                                      ? "Lưu mã giảm giá" 
+                                      : "Mã giảm giá không khả dụng"}
+                                </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                             <TooltipProvider>
@@ -993,12 +1039,11 @@ export default function PhotographerDetail() {
                                     size="icon"
                                     className="h-10 w-10"
                                     onClick={() => handleCopyDiscountCode(discount.code)}
-                                    disabled={!isActive}
                                   >
                                     <Copy className="h-5 w-5" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>{isActive ? "Sao chép mã" : "Mã giảm giá không khả dụng"}</TooltipContent>
+                                <TooltipContent>Sao chép mã</TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                             <TooltipProvider>
