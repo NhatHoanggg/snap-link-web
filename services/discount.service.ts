@@ -24,6 +24,25 @@ export interface Discount {
     current_uses: number
 }
 
+export interface PhotographerDiscountListResponse {
+    total: number,
+    discounts: PhotographerDiscount[]
+}
+
+export interface PhotographerDiscount {
+    code: string,
+    description: string,
+    discount_type: "fixed" | "percent",
+    value: number,
+    max_uses: number,
+    valid_from: string,
+    valid_to: string,
+    is_active: boolean,
+    id: number,
+    current_uses: number,
+    is_saved: boolean,
+    times_used: number
+}
 export interface DiscountResponse {
     total: number,
     discounts: Discount[]
@@ -75,5 +94,24 @@ export async function getDiscountById(id: number): Promise<Discount> {
     } catch (error) {
         console.error("Error fetching discount:", error)
         throw new Error("Failed to fetch discount")
+    }
+}
+
+export async function getPhotographerDiscounts(photographerId: number): Promise<PhotographerDiscountListResponse> {
+    try {
+        const response = await axiosInstance.get(`/api/photographers/${photographerId}/discounts`)
+        return response.data
+    } catch (error) {
+        console.error("Error fetching photographer discounts:", error)
+        throw new Error("Failed to fetch photographer discounts")
+    }
+}
+
+export async function saveDiscount(discountId: number): Promise<void> {
+    try {
+        await axiosInstance.post(`/photographer/discounts/${discountId}/save`)
+    } catch (error) {
+        console.error("Error saving discount:", error)
+        throw new Error("Failed to save discount")
     }
 }

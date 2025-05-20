@@ -369,8 +369,13 @@ export default function RequestsPage() {
                 <CardFooter className="pt-2 border-t">
                   <div className="w-full flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-primary">${request.estimated_budget}</span>
+                      <p className="text-muted-foreground">Ngân sách:</p>
+                      <span className="font-semibold text-primary">
+                        {request.estimated_budget.toLocaleString("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        })}
+                      </span>
                     </div>
                     <Button variant="ghost" size="sm" className="text-xs">
                       Xem chi tiết

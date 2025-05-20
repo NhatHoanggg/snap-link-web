@@ -8,6 +8,8 @@ import { Calendar, CheckCircle, Clock, Filter, MapPin, Search, User, XCircle, Ca
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { badgeVariants } from "@/components/ui/badge"
+import { type VariantProps } from "class-variance-authority"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -34,7 +36,6 @@ import {
 } from "@/components/ui/sheet"
 import { getMyBookings, type BookingResponse, updateBookingStatus } from "@/services/booking.service"
 import toast, { Toaster, ToastBar } from "react-hot-toast"
-import Link from "next/link" 
 
 const translateStatus = (status: string) => {
   switch (status) {
@@ -52,9 +53,7 @@ const translateStatus = (status: string) => {
 }
 
 // Helper function to get status badge variant
-type BadgeVariant = "default" | "destructive" | "outline" | "secondary"
-
-const getStatusBadgeVariant = (status: string): BadgeVariant => {
+const getStatusBadgeVariant = (status: string): VariantProps<typeof badgeVariants>["variant"] => {
   switch (status) {
     case "completed":
       return "default"
@@ -63,7 +62,7 @@ const getStatusBadgeVariant = (status: string): BadgeVariant => {
     case "pending":
       return "secondary"
     case "confirmed":
-      return "outline"
+      return "default"
     default:
       return "secondary"
   }
@@ -100,7 +99,6 @@ export default function PhotographerBookingsPage() {
         setBookings(data)
         setFilteredBookings(data)
         console.log(data)
-        // toast.success("Đã tải danh sách đặt lịch thành công")
       } catch (error) {
         console.error("Failed to fetch bookings:", error)
         toast.error("Không thể tải danh sách đặt lịch. Vui lòng thử lại sau.")
@@ -200,6 +198,7 @@ export default function PhotographerBookingsPage() {
   // Handle booking click
   const handleBookingClick = (booking: BookingResponse) => {
     setSelectedBooking(booking)
+    router.push(`/manage/bookings/${booking.booking_code}`)
   }
 
   // Handle status update
@@ -211,19 +210,17 @@ export default function PhotographerBookingsPage() {
       )
       setBookings(updatedBookings)
 
-      // Update the selected booking if it's open
       if (selectedBooking && selectedBooking.booking_id === bookingId) {
         setSelectedBooking({ ...selectedBooking, status: newStatus })
       }
 
-      // Find the booking to get its code
       const updatedBooking = updatedBookings.find(booking => booking.booking_id === bookingId)
-      if (updatedBooking) {
-        toast.success(`${updatedBooking.booking_code} đã được cập nhật thành ${translateStatus(newStatus).toLowerCase()}`)
-      }
+      const bookingCode = updatedBooking?.booking_code || 'Chưa có mã'
+      
+      toast.success(`Đặt lịch #${bookingCode} đã được cập nhật thành ${translateStatus(newStatus).toLowerCase()}`)
     } catch (error) {
       console.error("Failed to update booking status:", error)
-      toast.error("Không thể cập nhật trạng thái. Vui lòng thử lại sau.")
+      toast.error("Không thể cập nhật trạng thái đặt lịch. Vui lòng thử lại sau.")
     }
   }
 
@@ -283,14 +280,6 @@ export default function PhotographerBookingsPage() {
               <p className="text-xs text-green-600/70 dark:text-green-400/70 mt-1">Đã hoàn thành</p>
             </CardContent>
           </Card>
-          {/* <Card className="bg-red-50 dark:bg-red-950/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">Đã hủy</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{cancelledCount}</div>
-            </CardContent>
-          </Card> */}
           <Card className="bg-primary-50 dark:bg-primary-950/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-primary dark:text-primary/90">Doanh thu</CardTitle>
@@ -493,7 +482,6 @@ export default function PhotographerBookingsPage() {
           <>
             <div className="space-y-4">
               {currentBookings.map((booking) => (
-                <Link href={`/manage/bookings/${booking.booking_code}`} key={booking.booking_code}>
                 <Card key={booking.booking_id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -620,7 +608,6 @@ export default function PhotographerBookingsPage() {
                     </div>
                   </CardContent>
                 </Card>
-                </Link>
               ))}
             </div>
 
@@ -690,7 +677,6 @@ export default function PhotographerBookingsPage() {
           </>
         )}
       </div>
-      {/* Add Toaster component at the end of the component */}
       <Toaster position="bottom-right">
         {(t) => (
           <ToastBar toast={t}>

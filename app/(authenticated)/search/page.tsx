@@ -335,12 +335,12 @@ const PhotographerModal = ({
           <div className="space-y-4">
             <div>
               <h3 className="font-medium mb-2">About</h3>
-              <p className="text-sm text-muted-foreground">{photographer.bio}</p>
+              <p className="text-sm text-muted-foreground line-clamp-10 whitespace-pre-line break-words">{photographer.bio}</p>
             </div>
 
             {photographer.featured_photos && photographer.featured_photos.length > 0 && (
               <div>
-                <h3 className="font-medium mb-2">Featured Photos</h3>
+                <h3 className="font-medium mb-2">Ảnh nổi bật</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {photographer.featured_photos.map((photo) => (
                     <div key={photo.featured_photo_id} className="relative h-32 rounded-md overflow-hidden">
