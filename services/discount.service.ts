@@ -54,6 +54,7 @@ export interface SavedDiscount {
     user_id: number,
     discount_id: number,
     times_used: number,
+    photographer_id: number,
     discount: Discount
 }
 export interface SavedDiscountResponse {
