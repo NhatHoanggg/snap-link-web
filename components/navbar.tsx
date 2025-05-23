@@ -38,10 +38,10 @@ export function Navbar() {
   }
 
   const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/about", label: "About" },
-    { href: "/photographers", label: "Photographers" },
-    { href: "/contact", label: "Contact" },
+    { href: "/", label: "Trang chủ" },
+    { href: "/about", label: "Về chúng tôi" },
+    { href: "/photographers", label: "Nhiếp ảnh gia" },
+    { href: "/contact", label: "Liên hệ" },
     // { href: "/register", label: "Register" },
   ]
 
@@ -82,11 +82,11 @@ export function Navbar() {
 
           <div className="hidden md:block space-x-3 items-center">
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link href="/login">Log In</Link>
+              <Link href="/auth/login">Đăng nhập</Link>
             </Button>
 
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link href="/register">Sign Up</Link>
+              <Link href="/auth/register">Đăng ký</Link>
             </Button>
           </div>
 
@@ -121,11 +121,11 @@ export function Navbar() {
             ))}
             <div className="pt-2 flex flex-col gap-2 items-center">
               <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href="/login">Log In</Link>
+                <Link href="/auth/login">Đăng nhập</Link>
               </Button>
 
               <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href="/register">Sign Up</Link>
+                <Link href="/auth/register">Đăng ký</Link>
               </Button>
             </div>
           </nav>

@@ -55,7 +55,7 @@ export default function PhotographerDetailsStep({
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="tags" className="text-sm font-medium">
-            Photography Specialties
+            Chuyên môn
           </Label>
           <div className="grid grid-cols-2 gap-2">
             {tagOptions.map((tag) => (
@@ -75,7 +75,7 @@ export default function PhotographerDetailsStep({
 
         <div className="space-y-2">
           <Label htmlFor="pricePerHour" className="text-sm font-medium">
-            Price per Hour ($)
+            Giá /giờ ($)
           </Label>
           <Input
             id="pricePerHour"
@@ -90,7 +90,7 @@ export default function PhotographerDetailsStep({
 
         <div className="space-y-2">
           <Label htmlFor="experienceYears" className="text-sm font-medium">
-            Years of Experience
+            Năm kinh nghiệm
           </Label>
           <Input
             id="experienceYears"
@@ -106,10 +106,10 @@ export default function PhotographerDetailsStep({
 
       <div className="flex flex-col space-x-2 mt-4 gap-4">
         <Button type="button" variant="outline" className="w-full" onClick={onPrev}>
-          Back
+          Quay lại
         </Button>
         <Button type="submit" className="w-full">
-          Continue
+          Tiếp tục
         </Button>
       </div>
     </form>

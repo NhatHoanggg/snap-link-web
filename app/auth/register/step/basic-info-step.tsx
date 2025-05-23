@@ -54,9 +54,9 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
       <div className="flex items-center justify-between space-x-2">
         <Label htmlFor="role" className="text-sm font-medium">
           {formData.role === "CUSTOMER" ? (
-            <p className="text-sm font-medium">Customer</p>
+            <p className="text-sm font-medium">Khách hàng</p>
           ) : (
-            <p className="text-sm font-medium line-through italic">Customer</p>
+            <p className="text-sm font-medium line-through italic">Khách hàng</p>
           )}
         </Label>
         <Switch
@@ -68,16 +68,16 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
         />
         <Label htmlFor="role" className="text-sm font-medium">
           {formData.role === "PHOTOGRAPHER" ? (
-            <p className="text-sm font-medium">Photographer</p>
+            <p className="text-sm font-medium">Nhiếp ảnh gia</p>
           ) : (
-            <p className="text-sm font-medium line-through italic">Photographer</p>
+            <p className="text-sm font-medium line-through italic">Nhiếp ảnh gia</p>
           )}
         </Label>
       </div>
 
       {/* NAME */}
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
+        <Label htmlFor="name" className="text-sm font-medium">Họ và tên</Label>
         <div className="relative">
           <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           <Input
@@ -85,7 +85,7 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
             value={formData.name}
             onChange={(e) => updateFormData({ name: e.target.value })}
             className="pl-10"
-            placeholder="John Doe"
+            placeholder="Nhập họ và tên"
             required
             readOnly={isNameReadOnly}
           />
@@ -112,7 +112,7 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
 
       {/* PHONE */}
       <div className="space-y-2">
-        <Label htmlFor="phoneNumber" className="text-sm font-medium">Phone Number</Label>
+        <Label htmlFor="phoneNumber" className="text-sm font-medium">Số điện thoại</Label>
         <div className="relative">
           <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           <Input
@@ -120,14 +120,14 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
             value={formData.phoneNumber}
             onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
             className="pl-10"
-            placeholder="+1 (555) 123-4567"
+            placeholder="Nhập số điện thoại"
             required
           />
         </div>
       </div>
 
       <Button type="submit" className="w-full">
-        Continue
+        Tiếp tục
       </Button>
     </form>
   )

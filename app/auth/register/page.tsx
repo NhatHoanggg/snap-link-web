@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { LinkIcon } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
 import { registerCustomer, registerPhotographer } from "@/services/auth.service"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,6 +13,9 @@ import PasswordStep from "./step/password-step"
 import PhotographerDetailsStep from "./step/photographer-details-step"
 import LocationStep from "./step/location-step"
 import FinalStep from "./step/final-step"
+
+import toast, { Toaster, ToastBar } from "react-hot-toast"
+
 
 interface FormData {
   name: string
@@ -34,7 +36,6 @@ interface FormData {
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,19 +76,15 @@ export default function RegisterPage() {
 
   const handleSubmit = async () => {
     if (!formData.agreeToTerms) {
-      toast({
-        title: "Terms and Conditions",
-        description: "Please agree to the terms and conditions",
-        variant: "destructive",
+      toast("Hãy đồng ý với điều khoản và điều kiện của chúng tôi", {
+        icon: "⚠️",
       })
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match",
-        variant: "destructive",
+      toast("Mật khẩu không khớp", {
+        icon: "⚠️",
       })
       return
     }
@@ -108,10 +105,8 @@ export default function RegisterPage() {
           ward: formData.ward,
           address_detail: formData.address_detail,
         })
-        toast({
-          title: "Registration Successful",
-          description: "Your account has been created successfully",
-        })
+        toast.success("Tạo tài khoản thành công")
+
       } else {
         const photographerData = {
           email: formData.email,
@@ -131,20 +126,15 @@ export default function RegisterPage() {
         console.log('Sending photographer data:', photographerData)
         
         await registerPhotographer(photographerData)
-        toast({
-          title: "Registration Successful",
-          description: "Your photographer account has been created successfully",
-        })
+        toast.success(`Tạo tài khoản thành công\nHãy xác thực email để hoàn tất việc đăng ký`)
       }
-      router.push("/login")
+      // router.push("/auth/login")
+      router.push(`/auth/verify-email?email=${formData.email}`)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Registration failed"
+      const errorMessage = error instanceof Error ? error.message : "Đăng ký thất bại"
+      
       setError(errorMessage)
-      toast({
-        title: "Registration Failed",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -211,8 +201,8 @@ export default function RegisterPage() {
               <LinkIcon className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-              <CardDescription className="pt-1 text-muted-foreground">Join SnapLink to start</CardDescription>
+              <CardTitle className="text-2xl font-bold">Tạo tài khoản</CardTitle>
+              <CardDescription className="pt-1 text-muted-foreground">Đăng kí SnapLink</CardDescription>
             </div>
             <StepIndicator currentStep={currentStep} totalSteps={getTotalSteps()} />
           </CardHeader>
@@ -234,6 +224,22 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
       </motion.div>
+
+      <Toaster position="bottom-right">
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== "loading" && (
+                  <button onClick={() => toast.dismiss(t.id)}>X</button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
     </div>
   )
 }

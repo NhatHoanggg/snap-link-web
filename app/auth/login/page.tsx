@@ -3,7 +3,6 @@
 import type React from "react";
 import { useState } from "react";
 import Link from "next/link";
-// import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Eye,
@@ -106,10 +105,10 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <CardTitle className="text-2xl font-bold">
-                    Sign in to SnapLink
+                    SnapLink
                   </CardTitle>
                   <CardDescription className="pt-1 text-muted-foreground">
-                    Welcome back!
+                    Chào mừng trở lại!
                   </CardDescription>
                 </div>
               </CardHeader>
@@ -123,7 +122,7 @@ export default function LoginPage() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium">
-                        Email
+                        Email 
                       </Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -142,7 +141,7 @@ export default function LoginPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="password" className="text-sm font-medium">
-                        Password
+                        Mật khẩu
                       </Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -162,7 +161,7 @@ export default function LoginPage() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                           aria-label={
-                            showPassword ? "Hide password" : "Show password"
+                            showPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"
                           }
                         >
                           {showPassword ? (
@@ -176,13 +175,13 @@ export default function LoginPage() {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign in"}
+                    {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                   </Button>
 
                   <div className="relative flex items-center justify-center">
                     <Separator className="w-full" />
                     <span className="absolute bg-card px-2 text-xs text-muted-foreground">
-                      OR CONTINUE WITH
+                      HOẶC TIẾP TỤC VỚI
                     </span>
                   </div>
 
@@ -217,12 +216,12 @@ export default function LoginPage() {
               </form>
               <CardFooter className="flex justify-center border-t p-6">
                 <p className="text-sm text-muted-foreground">
-                  Don&apos;t have an account?{" "}
+                  Không có tài khoản?{" "}
                   <Link
-                    href="/register"
+                    href="/auth/register"
                     className="font-medium text-primary hover:underline"
                   >
-                    Sign up
+                    Đăng ký
                   </Link>
                 </p>
               </CardFooter>

@@ -61,10 +61,10 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
 
   const getPasswordStrengthText = () => {
     if (passwordStrength === 0) return ""
-    if (passwordStrength <= 25) return "Weak"
-    if (passwordStrength <= 50) return "Fair"
-    if (passwordStrength <= 75) return "Good"
-    return "Strong"
+    if (passwordStrength <= 25) return "Yếu"
+    if (passwordStrength <= 50) return "Trung bình"
+    if (passwordStrength <= 75) return "Khá"
+    return "Mạnh"
   }
 
   const getPasswordStrengthColor = () => {
@@ -81,7 +81,7 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="password" className="text-sm font-medium">
-            Password
+            Mật khẩu
           </Label>
           <div className="relative">
             <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -98,7 +98,7 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -107,7 +107,7 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
           {formData.password && (
             <div className="mt-2 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span>Password strength:</span>
+                <span>Độ mạnh mật khẩu:</span>
                 <span
                   className={
                     passwordStrength > 75
@@ -129,7 +129,7 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
 
         <div className="space-y-2">
           <Label htmlFor="confirmPassword" className="text-sm font-medium">
-            Confirm Password
+            Nhập lại mật khẩu
           </Label>
           <div className="relative">
             <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -146,23 +146,23 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"}
             >
               {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
           {formData.confirmPassword && !passwordsMatch && (
-            <p className="text-xs text-destructive mt-1">Passwords do not match</p>
+            <p className="text-xs text-destructive mt-1">Mật khẩu không khớp</p>
           )}
         </div>
       </div>
 
       <div className="flex flex-col space-x-2 mt-4 gap-4">
         <Button type="button" variant="outline" className="w-full" onClick={onPrev}>
-          Back
+          Quay lại
         </Button>
         <Button type="submit" className="w-full" disabled={!passwordsMatch}>
-          Continue
+          Tiếp tục
         </Button>
       </div>
     </form>

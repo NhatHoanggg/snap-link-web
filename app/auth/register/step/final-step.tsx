@@ -35,16 +35,16 @@ export default function FinalStep({ formData, updateFormData, onSubmit, onPrev, 
             onCheckedChange={(checked) => updateFormData({ agreeToTerms: checked as boolean })}
           />
           <Label htmlFor="terms" className="text-sm">
-            I agree to the{" "}
+            Tôi đồng ý với{" "}
             <Link href="/terms" className="text-primary hover:underline">
-              terms and conditions
+              điều khoản và điều kiện
             </Link>
           </Label>
         </div>
 
         <div className="relative flex items-center justify-center">
           <Separator className="w-full" />
-          <span className="absolute bg-card px-2 text-xs text-muted-foreground">OR CONTINUE WITH</span>
+          <span className="absolute bg-card px-2 text-xs text-muted-foreground">HOẶC TIẾP TỤC VỚI</span>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -59,19 +59,19 @@ export default function FinalStep({ formData, updateFormData, onSubmit, onPrev, 
         </div>
 
         <div className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/login" className="font-medium text-primary hover:underline">
-            Sign in
+          Đã có tài khoản?{" "}
+          <Link href="/auth/login" className="font-medium text-primary hover:underline">
+            Đăng nhập
           </Link>
         </div>
       </div>
 
       <div className="flex flex-col space-x-2 mt-4 gap-4">
         <Button type="button" variant="outline" className="w-full" onClick={onPrev}>
-          Back
+          Quay lại
         </Button>
         <Button type="submit" className="w-full" disabled={isLoading || !formData.agreeToTerms}>
-          {isLoading ? "Creating account..." : "Create account"}
+          {isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
         </Button>
       </div>
     </form>

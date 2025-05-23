@@ -123,3 +123,14 @@ export const registerPhotographer = async (data: PhotographerRegisterData): Prom
     throw new Error('An unexpected error occurred');
   }
 }; 
+
+export async function verifyEmail(email: string, otp: string): Promise<void> {
+  try {
+    await axiosInstance.post('/verify-email', { email, otp });
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to verify email');
+    }
+    throw new Error('An unexpected error occurred');
+  }
+}

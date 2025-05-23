@@ -35,46 +35,46 @@ export default function LocationStep({
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="province" className="text-sm font-medium">
-            Province
+            Tỉnh/Thành phố
           </Label>
           <Input
             id="province"
             value={formData.province}
             onChange={(e) => updateFormData({ province: e.target.value })}
-            placeholder="Enter your province"
+            placeholder="Nhập tỉnh/thành phố của bạn"
             required
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="district" className="text-sm font-medium">
-            District
+            Quận/Huyện
           </Label>
           <Input
             id="district"
             value={formData.district}
             onChange={(e) => updateFormData({ district: e.target.value })}
-            placeholder="Enter your district"
+            placeholder="Nhập quận/huyện của bạn"
             required
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="ward" className="text-sm font-medium">
-            Ward
+            Phường/Xã
           </Label>
           <Input
             id="ward"
             value={formData.ward}
             onChange={(e) => updateFormData({ ward: e.target.value })}
-            placeholder="Enter your ward"
+            placeholder="Nhập phường/xã của bạn"
             required
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="address_detail" className="text-sm font-medium">
-            Detailed Address
+            Địa chỉ chi tiết
           </Label>
           <div className="relative">
             <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -83,7 +83,7 @@ export default function LocationStep({
               value={formData.address_detail}
               onChange={(e) => updateFormData({ address_detail: e.target.value })}
               className="pl-10"
-              placeholder="Enter your detailed address"
+              placeholder="Nhập địa chỉ chi tiết của bạn"
               required
             />
           </div>
@@ -92,10 +92,10 @@ export default function LocationStep({
 
       <div className="flex flex-col space-x-2 mt-4 gap-4">
         <Button type="button" variant="outline" className="w-full" onClick={onPrev}>
-          Back
+          Quay lại
         </Button>
         <Button type="submit" className="w-full">
-          Continue
+          Tiếp tục
         </Button>
       </div>
     </form>
