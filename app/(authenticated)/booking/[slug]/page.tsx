@@ -42,6 +42,7 @@ export default function BookingForm() {
     availability_id: 0,
     discount_code: "",
     total_price: 0,
+    province: "",
   });
   const { toast } = useToast();
 

@@ -134,3 +134,28 @@ export async function verifyEmail(email: string, otp: string): Promise<void> {
     throw new Error('An unexpected error occurred');
   }
 }
+
+export const registerCustomerWithGoogle = async (data: CustomerRegisterData): Promise<RegisterResponse> => {
+  try {
+    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/v1/register/customer`, data);
+    return response.data;
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
+    throw new Error('An unexpected error occurred');
+  }
+};
+
+export const registerPhotographerWithGoogle = async (data: PhotographerRegisterData): Promise<RegisterResponse> => {
+  try {
+    console.log("data -->", data);
+    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/v1/register/photographer`, data);
+    return response.data;
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
+    throw new Error('An unexpected error occurred');
+  }
+}; 

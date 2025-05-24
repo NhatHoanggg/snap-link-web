@@ -32,13 +32,13 @@ export default function GoogleTokenPage() {
           router.push("/home");
         } catch (error) {
           console.error("Error logging in with Google:", error);
-          router.push("/login");
+          router.push("/auth/login");
         }
       };
       handleGoogleLogin();
     } else {
       console.log("No idToken found in session");
-      router.push("/login");
+      router.push("/auth/login");
     }
   }, [session, status, router, loginWithGoogle]);
 

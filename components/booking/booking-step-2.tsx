@@ -7,8 +7,21 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
 import { Camera, Home } from "lucide-react"
 import type { BookingFormData } from "@/services/booking.service"
-// import { useToast } from "@/hooks/use-toast"
 import { Photographer } from "@/services/photographer.service"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useEffect, useState } from "react"
+
+interface Province {
+  code: string
+  name: string
+  name_with_type: string
+}
 
 interface BookingStep2Props {
   formData: BookingFormData
@@ -19,18 +32,38 @@ interface BookingStep2Props {
 }
 
 export function BookingStep2({ formData, updateFormData, nextStep, prevStep, photographer }: BookingStep2Props) {
-  // const { toast } = useToast()
+  const [provinces, setProvinces] = useState<Province[]>([])
+
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await fetch('/data/vietnam.json')
+        const data = await response.json()
+        // Sort provinces by name
+        const sortedProvinces = data.sort((a: Province, b: Province) => 
+          a.name.localeCompare(b.name, 'vi')
+        )
+        setProvinces(sortedProvinces)
+      } catch (error) {
+        console.error('Error loading provinces:', error)
+      }
+    }
+
+    fetchProvinces()
+  }, [])
 
   const handleShootingTypeChange = (value: string) => {
     if (value === "studio") {
       updateFormData({ 
         shooting_type: value as "studio", 
-        custom_location: photographer?.address_detail || "19 Đặng Huy Trứ" 
+        custom_location: photographer?.address_detail,
+        province: photographer?.province,
       })
     } else {
       updateFormData({ 
         shooting_type: value as "outdoor", 
-        custom_location: "" 
+        custom_location: "", 
+        province: "",
       })
     }
   }
@@ -73,6 +106,34 @@ export function BookingStep2({ formData, updateFormData, nextStep, prevStep, pho
               <span className="text-xs text-muted-foreground mt-1">Chọn địa điểm</span>
             </Label>
           </RadioGroup>
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="province">Tỉnh/Thành phố</Label>
+          {formData.shooting_type === "studio" ? (
+            <Input
+              id="province"
+              value={formData.province}
+              readOnly
+              className="w-full"
+            />
+          ) : (
+            <Select
+              value={formData.province}
+              onValueChange={(value) => updateFormData({ province: value })}
+            >
+              <SelectTrigger id="province" className="w-full h-10">
+                <SelectValue placeholder="Chọn tỉnh/thành phố" />
+              </SelectTrigger>
+              <SelectContent>
+                {provinces.map((province) => (
+                  <SelectItem key={province.code} value={province.name}>
+                    {province.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div className="space-y-3">

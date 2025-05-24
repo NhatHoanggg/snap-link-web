@@ -38,7 +38,7 @@ const handler = NextAuth({
           const data = await response.json();
           
           if (!data.exists) {
-            return "/register?email=" + encodeURIComponent(user.email || "") + 
+            return "/auth/google/register?email=" + encodeURIComponent(user.email || "") + 
                "&name=" + encodeURIComponent(user.name || "");
           }
         console.log("user", user);

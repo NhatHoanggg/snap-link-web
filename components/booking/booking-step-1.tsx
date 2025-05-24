@@ -106,11 +106,6 @@ export function BookingStep1({
                   : undefined
               }
               onSelect={handleDateSelect}
-              month={
-                formData.booking_date
-                  ? new Date(formData.booking_date)
-                  : undefined
-              }
               className="rounded-md border"
               modifiers={{
                 available: (date) =>

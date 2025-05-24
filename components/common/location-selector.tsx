@@ -81,7 +81,7 @@ export default function LocationSelector({ onChange }: LocationSelectorProps) {
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
-            className={cn("w-[200px] justify-between", disabled && "opacity-50")}
+            className={cn("justify-between", disabled && "opacity-50")}
           >
             {value?.name || placeholder}
             <ChevronsUpDown className="opacity-50 h-4 w-4" />
@@ -120,7 +120,7 @@ export default function LocationSelector({ onChange }: LocationSelectorProps) {
   }
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col gap-4">
       <Combobox
         items={provinces}
         value={selectedProvince}

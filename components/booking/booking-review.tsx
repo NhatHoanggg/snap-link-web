@@ -52,6 +52,15 @@ export function BookingReview({ formData, prevStep, handleSubmit, isSubmitting, 
   const discountAmount = selectedDiscount ? calculateDiscountAmount(basePrice, selectedDiscount.discount) : 0
   const totalPrice = basePrice - discountAmount
 
+  // Update total_price in formData only when service is loaded and no discount is selected
+  useEffect(() => {
+    if (service && !selectedDiscount && formData.total_price !== basePrice) {
+      updateFormData({
+        total_price: basePrice
+      })
+    }
+  }, [service, selectedDiscount, basePrice, formData.total_price, updateFormData])
+
   function calculateDiscountAmount(price: number, discount: SavedDiscount["discount"]) {
     if (discount.discount_type === "percent") {
       return (price * discount.value) / 100

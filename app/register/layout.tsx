@@ -1,5 +1,5 @@
 import type React from "react"
-// import Image from "next/image"
+import Image from "next/image"
 
 export default function RegisterLayout({
   children,
@@ -8,7 +8,7 @@ export default function RegisterLayout({
 }) {
   return (
     <div className="flex flex-col md:flex-row items-center justify-center min-h-screen">
-      {/* <div className="hidden md:block w-full md:w-2/5 h-screen bg-muted/10">
+      <div className="hidden md:block w-full md:w-2/5 h-screen bg-muted/10">
         <div className="h-full flex items-center justify-center p-6">
           <div className="w-full max-w-md rounded-lg overflow-hidden border border-muted/30 shadow-lg">
             <Image
@@ -21,7 +21,7 @@ export default function RegisterLayout({
             />
           </div>
         </div>
-      </div> */}
+      </div>
       <div className="w-full md:w-3/5">{children}</div>
     </div>
   )

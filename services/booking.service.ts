@@ -12,6 +12,7 @@ export interface BookingFormData {
   availability_id: number
   discount_code: string
   total_price: number
+  province: string
 }
 
 export interface BookingResponse {
@@ -32,6 +33,7 @@ export interface BookingResponse {
   booking_code: string
   total_price: number
   discount_code: string
+  province: string
 }
 
 
