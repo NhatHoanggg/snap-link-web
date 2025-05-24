@@ -32,6 +32,7 @@ import {
   Percent,
   Tag,
   User,
+  MapPinned 
 } from "lucide-react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
@@ -269,11 +270,22 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
 
                       <div className="flex items-start gap-3">
                         <div className="bg-primary/10 p-2 rounded-md">
-                          <Clock className="h-5 w-5 text-primary" />
+                          <MapPin className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Loại chụp:</p>
-                          <p className="font-medium">{request.shooting_type}</p>
+                          <p className="text-sm text-muted-foreground">Tỉnh/Thành phố:</p>
+                          {/* <p className="font-medium">{request.location_text}</p> */}
+                          <p className="font-medium">{request.province}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 p-2 rounded-md">
+                          <MapPinned className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Địa điểm:</p>
+                          <p className="font-medium">{request.location_text}</p>
                         </div>
                       </div>
 
@@ -305,14 +317,14 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
                     </div>
 
                     <div className="space-y-4">
+
                       <div className="flex items-start gap-3">
                         <div className="bg-primary/10 p-2 rounded-md">
-                          <MapPin className="h-5 w-5 text-primary" />
+                          <Clock className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">Địa điểm:</p>
-                          <p className="font-medium">{request.location_text}</p>
-                          <p className="text-sm text-muted-foreground mt-1">{request.city}</p>
+                          <p className="text-sm text-muted-foreground">Loại chụp:</p>
+                          <p className="font-medium">{request.shooting_type}</p>
                         </div>
                       </div>
 

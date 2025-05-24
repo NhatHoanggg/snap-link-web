@@ -72,7 +72,7 @@ export function RequestForm({
     shooting_type: "outdoor",
     illustration_url: "",
     location_text: "",
-    city: "",
+    province: "",
   });
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -191,9 +191,15 @@ export function RequestForm({
             <Label htmlFor="shooting_type">Loại hình chụp ảnh</Label>
             <Select
               value={formData.shooting_type}
-              onValueChange={(value) =>
-                handleSelectChange("shooting_type", value)
-              }
+              onValueChange={(value) => {
+                handleSelectChange("shooting_type", value);
+                if (value === "studio") {
+                  setFormData(prev => ({
+                    ...prev,
+                    location_text: ""
+                  }));
+                }
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn loại hình chụp ảnh" />
@@ -243,17 +249,19 @@ export function RequestForm({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="location_text">Địa điểm chụp</Label>
-            <Input
-              id="location_text"
-              name="location_text"
-              value={formData.location_text}
-              onChange={handleChange}
-              placeholder="Nhập địa điểm chụp..."
-              required
-            />
-          </div>
+          {formData.shooting_type === "outdoor" && (
+            <div className="space-y-2">
+              <Label htmlFor="location_text">Địa điểm chụp</Label>
+              <Input
+                id="location_text"
+                name="location_text"
+                value={formData.location_text}
+                onChange={handleChange}
+                placeholder="Nhập địa điểm chụp..."
+                required
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Thành phố</Label>
@@ -283,7 +291,7 @@ export function RequestForm({
                             setSelectedProvince(province);
                             setFormData((prev) => ({
                               ...prev,
-                              city: province.name,
+                              province: province.name,
                             }));
                             setOpenCityPopover(false);
                           }}

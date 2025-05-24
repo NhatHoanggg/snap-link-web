@@ -7,7 +7,7 @@ export interface CreateRequest {
     shooting_type: string;
     illustration_url: string;
     location_text: string;
-    city: string;
+    province: string;
 }
 
 export interface RequestResponse {
@@ -17,7 +17,7 @@ export interface RequestResponse {
     shooting_type: string;
     illustration_url: string;
     location_text: string;
-    city: string;
+    province: string;
     request_id: number;
     user_id: number;
     status: string;

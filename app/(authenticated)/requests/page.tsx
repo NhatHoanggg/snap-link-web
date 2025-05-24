@@ -14,7 +14,7 @@ import { Slider } from "@/components/ui/slider"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon, Clock, DollarSign, Filter, MapPin, Search, Tag, X } from "lucide-react"
+import { CalendarIcon, Clock, DollarSign, Filter, MapPin, Search, Tag, X, MapPinned } from "lucide-react"
 import Link from "next/link"
 
 export default function RequestsPage() {
@@ -31,7 +31,7 @@ export default function RequestsPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   // Get unique cities from requests
-  const cities = [...new Set(requests.map((request) => request.city))].sort()
+  const cities = [...new Set(requests.map((request) => request.province))].sort()
 
   // Get min and max budget from requests
   const minBudget = requests.length > 0 ? Math.min(...requests.map((request) => Number(request.estimated_budget))) : 0
@@ -75,7 +75,7 @@ export default function RequestsPage() {
 
     // Filter by city
     if (selectedCity && selectedCity !== "all") {
-      result = result.filter((request) => request.city.toLowerCase() === selectedCity.toLowerCase())
+      result = result.filter((request) => request.province.toLowerCase() === selectedCity.toLowerCase())
     }
 
     // Filter by date
@@ -317,7 +317,7 @@ export default function RequestsPage() {
               <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-border hover:border-primary/20">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <Badge variant="outline" className="flex items-center gap-1.5">
+                    <Badge variant="secondary" className="flex items-center gap-1.5">
                       <Tag className="h-3 w-3" />#{request.request_code}
                     </Badge>
                     <Badge variant="outline" className={cn(getStatusColor(request.status))}>
@@ -348,19 +348,19 @@ export default function RequestsPage() {
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                       <div>
-                        <p className="text-muted-foreground">Địa điểm:</p>
+                        <p className="text-muted-foreground">Thành phố:</p>
                         <p className="line-clamp-1">
-                          {request.location_text}
+                            {request.province}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <MapPinned className="h-4 w-4 text-muted-foreground mt-0.5" />
                       <div>
-                        <p className="text-muted-foreground">Thành phố:</p>
+                        <p className="text-muted-foreground">Địa điểm:</p>
                         <p className="line-clamp-1">
-                            {request.city}
+                          {request.location_text}
                         </p>
                       </div>
                     </div>

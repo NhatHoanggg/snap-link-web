@@ -1,7 +1,5 @@
 import axiosInstance from './axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export enum MomoPaymentType {
   CAPTURE_WALLET = "captureWallet",  // Thanh toán qua ví MoMo
   PAY_WITH_ATM = "payWithATM",       // Thanh toán qua ATM
@@ -32,7 +30,7 @@ export interface MomoPaymentResponse {
 
 export const createMomoPayment = async (paymentData: MomoPaymentRequest): Promise<MomoPaymentResponse> => {
   try {
-    const response = await axiosInstance.post(`${API_URL}/api/payment/momo/create`, paymentData);
+    const response = await axiosInstance.post(`/api/payment/momo/create`, paymentData);
     return response.data;
   } catch (error) {
     console.error("Error creating momo payment:", error)
