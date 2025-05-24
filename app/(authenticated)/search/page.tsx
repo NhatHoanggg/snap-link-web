@@ -457,7 +457,7 @@ export default function PhotographersDirectory() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-lg font-medium">Loading photographers...</p>
+        <p className="text-lg font-medium">Đang tải ...</p>
       </div>
     )
   }

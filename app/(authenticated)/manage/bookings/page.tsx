@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { format, parseISO } from "date-fns"
+import { format, parseISO, addDays, subDays, isSameDay } from "date-fns"
 import { vi } from "date-fns/locale"
-import { Calendar, CheckCircle, Clock, Filter, MapPin, Search, User, XCircle, CalendarRange } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Calendar, CalendarCheck, CheckCircle, Clock, MapPin, User, XCircle, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { badgeVariants } from "@/components/ui/badge"
 import { type VariantProps } from "class-variance-authority"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Pagination,
   PaginationContent,
@@ -24,18 +22,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet"
 import { getMyBookings, type BookingResponse, updateBookingStatus } from "@/services/booking.service"
 import toast, { Toaster, ToastBar } from "react-hot-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const translateStatus = (status: string) => {
   switch (status) {
@@ -45,8 +41,10 @@ const translateStatus = (status: string) => {
       return "Đã hủy"
     case "pending":
       return "Chờ xác nhận"
-    case "confirmed":
+    case "accepted":
       return "Đã xác nhận"
+    case "confirmed":
+      return "Đã thanh toán"
     default:
       return status
   }
@@ -61,6 +59,8 @@ const getStatusBadgeVariant = (status: string): VariantProps<typeof badgeVariant
       return "destructive"
     case "pending":
       return "secondary"
+    case "accepted":
+      return "outline"
     case "confirmed":
       return "default"
     default:
@@ -73,20 +73,18 @@ export default function PhotographerBookingsPage() {
   const [bookings, setBookings] = useState<BookingResponse[]>([])
   const [filteredBookings, setFilteredBookings] = useState<BookingResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [dateFilter, setDateFilter] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTab, setActiveTab] = useState("all")
   const [selectedBooking, setSelectedBooking] = useState<BookingResponse | null>(null)
   const bookingsPerPage = 6
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false)
 
   // Stats
   const pendingCount = bookings.filter((b) => b.status === "pending").length
+  const acceptedCount = bookings.filter((b) => b.status === "accepted").length
   const confirmedCount = bookings.filter((b) => b.status === "confirmed").length
   const completedCount = bookings.filter((b) => b.status === "completed").length
-  // const cancelledCount = bookings.filter((b) => b.status === "cancelled").length
   const totalBookings = bookings.length
   const totalRevenue = bookings
     .filter((b) => b.status === "completed")
@@ -119,72 +117,9 @@ export default function PhotographerBookingsPage() {
       result = result.filter((booking) => booking.status === activeTab)
     }
 
-    if (searchTerm) {
-      result = result.filter(
-        (booking) =>
-          booking.concept.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (booking.booking_code && booking.booking_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (booking.custom_location && booking.custom_location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          booking.customer_id.toString().includes(searchTerm),
-      )
-    }
-
-    if (statusFilter !== "all") {
-      result = result.filter((booking) => booking.status === statusFilter)
-    }
-
-    if (typeFilter !== "all") {
-      result = result.filter((booking) => booking.shooting_type === typeFilter)
-    }
-
-    if (dateFilter !== "all") {
-      const today = new Date()
-      const tomorrow = new Date(today)
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      const nextWeek = new Date(today)
-      nextWeek.setDate(nextWeek.getDate() + 7)
-      const nextMonth = new Date(today)
-      nextMonth.setMonth(nextMonth.getMonth() + 1)
-
-      switch (dateFilter) {
-        case "today":
-          result = result.filter((booking) => {
-            const bookingDate = new Date(booking.booking_date)
-            return (
-              bookingDate.getDate() === today.getDate() &&
-              bookingDate.getMonth() === today.getMonth() &&
-              bookingDate.getFullYear() === today.getFullYear()
-            )
-          })
-          break
-        case "tomorrow":
-          result = result.filter((booking) => {
-            const bookingDate = new Date(booking.booking_date)
-            return (
-              bookingDate.getDate() === tomorrow.getDate() &&
-              bookingDate.getMonth() === tomorrow.getMonth() &&
-              bookingDate.getFullYear() === tomorrow.getFullYear()
-            )
-          })
-          break
-        case "week":
-          result = result.filter((booking) => {
-            const bookingDate = new Date(booking.booking_date)
-            return bookingDate >= today && bookingDate <= nextWeek
-          })
-          break
-        case "month":
-          result = result.filter((booking) => {
-            const bookingDate = new Date(booking.booking_date)
-            return bookingDate >= today && bookingDate <= nextMonth
-          })
-          break
-      }
-    }
-
     setFilteredBookings(result)
     setCurrentPage(1) // Reset to first page when filters change
-  }, [searchTerm, statusFilter, typeFilter, dateFilter, bookings, activeTab])
+  }, [bookings, activeTab])
 
   // Get current bookings for pagination
   const indexOfLastBooking = currentPage * bookingsPerPage
@@ -224,6 +159,15 @@ export default function PhotographerBookingsPage() {
     }
   }
 
+  // Get bookings for the selected date
+  const getBookingsForDate = (date: Date) => {
+    return bookings.filter(booking => 
+      isSameDay(parseISO(booking.booking_date), date)
+    )
+  }
+
+  const currentDateBookings = getBookingsForDate(selectedDate)
+
   return (
     <div className="h-full flex-1 space-y-8 p-8 pt-6">
       <div className="flex flex-col space-y-8">
@@ -234,16 +178,133 @@ export default function PhotographerBookingsPage() {
             <p className="text-muted-foreground mt-1">Quản lý tất cả các buổi chụp ảnh được đặt lịch</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push("/photographer/calendar")}>
-              <CalendarRange className="h-4 w-4 mr-2" />
-              Lịch làm việc
-            </Button>
+            <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <CalendarRange className="h-4 w-4 mr-2" />
+                  Lịch làm việc
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Lịch làm việc</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* Date Navigation */}
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setSelectedDate(prev => subDays(prev, 1))}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold">
+                        {format(selectedDate, "EEEE, dd/MM/yyyy", { locale: vi })}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {currentDateBookings.length} buổi chụp
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setSelectedDate(prev => addDays(prev, 1))}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Bookings List */}
+                  <ScrollArea className="h-[400px] pr-4">
+                    {currentDateBookings.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium">Không có buổi chụp nào</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Không có buổi chụp nào được lên lịch cho ngày này
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {currentDateBookings.map((booking) => (
+                          <Card key={booking.booking_id} className="overflow-hidden">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-semibold">{booking.concept}</h4>
+                                    <Badge variant={getStatusBadgeVariant(booking.status)}>
+                                      {translateStatus(booking.status)}
+                                    </Badge>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="h-4 w-4 text-muted-foreground" />
+                                      <span className="text-muted-foreground">
+                                        {format(parseISO(booking.booking_date), "HH:mm", { locale: vi })}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                                      <span className="text-muted-foreground">
+                                        {booking.custom_location || "Chưa có địa điểm"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <User className="h-4 w-4 text-muted-foreground" />
+                                      <span className="text-muted-foreground">
+                                        ID: {booking.customer_id}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-4 w-4 text-muted-foreground flex items-center justify-center">
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          className="h-4 w-4"
+                                        >
+                                          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                        </svg>
+                                      </div>
+                                      <span className="text-muted-foreground">
+                                        {booking.total_price > 0 ? `${booking.total_price.toLocaleString()} VND` : "Chưa cập nhật"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setIsScheduleOpen(false)
+                                    handleBookingClick(booking)
+                                  }}
+                                >
+                                  Chi tiết
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button onClick={() => router.push("/photographer/services")}>Quản lý dịch vụ</Button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Tổng đặt lịch</CardTitle>
@@ -262,13 +323,22 @@ export default function PhotographerBookingsPage() {
               <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70 mt-1">Cần xác nhận</p>
             </CardContent>
           </Card>
+          <Card className="bg-purple-50 dark:bg-purple-950/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-purple-600 dark:text-purple-400">Đã xác nhận</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{acceptedCount}</div>
+              <p className="text-xs text-purple-600/70 dark:text-purple-400/70 mt-1">Đã xác nhận</p>
+            </CardContent>
+          </Card>
           <Card className="bg-blue-50 dark:bg-blue-950/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">Đã xác nhận</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{confirmedCount}</div>
-              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">Sắp diễn ra</p>
+              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">Đã xác nhận</p>
             </CardContent>
           </Card>
           <Card className="bg-green-50 dark:bg-green-950/20">
@@ -293,16 +363,19 @@ export default function PhotographerBookingsPage() {
           </Card>
         </div>
 
-        {/* Tabs and Filters */}
+        {/* Tabs */}
         <div className="space-y-4">
           <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-5 w-full sm:w-auto">
+            <TabsList className="grid grid-cols-6 w-full sm:w-auto">
               <TabsTrigger value="all">Tất cả</TabsTrigger>
               <TabsTrigger value="pending" className="text-yellow-600">
                 Chờ xác nhận
               </TabsTrigger>
-              <TabsTrigger value="confirmed" className="text-blue-600">
+              <TabsTrigger value="accepted" className="text-blue-600">
                 Đã xác nhận
+              </TabsTrigger>
+              <TabsTrigger value="confirmed" className="text-purple-600">
+                Đã thanh toán
               </TabsTrigger>
               <TabsTrigger value="completed" className="text-green-600">
                 Hoàn thành
@@ -312,113 +385,6 @@ export default function PhotographerBookingsPage() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-
-          {/* Filters */}
-          <div className="bg-card border rounded-lg p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Tìm kiếm theo mã đặt lịch, concept, địa điểm hoặc ID khách hàng..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-auto">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Bộ lọc
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>Bộ lọc đặt lịch</SheetTitle>
-                      <SheetDescription>Lọc danh sách đặt lịch theo các tiêu chí</SheetDescription>
-                    </SheetHeader>
-                    <div className="py-4 space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Trạng thái</label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn trạng thái" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                            <SelectItem value="pending">Chờ xác nhận</SelectItem>
-                            <SelectItem value="confirmed">Đã xác nhận</SelectItem>
-                            <SelectItem value="completed">Hoàn thành</SelectItem>
-                            <SelectItem value="cancelled">Đã hủy</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Loại chụp</label>
-                        <Select value={typeFilter} onValueChange={setTypeFilter}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn loại chụp" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Tất cả loại chụp</SelectItem>
-                            <SelectItem value="outdoor">Ngoài trời</SelectItem>
-                            <SelectItem value="studio">Trong studio</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Thời gian</label>
-                        <Select value={dateFilter} onValueChange={setDateFilter}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn thời gian" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Tất cả thời gian</SelectItem>
-                            <SelectItem value="today">Hôm nay</SelectItem>
-                            <SelectItem value="tomorrow">Ngày mai</SelectItem>
-                            <SelectItem value="week">Tuần này</SelectItem>
-                            <SelectItem value="month">Tháng này</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <SheetFooter>
-                      <SheetClose asChild>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setStatusFilter("all")
-                            setTypeFilter("all")
-                            setDateFilter("all")
-                          }}
-                        >
-                          Đặt lại
-                        </Button>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <Button>Áp dụng</Button>
-                      </SheetClose>
-                    </SheetFooter>
-                  </SheetContent>
-                </Sheet>
-                <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Thời gian" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả thời gian</SelectItem>
-                    <SelectItem value="today">Hôm nay</SelectItem>
-                    <SelectItem value="tomorrow">Ngày mai</SelectItem>
-                    <SelectItem value="week">Tuần này</SelectItem>
-                    <SelectItem value="month">Tháng này</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Bookings List */}
@@ -450,27 +416,15 @@ export default function PhotographerBookingsPage() {
             </div>
             <h3 className="text-lg font-medium">Không tìm thấy đặt lịch nào</h3>
             <p className="text-muted-foreground mt-1">
-              {searchTerm ||
-              statusFilter !== "all" ||
-              typeFilter !== "all" ||
-              dateFilter !== "all" ||
-              activeTab !== "all"
+              {activeTab !== "all"
                 ? "Thử thay đổi bộ lọc để xem kết quả khác"
                 : "Bạn chưa có đặt lịch nào."}
             </p>
-            {(searchTerm ||
-              statusFilter !== "all" ||
-              typeFilter !== "all" ||
-              dateFilter !== "all" ||
-              activeTab !== "all") && (
+            {activeTab !== "all" && (
               <Button
                 variant="outline"
                 className="mt-4"
                 onClick={() => {
-                  setSearchTerm("")
-                  setStatusFilter("all")
-                  setTypeFilter("all")
-                  setDateFilter("all")
                   setActiveTab("all")
                 }}
               >
@@ -509,18 +463,24 @@ export default function PhotographerBookingsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {booking.status !== "pending" && (
+                            {/* {booking.status !== "pending" && (
                               <DropdownMenuItem onClick={() => handleStatusUpdate(booking.booking_id, "pending")}>
                                 <Clock className="mr-2 h-4 w-4 text-yellow-500" />
                                 <span>Chờ xác nhận</span>
                               </DropdownMenuItem>
-                            )}
-                            {booking.status !== "confirmed" && (
-                              <DropdownMenuItem onClick={() => handleStatusUpdate(booking.booking_id, "confirmed")}>
-                                <CheckCircle className="mr-2 h-4 w-4 text-blue-500" />
+                            )} */}
+                            {booking.status !== "accepted" && (
+                              <DropdownMenuItem onClick={() => handleStatusUpdate(booking.booking_id, "accepted")}>
+                                <CalendarCheck className="mr-2 h-4 w-4 text-blue-500" />
                                 <span>Xác nhận</span>
                               </DropdownMenuItem>
                             )}
+                            {/* {booking.status !== "confirmed" && (
+                              <DropdownMenuItem onClick={() => handleStatusUpdate(booking.booking_id, "confirmed")}>
+                                <CheckCircle className="mr-2 h-4 w-4 text-purple-500" />
+                                <span>Thanh toán</span>
+                              </DropdownMenuItem>
+                            )} */}
                             {booking.status !== "completed" && (
                               <DropdownMenuItem onClick={() => handleStatusUpdate(booking.booking_id, "completed")}>
                                 <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
