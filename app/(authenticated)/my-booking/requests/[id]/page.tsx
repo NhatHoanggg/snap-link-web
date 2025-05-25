@@ -173,7 +173,7 @@ export default function RequestDetailPage() {
                         </div>
                         <div>
                             <h3 className="text-sm font-medium text-muted-foreground mb-1">Địa Điểm</h3>
-                            <p className="text-foreground">{request.location_text}, {request.city}</p>
+                            <p className="text-foreground">{request.location_text}, {request.province}</p>
                         </div>
                         <div>
                             <h3 className="text-sm font-medium text-muted-foreground mb-1">Hình Minh Họa</h3>

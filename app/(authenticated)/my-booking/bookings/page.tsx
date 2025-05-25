@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { getMyBookings } from "@/services/booking.service"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { format, parseISO } from "date-fns"
+import { vi } from "date-fns/locale"
+import { Calendar, Camera, MapPin, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Eye, Pencil, Trash2, Search } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Pagination,
   PaginationContent,
@@ -18,280 +19,373 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { Skeleton } from "@/components/ui/skeleton"
+import { getMyBookings } from "@/services/booking.service"
+import { type BookingResponse } from "@/services/booking.service"
 
-type Booking = {
-  booking_id: number
-  booking_code: string
-  booking_date: string
-  concept: string
-  illustration_url: string
-  shooting_type: string
-  custom_location: string | null
-  status: string
-  total_price: number
+type Booking = BookingResponse
+
+const fetchBookings = async (): Promise<Booking[]> => {
+  try {
+    const data = await getMyBookings()
+    return data
+  } catch (error) {
+    console.error("Failed to fetch bookings:", error)
+    throw error
+  }
 }
 
-export default function BookingsPage() {
-  const [bookings, setBookings] = useState<Booking[] | null>(null)
+const getStatusBadgeVariant = (status: string): "destructive" | "secondary" | "default" | "outline" => {
+  switch (status) {
+    case "completed":
+      return "default"
+    case "cancelled":
+      return "destructive"
+    case "pending":
+      return "secondary"
+    default:
+      return "secondary"
+  }
+}
+
+const translateStatus = (status: string) => {
+  switch (status) {
+    case "completed":
+      return "Hoàn thành"
+    case "cancelled":
+      return "Đã hủy"
+    case "pending":
+      return "Đang chờ"
+    default:
+      return status
+  }
+}
+
+const translateShootingType = (type: string) => {
+  switch (type) {
+    case "outdoor":
+      return "Ngoài trời"
+    case "studio":
+      return "Trong studio"
+    default:
+      return type
+  }
+}
+
+export default function MyBookingsPage() {
+  const router = useRouter()
+  // const searchParams = useSearchParams()
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [typeFilter, setTypeFilter] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 7
+  const bookingsPerPage = 6
 
   useEffect(() => {
-    getMyBookings()
-      .then((data) => {
-        console.log(data)
-        const sortedData = [...data].sort((a, b) => 
-          new Date(b.booking_date).getTime() - new Date(a.booking_date).getTime()
-        )
-        setBookings(sortedData)
-      })
-      .finally(() => setLoading(false))
+    const loadBookings = async () => {
+      try {
+        const data = await fetchBookings()
+        setBookings(data)
+        setFilteredBookings(data)
+      } catch (error) {
+        console.error("Failed to fetch bookings:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadBookings()
   }, [])
 
-  const filteredBookings = bookings?.filter((booking) => {
-    const bookingCode = booking.booking_code?.toLowerCase() || ""
-    const concept = booking.concept?.toLowerCase() || ""
-    const customLocation = booking.custom_location?.toLowerCase() || ""
-    const search = searchTerm?.toLowerCase() || ""
+  useEffect(() => {
+    // Apply filters
+    let result = bookings
 
-    const matchesSearch = bookingCode.includes(search) || concept.includes(search) || customLocation.includes(search)
-    const matchesStatus = statusFilter === "all" || booking.status === statusFilter
+    if (searchTerm) {
+      result = result.filter(
+        (booking) =>
+          booking.concept.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (booking.booking_code && booking.booking_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (booking.custom_location && booking.custom_location.toLowerCase().includes(searchTerm.toLowerCase())),
+      )
+    }
 
-    return matchesSearch && matchesStatus
-  })
+    if (statusFilter !== "all") {
+      result = result.filter((booking) => booking.status === statusFilter)
+    }
 
-  const totalPages = Math.ceil((filteredBookings?.length || 0) / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedBookings = filteredBookings?.slice(startIndex, startIndex + itemsPerPage)
+    if (typeFilter !== "all") {
+      result = result.filter((booking) => booking.shooting_type === typeFilter)
+    }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "confirmed":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200"
-      case "completed":
-        return "bg-blue-100 text-blue-800 border-blue-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+    setFilteredBookings(result)
+    setCurrentPage(1) // Reset to first page when filters change
+  }, [searchTerm, statusFilter, typeFilter, bookings])
+
+  // Get current bookings for pagination
+  const indexOfLastBooking = currentPage * bookingsPerPage
+  const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage
+  const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking)
+  const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage)
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+
+  // Handle booking click
+  const handleBookingClick = (bookingCode: string | null) => {
+    if (bookingCode) {
+      router.push(`/my-booking/bookings/${bookingCode}`)
     }
   }
 
-  const handleViewDetails = (bookingCode: string) => {
-    window.location.href = `/my-booking/bookings/${bookingCode}`
-  }
-
-  const handleEdit = (bookingCode: string) => {
-    console.log("Edit booking:", bookingCode)
-  }
-
-  const handleDelete = (bookingCode: string) => {
-    console.log("Delete booking:", bookingCode)
-  }
-
-  const renderEmptyState = () => (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <h3 className="text-xl font-medium mb-2">Không có lịch hẹn nào</h3>
-      <p className="text-muted-foreground max-w-md mb-6">
-        Bạn chưa có lịch hẹn chụp ảnh nào. Hãy đặt lịch để bắt đầu trải nghiệm dịch vụ của chúng tôi.
-      </p>
-      <Button>Đặt lịch ngay</Button>
-    </div>
-  )
-
-  const renderSkeletonTable = () => (
-    <div className="w-full overflow-auto rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Mã</TableHead>
-            <TableHead>Concept</TableHead>
-            <TableHead>Kiểu chụp</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead className="w-[150px] text-right">Thao tác</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {[...Array(7)].map((_, i) => (
-            <TableRow key={i}>
-              <TableCell>
-                <Skeleton className="h-4 w-16" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-24" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-28" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-6 w-20 rounded-full" />
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Skeleton className="h-8 w-8 rounded-md" />
-                  <Skeleton className="h-8 w-8 rounded-md" />
-                  <Skeleton className="h-8 w-8 rounded-md" />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
-
   return (
-    <div className="container max-w-7xl mx-auto py-8 px-4">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Lịch hẹn của tôi</h1>
-          <p className="text-muted-foreground">Quản lý tất cả các buổi chụp ảnh của bạn</p>
+          <h1 className="text-3xl font-bold">Lịch hẹn của tôi</h1>
+          <p className="text-muted-foreground mt-1">Quản lý tất cả các buổi chụp ảnh đã đặt lịch</p>
         </div>
-        <Button>Đặt lịch mới</Button>
+        <Button onClick={() => router.push("/book-now")} className="shrink-0">
+          Đặt lịch mới
+        </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Tìm kiếm theo mã hoặc concept..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Filters */}
+      <div className="bg-card border rounded-lg p-4 mb-8">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm kiếm theo mã đặt lịch, concept hoặc địa điểm..."
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                <SelectItem value="pending">Đang chờ</SelectItem>
+                <SelectItem value="completed">Hoàn thành</SelectItem>
+                <SelectItem value="cancelled">Đã hủy</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Loại chụp" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả loại chụp</SelectItem>
+                <SelectItem value="outdoor">Ngoài trời</SelectItem>
+                <SelectItem value="studio">Trong studio</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Trạng thái" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả trạng thái</SelectItem>
-            <SelectItem value="pending">Đang chờ</SelectItem>
-            <SelectItem value="confirmed">Đã xác nhận</SelectItem>
-            <SelectItem value="completed">Hoàn thành</SelectItem>
-            <SelectItem value="cancelled">Đã hủy</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
+      {/* Bookings List */}
       {loading ? (
-        renderSkeletonTable()
-      ) : filteredBookings?.length === 0 ? (
-        renderEmptyState()
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <Card key={index} className="overflow-hidden">
+              <div className="aspect-video w-full bg-muted">
+                <Skeleton className="h-full w-full" />
+              </div>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : filteredBookings.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <Calendar className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium">Không tìm thấy lịch hẹn nào</h3>
+          <p className="text-muted-foreground mt-1">
+            {searchTerm || statusFilter !== "all" || typeFilter !== "all"
+              ? "Thử thay đổi bộ lọc để xem kết quả khác"
+              : "Bạn chưa có lịch hẹn nào. Hãy đặt lịch ngay!"}
+          </p>
+          {(searchTerm || statusFilter !== "all" || typeFilter !== "all") && (
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => {
+                setSearchTerm("")
+                setStatusFilter("all")
+                setTypeFilter("all")
+              }}
+            >
+              Xóa bộ lọc
+            </Button>
+          )}
+        </div>
       ) : (
         <>
-          <div className="w-full overflow-auto rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Mã</TableHead>
-                  <TableHead>Concept</TableHead>
-                  <TableHead>Kiểu chụp</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead className="w-[150px] text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedBookings?.map((booking) => (
-                  <TableRow key={booking.booking_id} className="group">
-                    <TableCell className="font-medium">#{booking.booking_code}</TableCell>
-                    <TableCell>{booking.concept}</TableCell>
-                    <TableCell>{booking.shooting_type}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`${getStatusColor(booking.status)} capitalize font-medium`}>
-                        {booking.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewDetails(booking.booking_code)}
-                          title="Xem chi tiết"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(booking.booking_code)}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDelete(booking.booking_code)}
-                          title="Xóa"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentBookings.map((booking) => (
+              <Card
+                key={booking.booking_id}
+                className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleBookingClick(booking.booking_code)}
+              >
+                <div className="aspect-video w-full bg-muted relative overflow-hidden">
+                  <img
+                    src={booking.illustration_url || "https://res.cloudinary.com/dy8p5yjsd/image/upload/v1748164460/23101740_6725295_ru1wsv.jpg"}
+                    alt={booking.concept}
+                    className="w-full h-full object-cover transition-transform hover:scale-105"
+                  />
+                  <div className="absolute top-2 right-2">
+                    <Badge variant={getStatusBadgeVariant(booking.status)} className="font-medium">
+                      {translateStatus(booking.status)}
+                    </Badge>
+                  </div>
+                </div>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg line-clamp-1">{booking.concept ||  "..."}</CardTitle>
+                      <CardDescription>#️⃣{booking.booking_code || "Chưa có mã đặt lịch"}</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <Calendar className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Ngày chụp</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(parseISO(booking.booking_date), "EEEE, dd/MM/yyyy", { locale: vi })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Địa điểm</p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">
+                        {booking.custom_location || "Chưa có thông tin địa điểm"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Camera className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Loại chụp</p>
+                      <p className="text-sm text-muted-foreground">{translateShootingType(booking.shooting_type)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    {/* <Camera className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" /> */}
+                    <div>
+                      <span className="text-sm font-medium">💰 Giá tiền: </span>
+                      <span className="text-sm text-muted-foreground">{booking?.total_price.toLocaleString()} VND</span>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (booking.booking_code) {
+                        handleBookingClick(booking.booking_code)
+                      }
+                    }}
+                    disabled={!booking.booking_code}
+                  >
+                    {booking.booking_code ? "Xem chi tiết" : "Chưa có mã đặt lịch"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
 
+          {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex justify-center">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                  
-                  {[...Array(totalPages)].map((_, i) => {
-                    const page = i + 1
-                    if (
-                      page === 1 ||
-                      page === totalPages ||
-                      (page >= currentPage - 1 && page <= currentPage + 1)
-                    ) {
-                      return (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(page)}
-                            isActive={currentPage === page}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    } else if (
-                      page === currentPage - 2 ||
-                      page === currentPage + 2
-                    ) {
-                      return (
-                        <PaginationItem key={page}>
-                          <PaginationEllipsis />
-                        </PaginationItem>
-                      )
-                    }
-                    return null
-                  })}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      if (currentPage > 1) paginate(currentPage - 1)
+                    }}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, index) => {
+                  const pageNumber = index + 1
+                  // Show first page, last page, and pages around current page
+                  if (
+                    pageNumber === 1 ||
+                    pageNumber === totalPages ||
+                    (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={pageNumber}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            paginate(pageNumber)
+                          }}
+                          isActive={pageNumber === currentPage}
+                        >
+                          {pageNumber}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  }
+                  // Show ellipsis if there's a gap
+                  if (
+                    (pageNumber === 2 && currentPage > 3) ||
+                    (pageNumber === totalPages - 1 && currentPage < totalPages - 2)
+                  ) {
+                    return (
+                      <PaginationItem key={pageNumber}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )
+                  }
+                  return null
+                })}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      if (currentPage < totalPages) paginate(currentPage + 1)
+                    }}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           )}
         </>
       )}

@@ -1,90 +1,293 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
-import { getBookingByCode, BookingResponse } from "@/services/booking.service"
-import { photographerService, Photographer } from "@/services/photographer.service"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Calendar, Clock, MapPin, ArrowLeft, CreditCard } from "lucide-react"
-import Image from "next/image"
-import { format } from "date-fns"
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
-import { useRouter } from "next/navigation"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import {
+  ArrowLeft,
+  Calendar,
+  Camera,
+  Clock,
+  Copy,
+  ExternalLink,
+  Info,
+  MapPin,
+  MessageSquare,
+  Package,
+  Tag,
+  MapPinned,
+  // User,
+} from "lucide-react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default function BookingDetailPage({ params }: { params: Promise<{ code: string }> }) {
-  const { code } = use(params)
-  const [booking, setBooking] = useState<BookingResponse | null>(null)
-  const [photographer, setPhotographer] = useState<Photographer | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [photographerLoading, setPhotographerLoading] = useState(true)
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { getBookingByCode, updateBookingStatus, type BookingResponse } from "@/services/booking.service"
+import { photographerService, type Photographer } from "@/services/photographer.service"
+import { getServiceByIdPublic, type Service } from "@/services/services.service"
+import toast, { Toaster, ToastBar } from "react-hot-toast"
+
+type Booking = BookingResponse
+
+const fetchBookingByCode = async (code: string): Promise<Booking | null> => {
+  try {
+    const data = await getBookingByCode(code)
+    return data
+  } catch (error) {
+    console.error("Failed to fetch booking:", error)
+    return null
+  }
+}
+
+// Helper function to get status badge variant
+const getStatusBadgeVariant = (status: string): "destructive" | "secondary" | "default" | "outline" => {
+  switch (status) {
+    case "completed":
+      return "default"
+    case "cancelled":
+      return "destructive"
+    case "pending":
+      return "outline"
+    default:
+      return "secondary"
+  }
+}
+
+// Helper function to translate status
+const translateStatus = (status: string) => {
+  switch (status) {
+    case "completed":
+      return "Hoàn thành"
+    case "cancelled":
+      return "Đã hủy"
+    case "pending":
+      return "Đang chờ"
+    default:
+      return status
+  }
+}
+
+// Helper function to translate shooting type
+const translateShootingType = (type: string) => {
+  switch (type) {
+    case "outdoor":
+      return "Ngoài trời"
+    case "studio":
+      return "Trong studio"
+    default:
+      return type
+  }
+}
+
+export default function BookingDetailPage() {
+  const params = useParams()
   const router = useRouter()
+  const [booking, setBooking] = useState<Booking | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [cancelReason, setCancelReason] = useState("")
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [photographer, setPhotographer] = useState<Photographer | null>(null)
+  const [service, setService] = useState<Service | null>(null)
+  const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false)
 
+  // Extract booking code from params and ensure it's a string
+  const bookingCode = typeof params.code === 'string' ? params.code : Array.isArray(params.code) ? params.code[0] : null
+
+  // Fetch photographer data when booking data is loaded
   useEffect(() => {
-    const fetchBookingAndPhotographer = async () => {
-      try {
-        const bookingData = await getBookingByCode(code)
-        setBooking(bookingData)
-        
-        // Fetch photographer information
-        const photographerData = await photographerService.getPhotographerById(bookingData.photographer_id)
-        setPhotographer(photographerData)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-      } finally {
-        setLoading(false)
-        setPhotographerLoading(false)
+    const fetchPhotographer = async () => {
+      if (booking?.photographer_id) {
+        try {
+          const data = await photographerService.getPhotographerById(booking.photographer_id)
+          setPhotographer(data)
+        } catch (error) {
+          console.error("Failed to fetch photographer:", error)
+        }
       }
     }
 
-    fetchBookingAndPhotographer()
-  }, [code])
+    fetchPhotographer()
+  }, [booking?.photographer_id])
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "confirmed":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200"
-      case "completed":
-        return "bg-blue-100 text-blue-800 border-blue-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+  useEffect(() => {
+    const loadBooking = async () => {
+      if (!bookingCode) {
+        setError("Mã đặt lịch không hợp lệ")
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await fetchBookingByCode(bookingCode)
+        if (data) {
+          setBooking(data)
+        } else {
+          setError("Không tìm thấy thông tin đặt lịch")
+        }
+      } catch (error) {
+        console.error("Failed to fetch booking:", error)
+        setError("Đã xảy ra lỗi khi tải thông tin đặt lịch")
+      } finally {
+        setLoading(false)
+      }
     }
+
+    loadBooking()
+  }, [bookingCode]) // Only depend on bookingCode
+
+  const handleCopyBookingCode = () => {
+    if (booking?.booking_code) {
+      navigator.clipboard.writeText(booking.booking_code)
+      toast("Mã đặt lịch đã được sao chép vào clipboard", {
+        icon: "🔗"
+      })
+    }
+  }
+
+  const handleCancelBooking = async () => {
+    if (!booking) return
+
+    try {
+      await updateBookingStatus(booking.booking_id, "cancelled")
+      toast("Đã hủy đặt lịch", {
+        icon: "❌",
+      })
+      setIsCancelDialogOpen(false)
+      // Update the booking status locally
+      setBooking({ ...booking, status: "cancelled" })
+    } catch (error) {
+      console.error("Failed to cancel booking:", error)
+      toast.error("Không thể hủy đặt lịch. Vui lòng thử lại sau.")
+    }
+  }
+
+  useEffect(() => {
+    const fetchService = async () => {
+      if (booking?.service_id) {
+        try {
+          const data = await getServiceByIdPublic(booking.service_id)
+          setService(data)
+        } catch (error) {
+          console.error("Failed to fetch service:", error)
+        }
+      }
+    }
+    fetchService()
+  }, [booking?.service_id])
+
+  
+  // Update the image fallback
+  const getImageUrl = (url: string | null) => {
+    if (!url) return "https://res.cloudinary.com/dy8p5yjsd/image/upload/v1748164460/23101740_6725295_ru1wsv.jpg"
+    return url
   }
 
   if (loading) {
     return (
-      <div className="container max-w-4xl mx-auto py-8 px-4">
-        <Skeleton className="h-8 w-48 mb-8" />
-        <div className="grid gap-6">
-          <Skeleton className="h-[200px] w-full rounded-xl" />
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-full max-w-[300px]" />
-            <Skeleton className="h-6 w-full max-w-[250px]" />
-            <Skeleton className="h-6 w-full max-w-[200px]" />
+      <div className="container mx-auto px-4 py-8">
+        <Toaster position="bottom-right">
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== "loading" && (
+                  <button onClick={() => toast.dismiss(t.id)}>X</button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mr-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Quay lại
+          </Button>
+          <Skeleton className="h-8 w-64" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-8 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="aspect-video w-full bg-muted rounded-md overflow-hidden">
+                  <Skeleton className="h-full w-full" />
+                </div>
+                <div className="space-y-4">
+                  {[...Array(4)].map((_, index) => (
+                    <div key={index} className="flex gap-4">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-full" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[...Array(5)].map((_, index) => (
+                  <Skeleton key={index} className="h-4 w-full" />
+                ))}
+              </CardContent>
+              <CardFooter className="flex-col space-y-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
           </div>
         </div>
       </div>
     )
   }
 
-  if (!booking) {
+  if (error || !booking) {
     return (
-      <div className="container max-w-4xl mx-auto py-8 px-4">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-semibold mb-4">Không tìm thấy lịch hẹn</h2>
-          <p className="text-muted-foreground mb-6">
-            Lịch hẹn bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Quay lại
+          </Button>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <Info className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium">{error || "Không tìm thấy thông tin đặt lịch"}</h3>
+          <p className="text-muted-foreground mt-1 max-w-md">
+            Mã đặt lịch không tồn tại hoặc đã bị xóa. Vui lòng kiểm tra lại mã đặt lịch của bạn.
           </p>
-          <Button onClick={() => router.push("/my-booking/bookings")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Quay lại danh sách
+          <Button className="mt-6" onClick={() => router.push("/my-bookings")}>
+            Xem tất cả đặt lịch
           </Button>
         </div>
       </div>
@@ -92,137 +295,375 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      <Button
-        variant="ghost"
-        className="mb-8"
-        onClick={() => router.push("/my-booking/bookings")}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Quay lại danh sách
-      </Button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mr-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Quay lại
+          </Button>
+          <h1 className="text-2xl font-bold">Chi tiết đặt lịch</h1>
+        </div>
+        <Badge variant={getStatusBadgeVariant(booking.status)} className="text-sm px-3 py-1">
+          {translateStatus(booking.status)}
+        </Badge>
+      </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold">#{booking.booking_code}</h1>
-                <Badge variant="outline" className={`${getStatusColor(booking.status)} capitalize font-medium`}>
-                  {booking.status}
-                </Badge>
-              </div>
-              <div className="text-xl font-semibold">
-                {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-                  booking.total_price
-                )}
-              </div>
-            </div>
-
-            {booking.illustration_url && (
-              <div className="relative w-full h-[300px] bg-muted/30 rounded-lg overflow-hidden mb-6">
-                <Image
-                  src={booking.illustration_url}
-                  alt={booking.concept}
-                  fill
-                  className="object-cover"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">{booking.concept}</CardTitle>
+              <CardDescription className="flex items-center">
+                <span className="font-medium mr-2">Mã đặt lịch:</span>
+                <span>{booking.booking_code}</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={handleCopyBookingCode}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Concept Image */}
+              <div className="aspect-video w-full bg-muted rounded-md overflow-hidden">
+                <img
+                  src={getImageUrl(booking.illustration_url)}
+                  alt={booking.concept || "Ảnh minh họa"}
+                  className="w-full h-full object-cover"
                 />
               </div>
-            )}
 
-            <div className="grid gap-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{format(new Date(booking.booking_date), "EEEE, dd/MM/yyyy", { locale: vi })}</span>
+              {/* Booking Details */}
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Calendar className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{format(new Date(booking.booking_date), "HH:mm", { locale: vi })}</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4 mt-0.5" />
-                    <span>{booking.custom_location || "Chưa xác định địa điểm"}</span>
+                  <div>
+                    <h3 className="font-medium">Ngày chụp</h3>
+                    <p className="text-muted-foreground">
+                      {format(parseISO(booking.booking_date), "EEEE, dd/MM/yyyy", { locale: vi })}
+                    </p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-sm text-muted-foreground">Concept</span>
-                    <p className="font-medium">{booking.concept}</p>
+
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Camera className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <span className="text-sm text-muted-foreground">Kiểu chụp</span>
-                    <p className="font-medium">{booking.shooting_type}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Số lượng</span>
-                    <p className="font-medium">{booking.quantity} người</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Thông tin nhiếp ảnh gia</h3>
-                <div className="flex items-center gap-4">
-                  {photographerLoading ? (
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                  ) : (
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={photographer?.avatar} />
-                      <AvatarFallback>{photographer?.full_name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="space-y-1">
-                    {photographerLoading ? (
-                      <Skeleton className="h-5 w-48" />
+                    <h3 className="font-medium">Nhiếp ảnh gia</h3>
+                    {loading ? (
+                      <p className="text-muted-foreground">
+                        <span className="inline-block h-4 w-32 bg-muted animate-pulse rounded" />
+                      </p>
+                    ) : photographer ? (
+                      <Link 
+                        href={`/photographers/${photographer.slug}`}
+                        className="text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {photographer.full_name}
+                      </Link>
                     ) : (
-                      <>
-                        <Link href={`/photographers/${photographer?.slug}`} className="font-medium">{photographer?.full_name}</Link>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{photographer?.experience_years} năm kinh nghiệm</span>
-                          <span>•</span>
-                          <span>{photographer?.average_rating.toFixed(1)} ⭐ ({photographer?.total_reviews} đánh giá)</span>
-                        </div>
-                      </>
+                      <p className="text-muted-foreground">Không thể tải thông tin nhiếp ảnh gia</p>
                     )}
                   </div>
                 </div>
-              </div>
 
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Thông tin thanh toán</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Tổng tiền:</span>
-                    <span className="font-medium">
-                      {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-                        booking.total_price
-                      )}
-                    </span>
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <MapPin className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Ngày đặt:</span>
-                    <span className="font-medium">
-                      {format(new Date(booking.created_at), "dd/MM/yyyy", { locale: vi })}
-                    </span>
+                  <div>
+                    <h3 className="font-medium">Tỉnh/Thành phố</h3>
+                    <p className="text-muted-foreground">{booking.province || "Chưa có thông tin tỉnh/thành phố"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <MapPinned className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Địa điểm</h3>
+                    <p className="text-muted-foreground">{booking.custom_location || "Chưa có thông tin địa điểm"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Camera className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Loại chụp</h3>
+                    <p className="text-muted-foreground">{translateShootingType(booking.shooting_type)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Concept</h3>
+                    <p className="text-muted-foreground">{booking.concept}</p>
                   </div>
                 </div>
               </div>
 
-              {booking.status === "pending" && (
-                <div className="flex gap-3 mt-4">
-                  <Button variant="outline" className="text-red-500 hover:text-red-600">
-                    Hủy lịch
+              <Separator />
+
+              {/* Service Information */}
+              <div>
+                <h3 className="font-medium text-lg mb-4">Thông tin dịch vụ</h3>
+                <div className="flex items-center justify-between bg-muted/50 p-4 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 p-2 rounded-full">
+                      <Package className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{service?.title || "Đang tải thông tin dịch vụ..."}</p>
+                      <p className="text-sm text-muted-foreground">Số lượng: {booking.quantity || 1}</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsServiceDialogOpen(true)}
+                    disabled={!service}
+                  >
+                    <span className="flex items-center gap-1">
+                      Xem dịch vụ
+                      <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                    </span>
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Thông tin thanh toán</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Giá dịch vụ</span>
+                {/* <span>{booking.total_price > 0 ? `${booking.total_price.toLocaleString()} VND` : "Liên hệ"}</span> */}
+                <span>{service?.price.toLocaleString()} VND</span>
+              </div>
+              {booking.discount_code && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Mã giảm giá</span>
+                  <span className="font-medium text-green-600">{booking.discount_code}</span>
+                </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+              <Separator />
+              <div className="flex justify-between font-medium">
+                <span>Tổng cộng</span>
+                <span>{booking.total_price > 0 ? `${booking.total_price.toLocaleString()} VND` : "Liên hệ"}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">* Giá cuối cùng sẽ được xác nhận bởi nhiếp ảnh gia</div>
+            </CardContent>
+            <CardFooter className="flex-col space-y-2">
+              {/* <Button className="w-full" asChild>
+                <Link href={`/chat/${booking.photographer_id}`}>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Nhắn tin với nhiếp ảnh gia
+                </Link>
+              </Button> */}
+
+              {booking.status === "accepted" && (
+                <Button
+                  variant="outline"
+                  className="w-full text-destructive hover:text-destructive"
+                  onClick={() => setIsCancelDialogOpen(true)}
+                >
+                  Thanh toán
+                </Button>
+              )}
+              {booking.status === "pending" && (
+                <Button
+                  variant="outline"
+                  className="w-full text-destructive hover:text-destructive"
+                  onClick={() => setIsCancelDialogOpen(true)}
+                >
+                  Hủy đặt lịch
+                </Button>
+              )}
+            </CardFooter>
+          </Card>
+
+          {/* Booking Information */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Thông tin đặt lịch</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Ngày tạo:</span>{" "}
+                    {format(parseISO(booking.created_at), "dd/MM/yyyy HH:mm")}
+                  </p>
+                </div>
+              </div>
+              {/* <div className="flex items-start gap-2">
+                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Mã khách hàng:</span> #{booking.customer_id}
+                  </p>
+                </div>
+              </div> */}
+              <div className="flex items-start gap-2">
+                <Camera className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Nhiếp ảnh gia:</span>{" "}
+                    {loading ? (
+                      <span className="inline-block h-4 w-24 bg-muted animate-pulse rounded" />
+                    ) : photographer ? (
+                      <Link 
+                        href={`/photographers/${photographer.slug}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {photographer.full_name}
+                      </Link>
+                    ) : (
+                      "Không thể tải thông tin"
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Tag className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Mã đặt lịch:</span> {booking.booking_code || "Chưa có"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      {/* Service Details Dialog */}
+      <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Chi tiết dịch vụ</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết về dịch vụ bạn đã đặt
+            </DialogDescription>
+          </DialogHeader>
+          {service && (
+            <div className="space-y-6 overflow-y-auto pr-2 -mr-2">
+              {/* Service Image */}
+              <div className="aspect-video w-full bg-muted rounded-md overflow-hidden">
+                <img
+                  src={service.thumbnail_url || "https://res.cloudinary.com/dy8p5yjsd/image/upload/v1748164460/23101740_6725295_ru1wsv.jpg"}
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Service Details */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-1">Tên dịch vụ</h3>
+                  <p className="text-muted-foreground">{service.title}</p>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-1">Mô tả</h3>
+                  <p className="text-muted-foreground whitespace-pre-wrap">{service.description}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-1">Giá dịch vụ</h3>
+                    <p className="text-muted-foreground">
+                      {service.price.toLocaleString()} VND
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-1">Loại đơn vị</h3>
+                    <p className="text-muted-foreground capitalize">
+                      {service.unit_type === "package" ? "Gói" : service.unit_type}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-1">Thông tin khác</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                    <div>
+                      <p>Ngày tạo: {format(parseISO(service.created_at), "dd/MM/yyyy")}</p>
+                      {service.updated_at && (
+                        <p>Cập nhật: {format(parseISO(service.updated_at), "dd/MM/yyyy")}</p>
+                      )}
+                    </div>
+                    <div>
+                      <p>Trạng thái: {service.is_active ? "Đang hoạt động" : "Không hoạt động"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="mt-4 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsServiceDialogOpen(false)}>
+              Đóng
+            </Button>
+            {/* {service && (
+              <Button asChild>
+                <Link href={`/photographers/${photographer?.slug}/services/${service.service_id}`}>
+                  Xem chi tiết trên trang nhiếp ảnh gia
+                </Link>
+              </Button>
+            )} */}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Dialog */}
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận hủy đặt lịch</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn hủy đặt lịch này? Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label htmlFor="reason" className="text-sm font-medium">
+                Lý do hủy (không bắt buộc)
+              </label>
+              <Textarea
+                id="reason"
+                placeholder="Nhập lý do hủy đặt lịch..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
+              Hủy bỏ
+            </Button>
+            <Button variant="destructive" onClick={handleCancelBooking}>
+              Xác nhận hủy
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
-} 
+}

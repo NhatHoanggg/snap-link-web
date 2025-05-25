@@ -58,6 +58,7 @@ export default function PaymentPage() {
       } else if (response.deeplink) {
         window.location.href = response.deeplink;
       }
+      
     } catch (error) {
       console.error("Payment error:", error);
       toast.error("Không thể tạo thanh toán. Vui lòng thử lại sau.");
