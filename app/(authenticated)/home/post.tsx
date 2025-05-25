@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
+import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -13,67 +13,37 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Heart, MessageCircle, Send, Loader2 } from "lucide-react"
+import { PostResponse, CommentResponse, postsService } from "@/services/posts.service"
+import toast, { Toaster } from 'react-hot-toast';
+import { useAuth } from "@/services/auth";
+
 
 interface PostProps {
-  post: {
-    userId: number
-    id: number
-    title: string
-    body: string
-  }
-}
-
-interface User {
-  id: number
-  name: string
-  username: string
-  email: string
-}
-
-interface Comment {
-  postId: number
-  id: number
-  name: string
-  email: string
-  body: string
+  post: PostResponse
 }
 
 export function Post({ post }: PostProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [comments, setComments] = useState<Comment[]>([])
+  const [comments, setComments] = useState<CommentResponse[]>([])
   const [showComments, setShowComments] = useState(false)
-  const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50))
+  const [liked, setLiked] = useState(post.is_liked)
+  const [likeCount, setLikeCount] = useState(post.like_count)
   const [commentText, setCommentText] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
   const [loadingComments, setLoadingComments] = useState(false)
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(`https://jsonplaceholder.typicode.com/users/${post.userId}`)
-        if (!response.ok) throw new Error("Failed to fetch user")
-        const data = await response.json()
-        setUser(data)
-      } catch (error) {
-        console.error("Error fetching user:", error)
-      }
-    }
-
-    fetchUser()
-  }, [post.userId])
+  const [liking, setLiking] = useState(false)
+  const { user } = useAuth()
 
   const fetchComments = async () => {
     if (comments.length > 0) return
 
     setLoadingComments(true)
     try {
-      const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${post.id}/comments`)
-      if (!response.ok) throw new Error("Failed to fetch comments")
-      const data = await response.json()
+      const data = await postsService.getCommentsByPostId(post.post_id)
       setComments(data)
     } catch (error) {
       console.error("Error fetching comments:", error)
+      toast.error("Không thể tải bình luận. Vui lòng thử lại sau.")
+
     } finally {
       setLoadingComments(false)
     }
@@ -86,85 +56,84 @@ export function Post({ post }: PostProps) {
     setShowComments(!showComments)
   }
 
-  const toggleLike = () => {
-    if (liked) {
-      setLikeCount(likeCount - 1)
-    } else {
-      setLikeCount(likeCount + 1)
+  const toggleLike = async () => {
+    if (liking) return
+    setLiking(true)
+    try {
+      if (liked) {
+        await postsService.unlikePost(post.post_id)
+        setLikeCount(likeCount - 1)
+      } else {
+        await postsService.likePost(post.post_id)
+        setLikeCount(likeCount + 1)
+      }
+      setLiked(!liked)
+    } catch (error) {
+      console.error("Error toggling like:", error)
+      toast.error("Không thể thực hiện thao tác. Vui lòng thử lại sau.")
+      // Revert the optimistic update
+      setLiked(liked)
+      setLikeCount(likeCount)
+    } finally {
+      setLiking(false)
     }
-    setLiked(!liked)
   }
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!commentText.trim()) return
+    if (!commentText.trim() || submittingComment) return
 
     setSubmittingComment(true)
-
     try {
-      const response = await fetch("https://jsonplaceholder.typicode.com/comments", {
-        method: "POST",
-        body: JSON.stringify({
-          postId: post.id,
-          name: "Current User",
-          email: "user@example.com",
-          body: commentText,
-        }),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-        },
-      })
-
-      if (!response.ok) throw new Error("Failed to post comment")
-
-       await response.json()
-
-      // JSONPlaceholder doesn't actually save the comment, so we'll add it to our local state
-      setComments([
-        {
-          postId: post.id,
-          id: Date.now(), // Use timestamp as temporary ID
-          name: "Current User",
-          email: "user@example.com",
-          body: commentText,
-        },
-        ...comments,
-      ])
-
+      await postsService.commentPost(post.post_id, commentText)
+      
+      // Add the new comment to the list
+      const newComment: CommentResponse = {
+        comment_id: Date.now(), 
+        post_id: post.post_id,
+        user_id: user?.user_id || 1, 
+        content: commentText,
+        created_at: new Date().toISOString(),
+        user_name: user?.full_name || "",
+        user_avatar: user?.avatar || "", 
+        user_slug: user?.slug || "" 
+      }
+      
+      setComments([newComment, ...comments])
       setCommentText("")
+      
+      toast.success("Bình luận của bạn đã được đăng.")
+
     } catch (error) {
       console.error("Error posting comment:", error)
+      toast.error("Không thể đăng bình luận. Vui lòng thử lại sau.")
+
     } finally {
       setSubmittingComment(false)
     }
   }
 
-  // Generate a random date in the past week for the post
-  const randomDate = new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000))
-  const timeAgo = formatDistanceToNow(randomDate, { addSuffix: true })
-
-  // Get initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase()
-  }
+  const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true })
 
   return (
     <Card className="overflow-hidden">
+      <Toaster position="bottom-right" />
+
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
-          <Avatar className="h-10 w-10 border">
-            <AvatarImage src={`https://i.pravatar.cc/150?u=${post.userId}`} alt={user?.name || "User"} />
-            <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
-          </Avatar>
+          <Link href={`/photographer/${post.photographer_slug}`}>
+            <Avatar className="h-10 w-10 border cursor-pointer">
+              <AvatarImage src={post.photographer_avatar} alt={post.photographer_name} />
+              <AvatarFallback>{post.photographer_name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+            </Avatar>
+          </Link>
           <div className="flex-1 space-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium leading-none">{user?.name || "Loading..."}</p>
-                <p className="text-sm text-muted-foreground">@{user?.username || "user"}</p>
+                <Link href={`/photographer/${post.photographer_slug}`} className="hover:underline">
+                  <p className="font-medium leading-none">{post.photographer_name}</p>
+                </Link>
+                <p className="text-sm text-muted-foreground">@{post.photographer_slug}</p>
               </div>
               <p className="text-xs text-muted-foreground">{timeAgo}</p>
             </div>
@@ -172,19 +141,27 @@ export function Post({ post }: PostProps) {
         </div>
       </CardHeader>
       <CardContent className="pb-4">
-        <h3 className="font-semibold text-lg capitalize mb-2">{post.title}</h3>
-        <p className="text-muted-foreground">{post.body}</p>
+        <p className="text-muted-foreground mb-4">{post.caption}</p>
 
-        {/* Random image for visual interest */}
         <div className="mt-4 rounded-md overflow-hidden">
           <Image
-            src={`https://picsum.photos/seed/${post.id}/800/400`}
+            src={post.image_url}
             alt="Post image"
             width={800}
             height={400}
             className="w-full h-auto object-cover transition-transform hover:scale-105"
           />
         </div>
+
+        {post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {post.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                #{tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex flex-col pt-0">
         <div className="flex items-center justify-between w-full pb-4">
@@ -194,17 +171,27 @@ export function Post({ post }: PostProps) {
               size="sm"
               className="gap-1 text-muted-foreground hover:text-primary"
               onClick={toggleLike}
+              disabled={liking}
             >
-              <Heart className={`h-5 w-5 ${liked ? "fill-red-500 text-red-500" : ""}`} />
+              {liking ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Heart className={`h-5 w-5 ${liked ? "fill-red-500 text-red-500" : ""}`} />
+              )}
               <span>{likeCount}</span>
             </Button>
-            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={toggleComments}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-1 text-muted-foreground" 
+              onClick={toggleComments}
+            >
               <MessageCircle className="h-5 w-5" />
-              <span>{comments.length}</span>
+              <span>{post.comment_count}</span>
             </Button>
           </div>
           <Badge variant="outline" className="text-xs">
-            #{post.id}
+            #{post.post_id}
           </Badge>
         </div>
 
@@ -222,26 +209,32 @@ export function Post({ post }: PostProps) {
               <form onSubmit={handleSubmitComment} className="mb-4">
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>ME</AvatarFallback>
+                    <AvatarFallback>{user?.full_name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                    <AvatarImage src={user?.avatar || ""} alt={user?.full_name || ""} />
                   </Avatar>
                   <div className="flex-1 space-y-2">
                     <Textarea
-                      placeholder="Write a comment..."
+                      placeholder="Viết bình luận..."
                       className="min-h-[80px] resize-none"
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
+                      disabled={submittingComment}
                     />
                     <div className="flex justify-end">
-                      <Button type="submit" size="sm" disabled={!commentText.trim() || submittingComment}>
+                      <Button 
+                        type="submit" 
+                        size="sm" 
+                        disabled={!commentText.trim() || submittingComment}
+                      >
                         {submittingComment ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Posting...
+                            Đang đăng...
                           </>
                         ) : (
                           <>
                             <Send className="mr-2 h-4 w-4" />
-                            Post
+                            Đăng
                           </>
                         )}
                       </Button>
@@ -258,28 +251,31 @@ export function Post({ post }: PostProps) {
                 <div className="space-y-4">
                   {comments.map((comment) => (
                     <motion.div
-                      key={comment.id}
+                      key={comment.comment_id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="flex gap-3"
                     >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={`https://i.pravatar.cc/150?u=${comment.email}`} alt={comment.name} />
-                        <AvatarFallback>{getInitials(comment.name)}</AvatarFallback>
-                      </Avatar>
+                      <Link href={`/photographer/${comment.user_slug}`}>
+                        <Avatar className="h-8 w-8 cursor-pointer">
+                          <AvatarImage src={comment.user_avatar} alt={comment.user_name} />
+                          <AvatarFallback>{comment.user_name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                        </Avatar>
+                      </Link>
                       <div className="flex-1">
                         <div className="bg-muted/50 rounded-lg p-3">
                           <div className="flex justify-between items-start mb-1">
-                            <p className="font-medium text-sm">{comment.name}</p>
-                            <Badge variant="outline" className="text-[10px] h-4">
-                              {comment.email.split("@")[0]}
-                            </Badge>
+                            <Link 
+                              href={`/photographer/${comment.user_slug}`}
+                              className="font-medium text-sm hover:underline"
+                            >
+                              {comment.user_name}
+                            </Link>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                            </span>
                           </div>
-                          <p className="text-sm">{comment.body}</p>
-                        </div>
-                        <div className="flex gap-4 mt-1 ml-2">
-                          <button className="text-xs text-muted-foreground hover:text-foreground">Like</button>
-                          <button className="text-xs text-muted-foreground hover:text-foreground">Reply</button>
+                          <p className="text-sm">{comment.content}</p>
                         </div>
                       </div>
                     </motion.div>

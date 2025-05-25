@@ -484,6 +484,15 @@ export default function BookingDetailPage() {
                 </Link>
               </Button> */}
 
+                {/* <Button
+                  variant="outline"
+                  className="w-full hover:text-accent-foreground"
+                  onClick={() => handlePayment(booking.booking_code)}
+                >
+                  💸Thanh toán
+                </Button> */}
+                
+              {booking.status === "accepted" && (
                 <Button
                   variant="outline"
                   className="w-full hover:text-accent-foreground"
@@ -491,16 +500,7 @@ export default function BookingDetailPage() {
                 >
                   💸Thanh toán
                 </Button>
-                
-              {/* {booking.status === "accepted" && (
-                <Button
-                  variant="outline"
-                  className="w-full text-destructive hover:text-destructive"
-                  onClick={() => setIsCancelDialogOpen(true)}
-                >
-                  Thanh toán
-                </Button>
-              )} */}
+              )}
               {booking.status === "pending" && (
                 <Button
                   variant="outline"

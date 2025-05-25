@@ -11,6 +11,7 @@ type User = {
   role: string
   avatar?: string
   phone_number?: string
+  slug?: string
 }
 
 type AuthContextType = {

@@ -2,41 +2,29 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Post } from "./post"
+import { Post as PostComponent } from "./post"
+import { postsService, PostResponse } from "@/services/posts.service"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 
-interface PostData {
-  userId: number    
-  id: number
-  title: string
-  body: string
-}
-
 export default function PostFeed() {
-  const [posts, setPosts] = useState<PostData[]>([])
+  const [posts, setPosts] = useState<PostResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
+  const [skip, setSkip] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
 
-  const fetchPosts = async (pageNum: number) => {
+  const fetchPosts = async (skipCount: number) => {
     try {
-      const response = await fetch(`https://jsonplaceholder.typicode.com/posts?_page=${pageNum}&_limit=5`)
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch posts")
-      }
-
-      const data = await response.json()
+      const data = await postsService.getLastestPosts()
 
       if (data.length === 0) {
         setHasMore(false)
         return
       }
 
-      if (pageNum === 1) {
+      if (skipCount === 0) {
         setPosts(data)
       } else {
         setPosts((prev) => [...prev, ...data])
@@ -51,20 +39,20 @@ export default function PostFeed() {
   }
 
   useEffect(() => {
-    fetchPosts(1)
+    fetchPosts(0)
   }, [])
 
   const loadMorePosts = () => {
     setLoadingMore(true)
-    setPage((prev) => prev + 1)
-    fetchPosts(page + 1)
+    setSkip((prev) => prev + 20)
+    fetchPosts(skip + 20)
   }
 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading posts...</span>
+        <span className="ml-2">Đang tải bài viết...</span>
       </div>
     )
   }
@@ -73,7 +61,7 @@ export default function PostFeed() {
     return (
       <div className="text-center py-20">
         <p className="text-destructive mb-4">{error}</p>
-        <Button onClick={() => fetchPosts(1)}>Try Again</Button>
+        <Button onClick={() => fetchPosts(0)}>Try Again</Button>
       </div>
     )
   }
@@ -83,12 +71,12 @@ export default function PostFeed() {
       <AnimatePresence>
         {posts.map((post, index) => (
           <motion.div
-            key={post.id}
+            key={post.post_id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
-            <Post post={post} />
+            <PostComponent post={post} />
           </motion.div>
         ))}
       </AnimatePresence>
@@ -102,7 +90,7 @@ export default function PostFeed() {
                 Loading...
               </>
             ) : (
-              "Load More"
+              "Xem thêm"
             )}
           </Button>
         </div>
