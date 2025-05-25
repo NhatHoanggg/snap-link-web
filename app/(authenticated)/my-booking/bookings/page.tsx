@@ -52,6 +52,10 @@ const translateStatus = (status: string) => {
   switch (status) {
     case "completed":
       return "Hoàn thành"
+    case "accepted":
+      return "Đã xác nhận"
+    case "confirmed":
+      return "Đã thanh toán"
     case "cancelled":
       return "Đã hủy"
     case "pending":

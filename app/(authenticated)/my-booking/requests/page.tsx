@@ -86,7 +86,7 @@ export default function MyRequestsPage() {
                                         {request.shooting_type}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                                        {request.location_text}, {request.city}
+                                        {request.location_text}, {request.province}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <Badge 

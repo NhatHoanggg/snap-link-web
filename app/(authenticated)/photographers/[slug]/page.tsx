@@ -401,7 +401,7 @@ export default function PhotographerDetail() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Column - Profile Info */}
           <div className="lg:w-1/3">
-            <Card className=" border-none shadow-2xl bg-white/80 backdrop-blur-sm">
+            <Card className=" border-none shadow-2xl backdrop-blur-sm">
               <div className="relative">
                 <div className="absolute -top-32 left-1/2 transform -translate-x-1/2">
                   <div className="relative w-48 h-48 rounded-full border-4 border-background overflow-hidden bg-background shadow-xl z-40">
@@ -696,7 +696,7 @@ export default function PhotographerDetail() {
           {/* Right Column - Content */}
           <div className="lg:w-2/3 space-y-8">
             {/* About Section */}
-            <Card className="overflow-hidden border-none shadow-xl bg-white/80 backdrop-blur-sm">
+            <Card className="overflow-hidden border-none shadow-xl backdrop-blur-sm">
               <CardHeader className="pb-2 pt-6">
                 <CardTitle className="text-2xl flex items-center">
                   <Info className="h-6 w-6 mr-2 text-primary" />

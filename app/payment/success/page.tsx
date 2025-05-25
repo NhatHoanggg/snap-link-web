@@ -1,60 +1,268 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Calendar, Camera, MapPin, MapPinned, ChevronDown, ChevronUp } from "lucide-react";
+import { getBookingByCode, updateBookingStatus, type BookingResponse } from '@/services/booking.service';
+import { format, parseISO } from "date-fns";
+import { vi } from "date-fns/locale";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const [loading, setLoading] = useState(true);
+  const [booking, setBooking] = useState<BookingResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showBookingInfo, setShowBookingInfo] = useState(false);
+
   const resultCode = searchParams.get('resultCode');
-  const orderId = searchParams.get('orderId');
+  const bookingCode = searchParams.get('orderInfo');
   const message = searchParams.get('message');
+  const amount = searchParams.get('amount');
+  const transId = searchParams.get('transId');
+  const payType = searchParams.get('payType');
 
   useEffect(() => {
-    // You can add additional logic here to verify the payment status
-    // with your backend if needed
-  }, []);
+    const fetchBooking = async () => {
+      if (!bookingCode) {
+        setError('Không tìm thấy mã đặt lịch');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const bookingData = await getBookingByCode(bookingCode);
+        setBooking(bookingData);
+
+        // If payment is successful, update booking status to completed
+        if (resultCode === '0' && bookingData.status !== 'confirmed') {
+          try {
+            await updateBookingStatus(bookingData.booking_id, 'confirmed');
+            // Update local booking state with new status
+            setBooking(prev => prev ? { ...prev, status: 'confirmed' } : null);
+            toast.success('Thanh toán thành công!');
+          } catch (err) {
+            console.error('Error updating booking status:', err);
+            toast.error('Không thể thanh toán');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching booking:', err);
+        setError('Không thể tải thông tin đặt lịch');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooking();
+  }, [bookingCode, resultCode]);
 
   const isSuccess = resultCode === '0';
 
+  // Helper function to translate payment type
+  const translatePaymentType = (type: string | null) => {
+    switch (type) {
+      case 'napas':
+        return 'Thẻ ATM';
+      case 'momo_wallet':
+        return 'Ví MoMo';
+      default:
+        return type;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container max-w-md mx-auto py-12">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <Loader2 className="h-16 w-16 text-primary animate-spin" />
+            </div>
+            <CardTitle className="text-center">Đang tải thông tin...</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container max-w-md mx-auto py-12">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <XCircle className="h-16 w-16 text-red-500" />
+            </div>
+            <CardTitle className="text-center text-red-500">Lỗi</CardTitle>
+            <CardDescription className="text-center">{error}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push('/')}
+            >
+              Về trang chủ
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-md mx-auto py-12">
+      <Toaster position="bottom-center" />
       <Card>
         <CardHeader>
           <div className="flex justify-center mb-4">
             {isSuccess ? (
               <CheckCircle2 className="h-16 w-16 text-green-500" />
             ) : (
-              <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
-                <span className="text-red-500 text-2xl">×</span>
-              </div>
+              <XCircle className="h-16 w-16 text-red-500" />
             )}
           </div>
           <CardTitle className="text-center">
-            {isSuccess ? 'Payment Successful' : 'Payment Failed'}
+            {isSuccess ? 'Thanh toán thành công' : 'Thanh toán thất bại'}
           </CardTitle>
           <CardDescription className="text-center">
             {isSuccess 
-              ? 'Your payment has been processed successfully.'
-              : message || 'There was an error processing your payment.'}
+              ? 'Đặt lịch của bạn đã được xác nhận thanh toán.'
+              : message || 'Có lỗi xảy ra trong quá trình thanh toán.'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {orderId && (
-            <div className="text-sm text-center text-gray-500">
-              Order ID: {orderId}
+        <CardContent className="space-y-6">
+          {/* Payment Information */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-lg">Thông tin thanh toán</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Mã đặt lịch:</span>
+                <span className="font-medium">{bookingCode}</span>
+              </div>
+              {amount && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Số tiền:</span>
+                  <span className="font-medium">{Number(amount).toLocaleString()} VND</span>
+                </div>
+              )}
+              {payType && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Phương thức:</span>
+                  <span className="font-medium capitalize">{translatePaymentType(payType)}</span>
+                </div>
+              )}
+              {transId && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Mã giao dịch:</span>
+                  <span className="font-medium">{transId}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Booking Information Toggle Button */}
+          {booking && (
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-between"
+              onClick={() => setShowBookingInfo(!showBookingInfo)}
+            >
+              <span>Thông tin đặt lịch</span>
+              {showBookingInfo ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+
+          {/* Booking Information */}
+          {booking && showBookingInfo && (
+            <div className="space-y-4 pt-2 border-t">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Ngày chụp</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {format(parseISO(booking.booking_date), "EEEE, dd/MM/yyyy", { locale: vi })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Camera className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Concept</h4>
+                    <p className="text-sm text-muted-foreground">{booking.concept}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Tỉnh/Thành phố</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {booking.province || "Chưa có thông tin địa điểm"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <MapPinned className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Địa điểm</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {booking.custom_location || "Chưa có thông tin địa điểm"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Package className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Số lượng</h4>
+                    <p className="text-sm text-muted-foreground">{booking.quantity || 1}</p>
+                  </div>
+                </div> */}
+              </div>
             </div>
           )}
-          <Button
-            className="w-full"
-            onClick={() => router.push('/')}
-          >
-            Return to Home
-          </Button>
+
+          {/* Action Buttons */}
+          <div className="pt-4 space-y-2">
+            {booking && (
+              <Button
+                className="w-full"
+                onClick={() => router.push(`/my-booking/bookings/${booking.booking_code}`)}
+              >
+                Xem chi tiết đặt lịch
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push('/')}
+            >
+              Về trang chủ
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

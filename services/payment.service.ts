@@ -37,3 +37,13 @@ export const createMomoPayment = async (paymentData: MomoPaymentRequest): Promis
     throw new Error("Failed to create momo payment")
   }
 }; 
+
+export const handleMomoPaymentCallback = async (partnerCode: string, orderId: string, requestId: string, amount: number, orderInfo: string, orderType: string, transId: string, resultCode: number, message: string, payType: string, responseTime: number, signature: string): Promise<MomoPaymentResponse> => {
+  try {
+    const response = await axiosInstance.post(`/api/payment/momo/callback/${partnerCode}/${orderId}/${requestId}/${amount}/${orderInfo}/${orderType}/${transId}/${resultCode}/${message}/${payType}/${responseTime}/${signature}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error handling momo payment callback:", error)
+    throw new Error("Failed to handle momo payment callback")
+  }
+};

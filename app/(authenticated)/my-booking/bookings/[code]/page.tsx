@@ -71,6 +71,10 @@ const translateStatus = (status: string) => {
   switch (status) {
     case "completed":
       return "Hoàn thành"
+    case "accepted":
+      return "Đã xác nhận"
+    case "confirmed":
+      return "Đã thanh toán"
     case "cancelled":
       return "Đã hủy"
     case "pending":
@@ -103,7 +107,6 @@ export default function BookingDetailPage() {
   const [photographer, setPhotographer] = useState<Photographer | null>(null)
   const [service, setService] = useState<Service | null>(null)
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false)
-
   // Extract booking code from params and ensure it's a string
   const bookingCode = typeof params.code === 'string' ? params.code : Array.isArray(params.code) ? params.code[0] : null
 
@@ -175,6 +178,11 @@ export default function BookingDetailPage() {
       console.error("Failed to cancel booking:", error)
       toast.error("Không thể hủy đặt lịch. Vui lòng thử lại sau.")
     }
+  }
+
+  const handlePayment = (bookingCode: string) => {
+    console.log("Thanh toán")
+    router.push(`/payment/${bookingCode}`)
   }
 
   useEffect(() => {
@@ -476,7 +484,15 @@ export default function BookingDetailPage() {
                 </Link>
               </Button> */}
 
-              {booking.status === "accepted" && (
+                <Button
+                  variant="outline"
+                  className="w-full hover:text-accent-foreground"
+                  onClick={() => handlePayment(booking.booking_code)}
+                >
+                  💸Thanh toán
+                </Button>
+                
+              {/* {booking.status === "accepted" && (
                 <Button
                   variant="outline"
                   className="w-full text-destructive hover:text-destructive"
@@ -484,7 +500,7 @@ export default function BookingDetailPage() {
                 >
                   Thanh toán
                 </Button>
-              )}
+              )} */}
               {booking.status === "pending" && (
                 <Button
                   variant="outline"
