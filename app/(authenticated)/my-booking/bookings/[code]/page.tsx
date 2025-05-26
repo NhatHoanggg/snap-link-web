@@ -104,11 +104,19 @@ export default function BookingDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [cancelReason, setCancelReason] = useState("")
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [isAcceptedDialogOpen, setIsAcceptedDialogOpen] = useState(false)
   const [photographer, setPhotographer] = useState<Photographer | null>(null)
   const [service, setService] = useState<Service | null>(null)
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false)
   // Extract booking code from params and ensure it's a string
   const bookingCode = typeof params.code === 'string' ? params.code : Array.isArray(params.code) ? params.code[0] : null
+
+  // Show accepted dialog when booking status is accepted
+  useEffect(() => {
+    if (booking?.status === "accepted") {
+      setIsAcceptedDialogOpen(true)
+    }
+  }, [booking?.status])
 
   // Fetch photographer data when booking data is loaded
   useEffect(() => {
@@ -676,6 +684,26 @@ export default function BookingDetailPage() {
             </Button>
             <Button variant="destructive" onClick={handleCancelBooking}>
               Xác nhận hủy
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Accepted Dialog */}
+      <Dialog open={isAcceptedDialogOpen} onOpenChange={setIsAcceptedDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lịch đã được xác nhận</DialogTitle>
+            <DialogDescription>
+              Lịch đã được nhiếp ảnh gia xác nhận 📝 <br /> Nhớ thanh toán bạn nhé! 🎉🎉
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAcceptedDialogOpen(false)}>
+              Đóng
+            </Button>
+            <Button onClick={() => handlePayment(booking.booking_code)}>
+              Thanh toán ngay
             </Button>
           </DialogFooter>
         </DialogContent>

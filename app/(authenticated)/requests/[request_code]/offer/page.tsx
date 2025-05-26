@@ -40,7 +40,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import Link from "next/link"
-
+import { AxiosError } from "axios"
 import toast, { Toaster, ToastBar } from "react-hot-toast";
 
 
@@ -59,6 +59,12 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   
+  // Add error message mapping
+  const errorMessages: { [key: string]: string } = {
+    "Cannot create offer for closed request": "Không thể tạo đề xuất cho yêu cầu đã bị hủy bởi khách hàng",
+    "You are not available on the requested date": "Bạn đã bận hoặc có lịch chụp vào ngày chụp của yêu cầu này",
+    "You have already created an offer for this request": "Bạn đã tạo request cho yêu cầu này"
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +98,7 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
     fetchData()
   }, [request_code])
 
-  console.log(request)
+  // console.log(request)
 
   // Calculate discount percentage
   const calculateDiscount = () => {
@@ -138,13 +144,20 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
 
       await createOffer(request.request_id, offerData)
       
-    // Show success message and redirect
-    // alert("Đề xuất của bạn đã được gửi thành công!")
-    toast.success("Yêu cầu của bạn đã được gửi thành công!")
+      toast.success("Yêu cầu của bạn đã được gửi thành công!")
       window.location.href = "/requests" 
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error creating offer:", err)
-      setSubmitError("Không thể gửi đề xuất. Vui lòng thử lại sau.")
+
+      if (err instanceof AxiosError) {
+        console.log("hello")
+        const errorMessage = err.response?.data?.detail as string
+        if (errorMessages[errorMessage]) {
+          setSubmitError(errorMessages[errorMessage])
+        } else {
+          setSubmitError("Không thể gửi đề xuất. Vui lòng thử lại sau.")
+        }
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -222,7 +235,7 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-md">
-                    <DollarSign className="h-4 w-4" />
+                    💰Ngân sách dự kiến: 
                     <span className="font-medium">{request.estimated_budget.toLocaleString("vi-VN")} VNĐ</span>
                   </div>
                 </TooltipTrigger>
@@ -463,7 +476,6 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
                           <div className="space-y-2">
                             <Label htmlFor="discount-percent" className="flex items-center gap-2">
                               <Percent className="h-4 w-4 text-muted-foreground" />
-                              Phần trăm giảm giá
                             </Label>
                             <div className="relative">
                               <Input

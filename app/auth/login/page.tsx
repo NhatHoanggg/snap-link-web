@@ -96,7 +96,7 @@ export default function LoginPage() {
                 {/* <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary-foreground/20 backdrop-blur-sm">
                   <LinkIcon className="h-10 w-10 text-primary-foreground" />
                 </div> */}
-                <h2 className="mb-2 text-3xl font-bold">SnapLink</h2>
+                <h2 className="mb-2 text-3xl font-bold">SnapLink 📸</h2>
                 <p className="mb-8 text-primary-foreground/80">Kết nối nhanh chóng. Chia sẻ dễ dàng.</p>
                 <div className="relative h-64 w-full">
                   <motion.div
@@ -137,12 +137,12 @@ export default function LoginPage() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent">
                   <LinkIcon className="h-8 w-8 text-primary-foreground" />
                 </div>
-                <h2 className="mt-4 text-2xl font-bold text-foreground">SnapLink</h2>
+                <h2 className="mt-4 text-2xl font-bold text-foreground">SnapLink 📸</h2>
                 <p className="text-muted-foreground">Kết nối nhanh chóng. Chia sẻ dễ dàng.</p>
               </div>
 
               <div className="mb-8">
-                <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Chào mừng trở lại!</h1>
+                <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Chào mừng trở lại! 🎉🎉🎉</h1>
                 <p className="mt-2 text-muted-foreground">Vui lòng đăng nhập để tiếp tục</p>
               </div>
 
