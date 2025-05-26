@@ -79,7 +79,7 @@ export default function AboutPage() {
 
   return (
     <div>
-      <div className="container mx-auto py-12 px-4 md:px-6">
+      <div className="container mx-auto py-12 px-4 md:px-6 mt-16">
         {/* Hero Section */}
         <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
           <div className="w-full md:w-1/2">

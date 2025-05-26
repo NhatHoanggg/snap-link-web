@@ -50,6 +50,7 @@ import { format, parseISO, isAfter } from "date-fns"
 import { vi } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import toast, { Toaster, ToastBar } from "react-hot-toast"
+import { AuthCheck } from "@/components/auth/auth-check"
 
 // Helper function to get discount status
 const getDiscountStatus = (discount: PhotographerDiscount): "active" | "expired" | "upcoming" => {
@@ -386,12 +387,12 @@ export default function PhotographerDetail() {
                 <Share2 className="h-4 w-4 mr-2" />
                 Chia sẻ
               </Button>
-              <Button size="sm" asChild>
-                <Link href={`/booking/${photographer.slug}`}>
+              <AuthCheck href={`/booking/${photographer.slug}`}>
+                <Button size="sm">
                   <Calendar className="h-4 w-4 mr-2" />
                   Đặt lịch
-                </Link>
-              </Button>
+                </Button>
+              </AuthCheck>
             </div>
           </div>
         </div>
@@ -481,16 +482,15 @@ export default function PhotographerDetail() {
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    <Button
-                      className="w-full py-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                      size="lg"
-                      asChild
-                    >
-                      <Link href={`/booking/${photographer.slug}`}>
+                    <AuthCheck href={`/booking/${photographer.slug}`}>
+                      <Button
+                        className="w-full py-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                        size="lg"
+                      >
                         <Calendar className="h-5 w-5 mr-2" />
                         Đặt lịch ngay
-                      </Link>
-                    </Button>
+                      </Button>
+                    </AuthCheck>
 
                     <div className="flex gap-2">
                       <Button

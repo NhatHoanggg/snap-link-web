@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, LinkIcon } from "lucide-react"
-
+import { Menu, X  } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
@@ -46,7 +46,7 @@ export function Navbar() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link
@@ -54,8 +54,9 @@ export function Navbar() {
           className="flex items-center space-x-2 text-xl font-bold transition-colors hover:text-primary"
           aria-label="SnapLink Home"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <LinkIcon size={18} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-md text-primary-foreground">
+            {/* <LinkIcon size={18} /> */}
+            <Image src="/logo.svg" alt="SnapLink Logo" width={32} height={32} />
           </span>
           <span>SnapLink</span>
         </Link>

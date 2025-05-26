@@ -1,7 +1,7 @@
-import axios from 'axios';
+// import axios from 'axios';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 import {type Service } from './services.service';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+import axiosInstance from './axios';
 
 export interface FeaturedPhoto {
   featured_photo_id: number;
@@ -87,50 +87,42 @@ export const photographerService = {
         }
       });
 
-      const response = await axios.get<PhotographersResponse>(
-        `${API_URL}/photographers?${params.toString()}`
+      const response = await axiosInstance.get<PhotographersResponse>(
+        `/photographers?${params.toString()}`
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch photographers');
-      }
+      console.log(error);
       throw new Error('An unexpected error occurred');
     }
   },
 
   async getPhotographerBySlug(slug: string): Promise<Photographer> {
     try {
-      const response = await axios.get<Photographer>(`${API_URL}/photographers/slug/${slug}`);
+      const response = await axiosInstance.get<Photographer>(`/photographers/slug/${slug}`);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch photographer');
-      }
+      console.log(error);
       throw new Error('An unexpected error occurred');
     }
   },
 
   async getPhotographerById(id: number): Promise<Photographer>{
     try {
-      const response = await axios.get<Photographer>(`${API_URL}/photographers/${id}`);
+      const response = await axiosInstance.get<Photographer>(`/photographers/${id}`);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch photographer');
-      }
+      console.log(error);
       throw new Error('An unexpected error occurred');
     }
   },
 
   async getPhotographerName(id: number): Promise<string>{
     try {
-      const response = await axios.get<Photographer>(`${API_URL}/photographers/${id}`);
+      const response = await axiosInstance.get<Photographer>(`/photographers/${id}`);
       return response.data.full_name;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch photographer');
-      }
+      console.log(error);
       throw new Error('An unexpected error occurred');
     }
   },
@@ -143,8 +135,8 @@ export const photographerService = {
     token: string
   ): Promise<Photographer> {
     try {
-      const response = await axios.patch<Photographer>(
-        `${API_URL}/photographers/${photographerId}`,
+      const response = await axiosInstance.patch<Photographer>(
+        `/photographers/${photographerId}`,
         data,
         {
           headers: {
@@ -154,9 +146,7 @@ export const photographerService = {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to update profile');
-      }
+      console.log(error);
       throw new Error('An unexpected error occurred');
     }
   },
@@ -173,14 +163,12 @@ export const photographerService = {
         limit: limit.toString(),
       });
 
-      const response = await axios.get<PhotographersResponse>(
-        `${API_URL}/photographers/availability/search?${params.toString()}`
+      const response = await axiosInstance.get<PhotographersResponse>(
+        `/photographers/availability/search?${params.toString()}`
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch photographers by date');
-      }
+      console.log(error);
       throw new Error('An unexpected error occurred');
     }
   },

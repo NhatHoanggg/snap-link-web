@@ -27,7 +27,7 @@ const handler = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
-          const response = await fetch("http://localhost:8001/check-email", {
+          const response = await fetch("https://snaplink-itqaz.ondigitalocean.app/check-email", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

@@ -6,6 +6,7 @@ import { Heart, MapPin, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { AuthCheck } from "@/components/auth/auth-check"
 
 interface Photographer {
   id: number
@@ -96,11 +97,13 @@ export function PhotographerCard({ photographer }: { photographer: Photographer 
       <CardFooter className="border-t p-4">
         <div className="flex w-full gap-2">
           <Button variant="outline" size="sm" className="flex-1">
-            View Profile
+            Xem hồ sơ
           </Button>
-          <Button size="sm" className="flex-1">
-            Book Now
-          </Button>
+          <AuthCheck>
+            <Button size="sm" className="flex-1">
+              Đặt lịch ngay
+            </Button>
+          </AuthCheck>
         </div>
       </CardFooter>
     </Card>

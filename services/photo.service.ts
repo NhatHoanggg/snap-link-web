@@ -18,6 +18,13 @@ export interface FeaturedPhotoUpdate {
   description: string;
 }
 
+export interface Photo {
+  photo_id: number;
+  booking_id: number;
+  image_url: string;
+  uploaded_at: Date;
+}
+
 
 import axiosInstance from "./axios"
 

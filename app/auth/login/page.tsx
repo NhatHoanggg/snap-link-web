@@ -93,21 +93,21 @@ export default function LoginPage() {
                 transition={{ delay: 0.2, duration: 0.8 }}
                 className="text-center"
               >
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary-foreground/20 backdrop-blur-sm">
+                {/* <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary-foreground/20 backdrop-blur-sm">
                   <LinkIcon className="h-10 w-10 text-primary-foreground" />
-                </div>
+                </div> */}
                 <h2 className="mb-2 text-3xl font-bold">SnapLink</h2>
                 <p className="mb-8 text-primary-foreground/80">Kết nối nhanh chóng. Chia sẻ dễ dàng.</p>
                 <div className="relative h-64 w-full">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5, duration: 0.8 }}
+                    animate={{ opacity: 1, scale: 1.2 }}
+                    transition={{ delay: 0.5, duration: 1.2 }}
                     className="absolute left-0 top-0 h-48 w-48 rounded-lg bg-primary-foreground/10 backdrop-blur-sm"
                   ></motion.div>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    animate={{ opacity: 1, scale: 1.1 }}
                     transition={{ delay: 0.7, duration: 0.8 }}
                     className="absolute bottom-0 right-0 h-48 w-48 rounded-lg bg-primary-foreground/10 backdrop-blur-sm"
                   ></motion.div>
@@ -117,15 +117,7 @@ export default function LoginPage() {
                     transition={{ delay: 0.9, duration: 0.8 }}
                     className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-xl bg-primary-foreground/20 p-2 backdrop-blur-sm"
                   >
-                    {/* <div className="h-full w-full rounded-lg bg-gradient-to-br from-secondary to-accent p-4">
-                      <div className="h-4 w-2/3 rounded-full bg-primary-foreground/30 mb-3"></div>
-                      <div className="h-4 w-3/4 rounded-full bg-primary-foreground/30 mb-6"></div>
-                      <div className="h-20 w-full rounded-lg bg-primary-foreground/20"></div>
-                      <div className="mt-4 flex justify-between">
-                        <div className="h-8 w-8 rounded-full bg-primary-foreground/30"></div>
-                        <div className="h-8 w-20 rounded-full bg-primary-foreground/30"></div>
-                      </div>
-                    </div> */}
+
                     <Image src="/logo.svg" alt="SnapLink" width={200} height={200} />
                   </motion.div>
                 </div>

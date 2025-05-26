@@ -45,8 +45,10 @@ export default function PaymentPage() {
         amount: booking.total_price,
         order_id: generateOrderId(),
         order_info: `${booking.booking_code}`,
-        return_url: `http://localhost:3000/payment/success`,
-        notify_url: `http://127.0.0.1:8001/api/payment/momo/callback`,
+        return_url: `https://snap-link-web.vercel.app/payment/success`,
+        notify_url: `https://snaplink-itqaz.ondigitalocean.app/api/payment/momo/callback`,
+        // return_url: `http://localhost:3000/payment/success`,
+        // notify_url: `http://127.0.0.1:8001/api/payment/momo/callback`,
         payment_type: paymentType,
       };
 

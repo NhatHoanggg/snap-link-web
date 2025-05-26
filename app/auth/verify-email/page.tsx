@@ -129,24 +129,24 @@ export default function OtpVerificationPage() {
 
   if (!email) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-md text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Đang tải...</h1>
-          <p className="mt-2 text-sm text-gray-600">Vui lòng đợi trong giây lát</p>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-8 rounded-xl bg-card p-8 shadow-md text-center">
+          <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Đang tải...</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Vui lòng đợi trong giây lát</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-md">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-8 rounded-xl bg-card p-8 shadow-md">
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Xác thực Email</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Xác thực Email</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             Vui lòng nhập mã 6 chữ số đã được gửi đến
           </p>
-          <p className="mt-1 text-sm font-medium text-blue-600">{email}</p>
+          <p className="mt-1 text-sm font-medium text-primary">{email}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -166,11 +166,11 @@ export default function OtpVerificationPage() {
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  className="h-12 w-12 rounded-lg border border-gray-300 text-center text-lg font-semibold focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="h-12 w-12 rounded-lg border border-input text-center text-lg font-semibold focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background text-foreground"
                 />
               ))}
             </div>
-            <p className="text-center text-sm text-gray-500">Mã OTP sẽ hết hạn sau 5 phút</p>
+            <p className="text-center text-sm text-muted-foreground">Mã OTP sẽ hết hạn sau 5 phút</p>
           </div>
 
           <Button 
@@ -195,7 +195,7 @@ export default function OtpVerificationPage() {
         <div className="mt-4 text-center">
           <button
             type="button"
-            className="text-sm font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleResendOtp}
             disabled={isResending}
           >
