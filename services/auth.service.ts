@@ -1,7 +1,7 @@
 import axiosInstance from './axios';
 import { isAxiosError } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"
 
 // interface LoginCredentials {
 //   email: string;
@@ -101,7 +101,7 @@ export async function logout(token: string): Promise<void> {
 
 export const registerCustomer = async (data: CustomerRegisterData): Promise<RegisterResponse> => {
   try {
-    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/register/customer`, data);
+    const response = await axiosInstance.post<RegisterResponse>(`/register/customer`, data);
     return response.data;
   } catch (error: unknown) {
     if (isAxiosError(error)) {
@@ -114,7 +114,7 @@ export const registerCustomer = async (data: CustomerRegisterData): Promise<Regi
 export const registerPhotographer = async (data: PhotographerRegisterData): Promise<RegisterResponse> => {
   try {
     console.log("data -->", data);
-    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/register/photographer`, data);
+    const response = await axiosInstance.post<RegisterResponse>(`/register/photographer`, data);
     return response.data;
   } catch (error: unknown) {
     if (isAxiosError(error)) {
@@ -137,7 +137,7 @@ export async function verifyEmail(email: string, otp: string): Promise<void> {
 
 export const registerCustomerWithGoogle = async (data: CustomerRegisterData): Promise<RegisterResponse> => {
   try {
-    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/v1/register/customer`, data);
+    const response = await axiosInstance.post<RegisterResponse>(`/v1/register/customer`, data);
     return response.data;
   } catch (error: unknown) {
     if (isAxiosError(error)) {
@@ -150,7 +150,7 @@ export const registerCustomerWithGoogle = async (data: CustomerRegisterData): Pr
 export const registerPhotographerWithGoogle = async (data: PhotographerRegisterData): Promise<RegisterResponse> => {
   try {
     console.log("data -->", data);
-    const response = await axiosInstance.post<RegisterResponse>(`${API_URL}/v1/register/photographer`, data);
+    const response = await axiosInstance.post<RegisterResponse>(`/v1/register/photographer`, data);
     return response.data;
   } catch (error: unknown) {
     if (isAxiosError(error)) {
