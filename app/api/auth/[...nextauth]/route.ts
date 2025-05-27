@@ -20,33 +20,45 @@ const handler = NextAuth({
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
-    signIn: "/login",
+    signIn: "/auth/login",
   },
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        try {
-          const response = await fetch("https://snaplink-itqaz.ondigitalocean.app/check-email", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email: user.email }),
-          });
-
-          const data = await response.json();
-          
-          if (!data.exists) {
-            return "/auth/google/register?email=" + encodeURIComponent(user.email || "") + 
-               "&name=" + encodeURIComponent(user.name || "");
-          }
         console.log("user", user);
         return true;
-        } catch (error) {
-          console.error("Error checking email:", error);
-          return false;
-        }
+        // try {
+        //   console.log("Sign in attempt with:", {
+        //     email: user.email,
+        //     name: user.name,
+        //     account: account
+        //   });
+          
+        //   const response = await fetch("https://snaplink-itqaz.ondigitalocean.app/check-email", {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({ email: user.email }),
+        //   });
+
+        //   const data = await response.json();
+          
+        //   if (!data.exists) {
+        //     return "/auth/google/register?email=" + encodeURIComponent(user.email || "") + 
+        //        "&name=" + encodeURIComponent(user.name || "");
+        //   }
+        //   console.log("user", user);
+        //   return true;
+        // } catch (error) {
+        //   console.error("Error checking email:", error);
+        //   return false;
+        // }
       }
       return true;
     },
@@ -63,7 +75,12 @@ const handler = NextAuth({
           ...token,
           accessToken: account.access_token,
           idToken: account.id_token,
+          user: user,
         };
+      }
+      // Return previous token if the access token has not expired yet
+      if (token) {
+        return token;
       }
       return token;
     },

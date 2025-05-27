@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "SnapLink",
-  description: "A modern web application for connecting photographers and clients",
+  description: "Trang web cho phép người dùng kết nối với các nhiếp ảnh gia",
   icons: {
     icon: "/logo.svg",
   },

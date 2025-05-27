@@ -80,9 +80,9 @@ export async function login(credentials: { email: string; password: string }): P
   return response.data;
 }
 
-export async function loginWithGoogle(idToken: string): Promise<LoginResponse> {
+export async function loginWithGoogle(idToken: string, role: string | null): Promise<LoginResponse> {
   console.log("idToken -->", idToken);
-  const response = await axiosInstance.post<LoginResponse>('/auth/google', { google_token: idToken });
+  const response = await axiosInstance.post<LoginResponse>('/auth/google', { google_token: idToken, role: role });
   return response.data;
 }
 

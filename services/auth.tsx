@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { login as apiLogin, logout as apiLogout, loginWithGoogle as apiLoginWithGoogle } from "@/services/auth.service"
+import { signOut } from "next-auth/react";
 
 type User = {
   user_id: number
@@ -20,8 +21,9 @@ type AuthContextType = {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  loginWithGoogle: (idToken: string) => Promise<void>
+  loginWithGoogle: (idToken: string, role: string | null) => Promise<void>
   logout: () => Promise<void>
+  GoogleLogin: (email: string, name: string) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -67,9 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const loginWithGoogle = async (idToken: string) => {
+  const loginWithGoogle = async (idToken: string, role: string | null) => {
     try {
-      const response = await apiLoginWithGoogle(idToken)
+      const response = await apiLoginWithGoogle(idToken, role)
       const { access_token, refresh_token, user } = response
       localStorage.setItem("token", access_token)
       localStorage.setItem("refreshToken", refresh_token)
@@ -80,6 +82,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       throw error
     } 
+  }
+
+  const GoogleLogin = (email: string, name: string) => {
+    setUser({
+      email: email,
+      full_name: name,
+      role: "user",
+      user_id: 0,
+    })
   }
 
   const logout = async () => {
@@ -96,7 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("user")
       setUser(null)
       setToken(null)
-      router.push("/")
+      // router.push("/")
+      signOut({ callbackUrl: "/auth/login" });
     }
   }
 
@@ -108,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     loginWithGoogle,
+    GoogleLogin,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -43,14 +43,14 @@ export default function LoginPage() {
     try {
       await login(formData.email, formData.password)
       toast({
-        title: "Login successful",
-        description: "Welcome back!",
+        title: "Đăng nhập thành công",
+        description: "Chào mừng đến với SnapLink",
       })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Login failed"
+      const errorMessage = error instanceof Error ? error.message : "Đăng nhập thất bại"
       setError(errorMessage)
       toast({
-        title: "Login failed",
+        title: "Đăng nhập thất bại",
         description: errorMessage,
         variant: "destructive",
       })
