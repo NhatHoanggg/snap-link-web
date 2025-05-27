@@ -12,21 +12,27 @@ export default function GoogleTokenPage() {
   const { data: session, status } = useSession();
   const { loginWithGoogle } = useAuth();
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRoleSelection = async (role: string) => {
     try {
+      setIsLoading(true);
       if (!session?.idToken) {
         throw new Error("No idToken found");
       }
       await loginWithGoogle(session.idToken, role);
-      router.push("/home");
+      router.push("/home?role=" + role + "&first_login=true");
     } catch (error) {
       console.error("Error logging in with Google:", error);
       router.push("/auth/login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log("Session status:", status);
+    console.log("Session data:", session);
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
@@ -37,9 +43,11 @@ export default function GoogleTokenPage() {
 
     const idToken = session?.idToken;
     if (idToken) {
+      console.log("idToken -->", idToken);
       
       const handleGoogleLogin = async () => {
         try {
+          setIsLoading(true);
           const checkEmailResponse = await fetch("https://snaplink-itqaz.ondigitalocean.app/check-email", {
             method: "POST",
             headers: {
@@ -52,23 +60,30 @@ export default function GoogleTokenPage() {
           console.log("Email check response:", emailData);
 
           if (emailData.exists) {
+            // Email exists, login with null role
             await loginWithGoogle(idToken, null);
             router.push("/home");
             return;
           }
 
+          // Email doesn't exist, check for role
           const role = searchParams.get("role");
           
           if (!role) {
+            // Show role selection UI
             setShowRoleSelection(true);
             return;
           }
+
+          // Role exists, proceed with registration and login
           await loginWithGoogle(idToken, role);
-          router.push("/home");
+          router.push("/home?role=" + role + "&first_login=true");
           
         } catch (error) {
           console.error("Error logging in with Google:", error);
           router.push("/auth/login");
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -78,6 +93,15 @@ export default function GoogleTokenPage() {
       router.push("/auth/login");
     }
   }, [session, status, router, loginWithGoogle, searchParams]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-[--foreground] p-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[--primary] mb-4"></div>
+        <p className="text-[--muted-foreground]">Đang xử lý...</p>
+      </div>
+    );
+  }
 
   if (showRoleSelection) {
     return (
@@ -91,7 +115,8 @@ export default function GoogleTokenPage() {
           <div className="space-y-4">
             <button
               onClick={() => handleRoleSelection("customer")}
-              className="hover:cursor-pointer w-full group relative overflow-hidden rounded-xl border border-[--border] bg-[--card] p-6 transition-all hover:border-[--primary] hover:shadow-md hover:scale-105"
+              disabled={isLoading}
+              className="hover:cursor-pointer w-full group relative overflow-hidden rounded-xl border border-[--border] bg-[--card] p-6 transition-all hover:border-[--primary] hover:shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-4">
                 <div className="rounded-lg bg-[--primary]/10 p-3">
@@ -108,7 +133,8 @@ export default function GoogleTokenPage() {
 
             <button
               onClick={() => handleRoleSelection("photographer")}
-              className="hover:cursor-pointer w-full group relative overflow-hidden rounded-xl border border-[--border] bg-[--card] p-6 transition-all hover:border-[--secondary] hover:shadow-md hover:scale-105"
+              disabled={isLoading}
+              className="hover:cursor-pointer w-full group relative overflow-hidden rounded-xl border border-[--border] bg-[--card] p-6 transition-all hover:border-[--secondary] hover:shadow-md hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-4">
                 <div className="rounded-lg bg-[--secondary]/10 p-3">
@@ -131,7 +157,7 @@ export default function GoogleTokenPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-[--primary]"></div>
     </div>
   );
 }

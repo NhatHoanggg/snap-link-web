@@ -33,6 +33,9 @@ export function AuthCheck({ children, onAuthSuccess, href }: AuthCheckProps) {
       e.stopPropagation()
       setShowLoginDialog(true)
     }
+    else {
+      return;
+    }
   }
 
   return (

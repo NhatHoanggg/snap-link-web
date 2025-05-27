@@ -23,6 +23,7 @@ import {
   ListTodo, 
   Shell,
   Aperture,
+  Percent,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,6 +56,11 @@ const customerItems = [
     title: "Yêu cầu",
     href: "/request",
     icon: Shell,
+  },
+  {
+    title: "Mã giảm giá",
+    href: "/discount",
+    icon: Percent,
   },
   {
     title: "Hồ sơ",

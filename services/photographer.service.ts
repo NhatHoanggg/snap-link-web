@@ -66,6 +66,26 @@ export interface PhotographersResponse {
   photographers: Photographer[];
 }
 
+export interface SimplifiedPhotographerProfile {
+  full_name: string;
+  slug: string;
+  avatar: string;
+  province: string;
+  district: string;
+  ward: string;
+  address_detail: string;
+  price_per_hour: number;
+  experience_years: number;
+  average_rating: number;
+  tags: string[];
+  total_bookings: number;
+}
+
+export interface SimplifiedPhotographersResponse {
+  total: number;
+  photographers: SimplifiedPhotographerProfile[];
+}
+
 export interface PhotographerFilters {
   skip?: number;
   limit?: number;
@@ -75,6 +95,17 @@ export interface PhotographerFilters {
   max_price?: number;
   sort_by?: 'rating' | 'price' | 'reviews';
   sort_order?: 'asc' | 'desc';
+}
+
+export interface SimplifiedPhotographerFilters {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  min_price?: number;
+  max_price?: number;
+  min_experience?: number;
+  tags?: string[];
+  sort_by?: 'rating' | 'price_low' | 'price_high' | 'experience';
 }
 
 export const photographerService = {
@@ -96,6 +127,7 @@ export const photographerService = {
       throw new Error('An unexpected error occurred');
     }
   },
+
 
   async getPhotographerBySlug(slug: string): Promise<Photographer> {
     try {
@@ -165,6 +197,33 @@ export const photographerService = {
 
       const response = await axiosInstance.get<PhotographersResponse>(
         `/photographers/availability/search?${params.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  async getSimplifiedPhotographers(filters: SimplifiedPhotographerFilters = {}): Promise<SimplifiedPhotographersResponse> {
+    try {
+      const params = new URLSearchParams();
+      
+      // Add basic filters
+      if (filters.skip !== undefined) params.append('skip', filters.skip.toString());
+      if (filters.limit !== undefined) params.append('limit', filters.limit.toString());
+      if (filters.search) params.append('search', filters.search);
+      if (filters.min_price !== undefined) params.append('min_price', filters.min_price.toString());
+      if (filters.max_price !== undefined) params.append('max_price', filters.max_price.toString());
+      if (filters.min_experience !== undefined) params.append('min_experience', filters.min_experience.toString());
+      
+      // Handle tags array
+      if (filters.tags && filters.tags.length > 0) {
+        filters.tags.forEach(tag => params.append('tags', tag));
+      }
+
+      const response = await axiosInstance.get<SimplifiedPhotographersResponse>(
+        `/photographers/simplified?${params.toString()}`
       );
       return response.data;
     } catch (error) {
