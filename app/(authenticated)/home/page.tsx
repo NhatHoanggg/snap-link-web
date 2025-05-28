@@ -1,9 +1,12 @@
 import { Suspense } from "react"
 import PostFeed from "./post-feed"
 import { Skeleton } from "@/components/ui/skeleton"
+import { MissingInfoDialog } from "@/components/home/missing-info-dialog"
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+      <MissingInfoDialog />
       <div className="container max-w-4xl mx-auto px-4 py-8">
         <Suspense fallback={<FeedSkeleton />}>
           <PostFeed />

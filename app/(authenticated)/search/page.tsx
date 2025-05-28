@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { Search, MapPin, Loader2, LayoutGrid, List, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, MapPin, Loader2, LayoutGrid, List, X, ChevronLeft, ChevronRight, Users } from "lucide-react"
 import { photographerService, SimplifiedPhotographerFilters, type SimplifiedPhotographerProfile } from "@/services/photographer.service"
 import { getTags, type Tag } from "@/services/tags.service"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -204,7 +204,7 @@ const PhotographersList = ({
           variants={item}
         >
           <Link href={`/photographers/${photographer.slug}`} className="block h-full">
-            <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300">
+            <Card className="overflow-hidden h-full transition-all duration-300 shadow-md hover:shadow-2xl hover:scale-105 hover:shadow-primary hover:z-50">
               <div className="relative h-48">
                 <Image
                   src={photographer.avatar || "/placeholder.svg"}
@@ -222,6 +222,15 @@ const PhotographersList = ({
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground mb-2">
                   <span className="truncate">📌{photographer.address_detail}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-muted-foreground mb-2">
+                  <span className="truncate">Đánh giá: {photographer.average_rating} ⭐</span>
+                </div>
+
+                <div className="flex items-center text-sm text-muted-foreground mb-2">
+                  <Users className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">{photographer.total_bookings} lượt đặt </span>
                 </div>
                 
                 <Badge variant="outline" className="bg-primary/10 text-primary">
@@ -243,7 +252,7 @@ const PhotographersList = ({
           variants={item}
         >
           <Link href={`/photographers/${photographer.slug}`} className="block">
-            <Card className="overflow-hidden transition-all hover:shadow-md">
+            <Card className="overflow-hidden transition-all shadow-md hover:shadow-2xl hover:scale-105 hover:shadow-primary">
               <div className="flex flex-col sm:flex-row">
                 <div className="relative w-full sm:w-48 h-48">
                   <Image
@@ -262,6 +271,13 @@ const PhotographersList = ({
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground mb-2">
                     <span className="truncate">📌{photographer.address_detail}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground mb-2">
+                    <Users className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">{photographer.total_bookings} lượt đặt </span>
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground mb-2">
+                    <span className="truncate">Đánh giá: {photographer.average_rating} ⭐</span>
                   </div>
                   <Badge variant="outline" className="bg-primary/10 text-primary">
                     {formatCurrency(photographer.price_per_hour)}/giờ

@@ -65,6 +65,12 @@ export interface UserProfileResponse {
   address_detail: string | null;
 }  
 
+export interface MissingInfoResponse {
+  has_missing_info: boolean;
+  missing_fields: string[];
+  message: string;
+}
+
 export const userService = {
   async getProfile(): Promise<UserProfile> {
     try {
@@ -119,6 +125,18 @@ export const userService = {
     } catch (error) {
       if (isAxiosError(error)) {
         throw new Error(error.response?.data?.message || 'Failed to fetch user profile');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  async checkMissingInfo(): Promise<MissingInfoResponse> {
+    try {
+      const response = await axiosInstance.get<MissingInfoResponse>('/users/me/missing-info');
+      return response.data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to check missing info');
       }
       throw new Error('An unexpected error occurred');
     }

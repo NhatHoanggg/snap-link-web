@@ -59,7 +59,7 @@ const customerItems = [
   },
   {
     title: "Mã giảm giá",
-    href: "/discount",
+    href: "/my-booking/discounts",
     icon: Percent,
   },
   {
