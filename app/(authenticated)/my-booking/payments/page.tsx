@@ -7,7 +7,7 @@ import {
   PaymentMethod,
   PaymentType,
 } from "@/services/payment.service";
-import { format, toZonedTime } from "date-fns-tz";
+import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
 export default function PaymentHistoryPage() {
@@ -70,15 +70,6 @@ export default function PaymentHistoryPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const vietnamDate = toZonedTime(date, 'Asia/Ho_Chi_Minh');
-    return format(vietnamDate, "dd/MM/yyyy HH:mm", {
-      locale: vi,
-      timeZone: 'Asia/Ho_Chi_Minh'
-    });
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -136,7 +127,9 @@ export default function PaymentHistoryPage() {
                 {payments.map((payment) => (
                   <tr key={payment.payment_id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(payment.paid_at)}
+                      {format(new Date(payment.paid_at), "dd/MM/yyyy HH:mm", {
+                        locale: vi,
+                      })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                       {formatCurrency(payment.amount)}

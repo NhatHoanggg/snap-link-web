@@ -116,10 +116,10 @@ export default function ChangePasswordPage() {
   }
 
   const getStrengthText = () => {
-    if (passwordStrength < 30) return "Weak"
-    if (passwordStrength < 60) return "Moderate"
-    if (passwordStrength < 80) return "Strong"
-    return "Very Strong"
+    if (passwordStrength < 30) return "Yếu"
+    if (passwordStrength < 60) return "Trung bình"
+    if (passwordStrength < 80) return "Mạnh"
+    return "Rất mạnh"
   }
 
   const getStrengthColor = () => {
@@ -175,7 +175,7 @@ export default function ChangePasswordPage() {
             >
               <Lock className="h-6 w-6 text-primary" />
             </motion.div>
-            <CardTitle className="text-2xl font-bold">Change Password</CardTitle>
+            <CardTitle className="text-2xl font-bold">Đổi mật khẩu</CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-4">
@@ -191,7 +191,7 @@ export default function ChangePasswordPage() {
                   <Alert className="bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
                     <CheckCircle2 className="h-4 w-4" />
                     <AlertDescription>
-                      Your password has been changed successfully! Your account is now secure.
+                      Mật khẩu của bạn đã được thay đổi thành công! Tài khoản của bạn đã được bảo mật.
                     </AlertDescription>
                   </Alert>
                 </motion.div>
@@ -214,7 +214,7 @@ export default function ChangePasswordPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="currentPassword" className="text-sm font-medium">
-                  Current Password
+                  Mật khẩu hiện tại
                 </Label>
                 <div className="relative">
                   <Input
@@ -236,7 +236,7 @@ export default function ChangePasswordPage() {
                     ) : (
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="sr-only">{showCurrentPassword ? "Hide password" : "Show password"}</span>
+                    <span className="sr-only">{showCurrentPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"}</span>
                   </Button>
                 </div>
                 {errors.currentPassword && (
@@ -252,7 +252,7 @@ export default function ChangePasswordPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="newPassword" className="text-sm font-medium">
-                  New Password
+                  Mật khẩu mới
                 </Label>
                 <div className="relative">
                   <Input
@@ -274,7 +274,7 @@ export default function ChangePasswordPage() {
                     ) : (
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="sr-only">{showNewPassword ? "Hide password" : "Show password"}</span>
+                    <span className="sr-only">{showNewPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"}</span>
                   </Button>
                 </div>
                 {errors.newPassword && (
@@ -296,7 +296,7 @@ export default function ChangePasswordPage() {
                     className="mt-2 space-y-1"
                   >
                     <div className="flex justify-between items-center">
-                      <span className="text-xs">Password Strength</span>
+                      <span className="text-xs">Độ mạnh mật khẩu</span>
                       <span className="text-xs font-medium">{getStrengthText()}</span>
                     </div>
                     <Progress
@@ -315,7 +315,7 @@ export default function ChangePasswordPage() {
                             /[A-Z]/.test(newPassword) ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
                           }`}
                         />
-                        <span className="text-muted-foreground">Uppercase</span>
+                        <span className="text-muted-foreground">Chữ hoa</span>
                       </div>
                       <div className="flex items-center text-xs space-x-1">
                         <div
@@ -323,7 +323,7 @@ export default function ChangePasswordPage() {
                             /[a-z]/.test(newPassword) ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
                           }`}
                         />
-                        <span className="text-muted-foreground">Lowercase</span>
+                        <span className="text-muted-foreground">Chữ thường</span>
                       </div>
                       <div className="flex items-center text-xs space-x-1">
                         <div
@@ -331,7 +331,7 @@ export default function ChangePasswordPage() {
                             /[0-9]/.test(newPassword) ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
                           }`}
                         />
-                        <span className="text-muted-foreground">Number</span>
+                        <span className="text-muted-foreground">Số</span>
                       </div>
                       <div className="flex items-center text-xs space-x-1">
                         <div
@@ -339,7 +339,7 @@ export default function ChangePasswordPage() {
                             /[^A-Za-z0-9]/.test(newPassword) ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
                           }`}
                         />
-                        <span className="text-muted-foreground">Special</span>
+                        <span className="text-muted-foreground">Ký tự đặc biệt</span>
                       </div>
                     </motion.div>
                   </motion.div>
@@ -348,7 +348,7 @@ export default function ChangePasswordPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm New Password
+                  Xác nhận mật khẩu mới
                 </Label>
                 <div className="relative">
                   <Input
@@ -370,7 +370,7 @@ export default function ChangePasswordPage() {
                     ) : (
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                    <span className="sr-only">{showConfirmPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"}</span>
                   </Button>
                 </div>
                 {errors.confirmPassword && (
@@ -395,7 +395,7 @@ export default function ChangePasswordPage() {
                   ) : (
                     <ShieldCheck className="mr-2 h-4 w-4" />
                   )}
-                  {isSubmitting ? "Updating Password..." : "Update Password"}
+                  {isSubmitting ? "Đang cập nhật mật khẩu..." : "Cập nhật mật khẩu"}
                 </Button>
               </motion.div>
             </form>
@@ -405,11 +405,11 @@ export default function ChangePasswordPage() {
             <div className="text-xs text-center text-muted-foreground">
               <div className="flex items-center justify-center mb-2">
                 <KeyRound className="h-3 w-3 mr-1" />
-                <span>Password Security Tips</span>
+                <span>Mẹo bảo mật mật khẩu</span>
               </div>
               <p>
-                Use a unique password that you don&apos;t use for other websites. Consider using a password manager to
-                generate and store strong passwords.
+                Sử dụng mật khẩu duy nhất mà bạn không sử dụng cho các trang web khác. Xem xét sử dụng trình quản lý mật khẩu để
+                tạo và lưu trữ mật khẩu mạnh.
               </p>
             </div>
           </CardFooter>

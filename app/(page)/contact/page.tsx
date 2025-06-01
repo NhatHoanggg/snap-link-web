@@ -57,15 +57,15 @@ export default function ContactPage() {
       }
 
       toast({
-        title: "Message sent",
-        description: "Thank you for your message. We'll get back to you soon!",
+        title: "Thông báo",
+        description: "Cảm ơn bạn đã liên hệ với chúng tôi. Chúng tôi sẽ liên lạc lại với bạn sớm nhất có thể!",
       });
 
       reset();
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Lỗi:", error);
       setSubmitError(
-        "There was a problem sending your message. Please try again."
+        "Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại."
       );
     } finally {
       setIsSubmitting(false);
@@ -76,10 +76,9 @@ export default function ContactPage() {
     <div>
       <div className="container mx-auto py-12 px-4 md:px-6 mt-16">
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-bold mb-3">Contact Us</h1>
+          <h1 className="text-4xl font-bold mb-3">Liên hệ với chúng tôi</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Have questions about our photography services? Need to book a
-            session? We&apos;re here to help.
+            Có câu hỏi về dịch vụ của chúng tôi? Cần đặt lịch hẹn? Chúng tôi sẵn sàng giúp đỡ bạn.
           </p>
         </div>
 
@@ -100,10 +99,9 @@ export default function ContactPage() {
           {/* Right side - Contact Form */}
           <Card>
             <CardHeader>
-              <CardTitle>Get in Touch</CardTitle>
+              <CardTitle>Liên hệ với chúng tôi</CardTitle>
               <CardDescription>
-                Our team is ready to assist you with any inquiries about our
-                photography services.
+                Đội ngũ của chúng tôi sẵn sàng giúp đỡ bạn với bất kỳ câu hỏi nào về dịch vụ của chúng tôi.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -112,7 +110,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-medium">Email</h3>
                   <p className="text-muted-foreground">
-                    info@photographybooking.com
+                    info@snaplink.vn
                   </p>
                 </div>
               </div>
@@ -120,7 +118,7 @@ export default function ContactPage() {
               <div className="flex items-start space-x-3">
                 <Phone className="h-5 w-5 mt-0.5 text-primary" />
                 <div>
-                  <h3 className="font-medium">Phone</h3>
+                  <h3 className="font-medium">Điện thoại</h3>
                   <p className="text-muted-foreground">+84 123 456 789</p>
                 </div>
               </div>
@@ -128,13 +126,13 @@ export default function ContactPage() {
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 mt-0.5 text-primary" />
                 <div>
-                  <h3 className="font-medium">Office</h3>
+                  <h3 className="font-medium">Văn phòng</h3>
                   <p className="text-muted-foreground">
-                    Da Nang University of Technology
+                    Đại học Bách Khoa Đà Nẵng
                     <br />
-                    54 Nguyen Luong Bang, Lien Chieu
+                    54 Nguyễn Lương Bằng, Liên Chiểu
                     <br />
-                    Da Nang, Vietnam
+                    Đà Nẵng, Việt Nam
                   </p>
                 </div>
               </div>
@@ -143,21 +141,21 @@ export default function ContactPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Business Hours</CardTitle>
+              <CardTitle>Giờ làm việc</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span>Monday - Friday</span>
-                  <span>9:00 AM - 6:00 PM</span>
+                  <span>Thứ Hai - Thứ Sáu</span>
+                  <span>9:00 - 18:00</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Saturday</span>
+                  <span>Thứ Bảy</span>
                   <span>10:00 AM - 4:00 PM</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Sunday</span>
-                  <span>Closed</span>
+                  <span>Chủ nhật</span>
+                  <span>Đóng cửa</span>
                 </div>
               </div>
             </CardContent>
@@ -166,10 +164,9 @@ export default function ContactPage() {
           {/* Contact Form */}
           <Card>
             <CardHeader>
-              <CardTitle>Send a Message</CardTitle>
+              <CardTitle>Gửi tin nhắn</CardTitle>
               <CardDescription>
-                Fill out the form below and we&apos;ll get back to you as soon
-                as possible.
+                Điền vào biểu mẫu bên dưới và chúng tôi sẽ trả lời bạn sớm nhất có thể.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -217,19 +214,19 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number (optional)</Label>
+                  <Label htmlFor="phone">Số điện thoại (tùy chọn)</Label>
                   <Input
                     id="phone"
-                    placeholder="Your phone number"
+                    placeholder="Số điện thoại của bạn"
                     {...register("phone")}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
+                  <Label htmlFor="subject">Chủ đề</Label>
                   <Input
                     id="subject"
-                    placeholder="What is this regarding?"
+                    placeholder="Điều gì đang liên quan?"
                     {...register("subject", {
                       required: "Subject is required",
                     })}
@@ -242,10 +239,10 @@ export default function ContactPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
+                  <Label htmlFor="message">Tin nhắn</Label>
                   <Textarea
                     id="message"
-                    placeholder="Please provide details about your inquiry..."
+                    placeholder="Vui lòng cung cấp chi tiết về câu hỏi của bạn..."
                     rows={5}
                     {...register("message", {
                       required: "Message is required",
@@ -270,12 +267,12 @@ export default function ContactPage() {
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                      Sending...
+                      Gửi...
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
                       <Send className="h-4 w-4" />
-                      Send Message
+                      Gửi tin nhắn
                     </span>
                   )}
                 </Button>

@@ -73,11 +73,11 @@ export default function ThemeSettings() {
           <Button variant="ghost" size="sm" asChild className="gap-1 pl-0 hover:pl-2 transition-all mb-2">
             <Link href="/settings">
               <ChevronLeft className="h-4 w-4" />
-              Back to Settings
+              Trở lại cài đặt
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold">Theme Settings</h1>
-          <p className="text-muted-foreground mt-1">Customize the appearance of the application</p>
+          <h1 className="text-3xl font-bold">Tùy chọn giao diện</h1>
+          <p className="text-muted-foreground mt-1">Tùy chọn giao diện của ứng dụng</p>
         </div>
         <Settings className="h-8 w-8 text-muted-foreground" />
       </div>
@@ -113,21 +113,21 @@ export default function ThemeSettings() {
                 <RadioGroupItem value="light" id="light" />
                 <Label htmlFor="light" className="flex items-center gap-1.5">
                   <Sun className="h-4 w-4" />
-                  Light
+                  Sáng
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="dark" id="dark" />
                 <Label htmlFor="dark" className="flex items-center gap-1.5">
                   <Moon className="h-4 w-4" />
-                  Dark
+                  Tối
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="system" id="system" />
                 <Label htmlFor="system" className="flex items-center gap-1.5">
                   <Laptop className="h-4 w-4" />
-                  System
+                  Hệ thống
                 </Label>
               </div>
             </RadioGroup>
