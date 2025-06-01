@@ -17,6 +17,7 @@ import {
   Package,
   Tag,
   MapPinned,
+  ImageUp,
   // User,
 } from "lucide-react"
 import Link from "next/link"
@@ -105,9 +106,11 @@ export default function BookingDetailPage() {
   const [cancelReason, setCancelReason] = useState("")
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const [isAcceptedDialogOpen, setIsAcceptedDialogOpen] = useState(false)
+  const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false)
+  const [isPhotosReadyDialogOpen, setIsPhotosReadyDialogOpen] = useState(false)
+  const [isPhotosReadyPartialDialogOpen, setIsPhotosReadyPartialDialogOpen] = useState(false)
   const [photographer, setPhotographer] = useState<Photographer | null>(null)
   const [service, setService] = useState<Service | null>(null)
-  const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false)
   // Extract booking code from params and ensure it's a string
   const bookingCode = typeof params.code === 'string' ? params.code : Array.isArray(params.code) ? params.code[0] : null
 
@@ -117,6 +120,20 @@ export default function BookingDetailPage() {
       setIsAcceptedDialogOpen(true)
     }
   }, [booking?.status])
+
+  // Show photos ready dialog when payment is fully paid and status is completed
+  useEffect(() => {
+    if (booking?.payment_status === "fully_paid" && booking?.status === "completed") {
+      setIsPhotosReadyDialogOpen(true)
+    }
+  }, [booking?.payment_status, booking?.status])
+
+  // Show photos ready partial dialog when payment is deposit paid and status is completed
+  useEffect(() => {
+    if (booking?.payment_status === "deposit_paid" && booking?.status === "completed") {
+      setIsPhotosReadyPartialDialogOpen(true)
+    }
+  }, [booking?.payment_status, booking?.status])
 
   // Fetch photographer data when booking data is loaded
   useEffect(() => {
@@ -168,6 +185,21 @@ export default function BookingDetailPage() {
       toast("Mã đặt lịch đã được sao chép vào clipboard", {
         icon: "🔗"
       })
+    }
+  }
+
+  const handleCopyPhotoLink = () => {
+    if (booking?.photo_storage_link) {
+      toast("Đã sao chép liên kết vào clipboard", {
+        icon: "🔗"
+      })
+      navigator.clipboard.writeText(booking.photo_storage_link)
+    }
+  }
+
+  const handleOpenPhotoLink = () => {
+    if (booking?.photo_storage_link) {
+      window.open(booking.photo_storage_link, '_blank')
     }
   }
 
@@ -574,6 +606,31 @@ export default function BookingDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {booking.photo_storage_link && booking.status === "completed" && booking.payment_status === "fully_paid" && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Ảnh chụp</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-2">
+                <ImageUp className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Liên kết ảnh:</span> 
+                    <a href= {booking.photo_storage_link || ""} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      Xem ảnh
+                    </a>
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" onClick={handleCopyPhotoLink}>
+                <Copy className="h-4 w-4 mr-2" />
+                Sao chép liên kết
+              </Button>
+            </CardContent>
+          </Card>
+          )}
         </div>
       </div>
 
@@ -700,6 +757,48 @@ export default function BookingDetailPage() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAcceptedDialogOpen(false)}>
+              Đóng
+            </Button>
+            <Button onClick={() => handlePayment(booking.booking_code)}>
+              Thanh toán ngay
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photos Ready Dialog */}
+      <Dialog open={isPhotosReadyDialogOpen} onOpenChange={setIsPhotosReadyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nhiếp ảnh gia đã upload ảnh xong</DialogTitle>
+            <DialogDescription>
+              Bạn có thể xem ảnh của mình ngay bây giờ
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleCopyPhotoLink}>
+              <Copy className="h-4 w-4 mr-2" />
+              Sao chép liên kết
+            </Button>
+            <Button onClick={handleOpenPhotoLink}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Mở ảnh
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photos Ready Partial Payment Dialog */}
+      <Dialog open={isPhotosReadyPartialDialogOpen} onOpenChange={setIsPhotosReadyPartialDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ảnh của bạn đã được upload xong</DialogTitle>
+            <DialogDescription>
+              Hãy thanh toán phần còn lại để xem hình ảnh
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPhotosReadyPartialDialogOpen(false)}>
               Đóng
             </Button>
             <Button onClick={() => handlePayment(booking.booking_code)}>
