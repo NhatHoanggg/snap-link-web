@@ -28,6 +28,7 @@ type Booking = BookingResponse
 const fetchBookings = async (): Promise<Booking[]> => {
   try {
     const data = await getMyBookings()
+    console.log(data)
     return data
   } catch (error) {
     console.error("Failed to fetch bookings:", error)

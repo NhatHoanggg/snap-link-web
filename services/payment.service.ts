@@ -6,6 +6,28 @@ export enum MomoPaymentType {
   PAY_WITH_CC = "payWithCC"          // Thanh toán qua thẻ quốc tế
 }
 
+export enum PaymentType {
+  DEPOSIT = "deposit",
+  FULL = "full",
+  REFUNDED = "refunded"
+}
+
+export enum PaymentMethod {
+  CARD = "card",
+  CASH = "cash",
+  MOBILE = "mobile",
+  BANK_TRANSFER = "bank_transfer"
+}
+
+export interface PaymentRequest {
+  booking_id: number;
+  amount: number;
+  payment_type: PaymentType;
+  transaction_id: string;
+  payment_method: PaymentMethod;
+  info: string;
+}
+
 export interface MomoPaymentRequest {
   amount: number;
   order_id: string;
@@ -47,3 +69,13 @@ export const handleMomoPaymentCallback = async (partnerCode: string, orderId: st
     throw new Error("Failed to handle momo payment callback")
   }
 };
+
+export async function createPayment(paymentData: PaymentRequest) {
+  try {
+    const response = await axiosInstance.post('/payments', paymentData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating payment:", error);
+    throw new Error("Failed to create payment");
+  }
+}

@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2, Calendar, Camera, MapPin, MapPinned, ChevronDown, ChevronUp } from "lucide-react";
-import { getBookingByCode, updateBookingStatus, type BookingResponse } from '@/services/booking.service';
+import { getBookingByCode, updateBookingStatus, updatePaymentStatus, type BookingResponse, type PaymentStatus } from '@/services/booking.service';
+import { createPayment, PaymentType, PaymentMethod } from '@/services/payment.service';
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import toast, { Toaster } from 'react-hot-toast';
@@ -19,11 +20,44 @@ export default function PaymentSuccessPage() {
   const [showBookingInfo, setShowBookingInfo] = useState(false);
 
   const resultCode = searchParams.get('resultCode');
-  const bookingCode = searchParams.get('orderInfo');
+  const bookingCode = searchParams.get('orderInfo')?.split('_')[0];
+  const paymentOption = searchParams.get('orderInfo')?.split('_')[1];
   const message = searchParams.get('message');
   const amount = searchParams.get('amount');
   const transId = searchParams.get('transId');
   const payType = searchParams.get('payType');
+
+  // Helper function to get payment type information
+  const getPaymentTypeInfo = () => {
+    switch (paymentOption) {
+      case 'full':
+        return {
+          title: 'Thanh toán toàn bộ',
+          description: 'Bạn đã thanh toán 100% giá trị đặt lịch',
+          percentage: 100
+        };
+      case 'deposit':
+        return {
+          title: 'Thanh toán đặt cọc',
+          description: 'Bạn đã thanh toán 20% giá trị đặt lịch',
+          percentage: 20
+        };
+      case 'reminder':
+        return {
+          title: 'Thanh toán phần còn lại',
+          description: 'Bạn đã thanh toán 80% giá trị đặt lịch còn lại',
+          percentage: 80
+        };
+      default:
+        return {
+          title: 'Thanh toán',
+          description: 'Thông tin thanh toán',
+          percentage: 0
+        };
+    }
+  };
+
+  const paymentInfo = getPaymentTypeInfo();
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -38,16 +72,49 @@ export default function PaymentSuccessPage() {
         const bookingData = await getBookingByCode(bookingCode);
         setBooking(bookingData);
 
-        // If payment is successful, update booking status to completed
-        if (resultCode === '0' && bookingData.status !== 'confirmed') {
+        // If payment is successful, update booking status
+        if (resultCode === '0') {
           try {
-            await updateBookingStatus(bookingData.booking_id, 'confirmed');
+            const newStatus = 'confirmed';
+            let newPaymentStatus: PaymentStatus = 'fully_paid'; // Mặc định là fully_paid
+            let paymentType: PaymentType = PaymentType.FULL;
+
+            if (paymentOption === 'deposit') {
+              newPaymentStatus = 'deposit_paid';
+              paymentType = PaymentType.DEPOSIT;
+            } else if (paymentOption === 'reminder') {
+              newPaymentStatus = 'fully_paid';
+              paymentType = PaymentType.FULL;
+            }
+
+            // Update booking status
+            await updateBookingStatus(bookingData.booking_id, newStatus);
+            await updatePaymentStatus(bookingData.booking_id, newPaymentStatus);
+
+            // Create payment record
+            const orderInfo = searchParams.get('orderInfo');
+            const paymentData = {
+              booking_id: bookingData.booking_id,
+              amount: Number(amount),
+              payment_type: paymentType,
+              transaction_id: transId || '',
+              payment_method: payType === 'momo_wallet' ? PaymentMethod.MOBILE : PaymentMethod.CARD,
+              info: orderInfo || ''
+            };
+
+            await createPayment(paymentData);
+            
             // Update local booking state with new status
-            setBooking(prev => prev ? { ...prev, status: 'confirmed' } : null);
+            setBooking(prev => prev ? { 
+              ...prev, 
+              status: newStatus,
+              payment_status: newPaymentStatus 
+            } : null);
+            
             toast.success('Thanh toán thành công!');
           } catch (err) {
             console.error('Error updating booking status:', err);
-            toast.error('Không thể thanh toán');
+            toast.error('Không thể cập nhật trạng thái đặt lịch');
           }
         }
       } catch (err) {
@@ -59,7 +126,7 @@ export default function PaymentSuccessPage() {
     };
 
     fetchBooking();
-  }, [bookingCode, resultCode]);
+  }, [bookingCode, resultCode, paymentOption, amount, transId, payType, searchParams]);
 
   const isSuccess = resultCode === '0';
 
@@ -132,7 +199,7 @@ export default function PaymentSuccessPage() {
           </CardTitle>
           <CardDescription className="text-center">
             {isSuccess 
-              ? 'Đặt lịch của bạn đã được xác nhận thanh toán.'
+              ? paymentInfo.description
               : message || 'Có lỗi xảy ra trong quá trình thanh toán.'}
           </CardDescription>
         </CardHeader>
@@ -145,9 +212,13 @@ export default function PaymentSuccessPage() {
                 <span className="text-muted-foreground">Mã đặt lịch:</span>
                 <span className="font-medium">{bookingCode}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Loại thanh toán:</span>
+                <span className="font-medium">{paymentInfo.title}</span>
+              </div>
               {amount && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Số tiền:</span>
+                  <span className="text-muted-foreground">Số tiền đã thanh toán:</span>
                   <span className="font-medium">{Number(amount).toLocaleString()} VND</span>
                 </div>
               )}
@@ -164,6 +235,33 @@ export default function PaymentSuccessPage() {
                 </div>
               )}
             </div>
+
+            {/* Payment Summary */}
+            {booking && (
+              <div className="mt-4 p-4 bg-primary/5 rounded-lg">
+                <h4 className="font-medium mb-2">Tóm tắt thanh toán</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tổng giá trị đặt lịch:</span>
+                    <span className="font-medium">{booking.total_price.toLocaleString()} VND</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Đã thanh toán:</span>
+                    <span className="font-medium text-green-600">
+                      {paymentInfo.percentage}% ({Number(amount).toLocaleString()} VND)
+                    </span>
+                  </div>
+                  {paymentOption === 'deposit' && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Còn lại:</span>
+                      <span className="font-medium text-orange-600">
+                        80% ({Math.round(booking.total_price * 0.8).toLocaleString()} VND)
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Booking Information Toggle Button */}
@@ -231,16 +329,6 @@ export default function PaymentSuccessPage() {
                     </p>
                   </div>
                 </div>
-
-                {/* <div className="flex items-start gap-3">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <Package className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Số lượng</h4>
-                    <p className="text-sm text-muted-foreground">{booking.quantity || 1}</p>
-                  </div>
-                </div> */}
               </div>
             </div>
           )}

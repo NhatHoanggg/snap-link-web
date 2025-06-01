@@ -13,6 +13,8 @@ export interface BookingFormData {
   discount_code: string
   total_price: number
   province: string
+  photo_storage_link: string | null
+  payment_status: string | null
 }
 
 export interface BookingResponse {
@@ -34,8 +36,11 @@ export interface BookingResponse {
   total_price: number
   discount_code: string
   province: string
+  photo_storage_link: string | null
+  payment_status: string | null
 }
 
+export type PaymentStatus = 'unpaid' | 'deposit_paid' | 'fully_paid' | 'refunded';
 
 export async function createBooking(booking: BookingFormData) {
   const response = await axiosInstance.post('/bookings', booking)
@@ -64,6 +69,13 @@ export async function updateBooking(id: number, booking: BookingFormData) {
 
 export async function updateBookingStatus(id: number, status: string) {
   const response = await axiosInstance.patch(`/bookings/${id}/status`, { status })
+  return response.data
+}
+
+export async function updatePaymentStatus(id: number, status: PaymentStatus) {
+  const response = await axiosInstance.patch(`/bookings/${id}/payment-status`, {
+    payment_status: status,
+  })
   return response.data
 }
 
