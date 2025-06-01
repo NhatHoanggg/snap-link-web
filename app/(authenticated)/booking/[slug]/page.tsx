@@ -43,6 +43,8 @@ export default function BookingForm() {
     discount_code: "",
     total_price: 0,
     province: "",
+    photo_storage_link: "",
+    payment_status: "unpaid",
   });
   const { toast } = useToast();
 
