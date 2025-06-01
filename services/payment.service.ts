@@ -28,6 +28,23 @@ export interface PaymentRequest {
   info: string;
 }
 
+export interface Payment {
+  payment_id: number;
+  booking_id: number;
+  user_id: number;
+  paid_at: string;
+  amount: number;
+  payment_type: PaymentType;
+  payment_method: PaymentMethod;
+  transaction_id: string;
+  info: string;
+}
+
+export interface PaymentListResponse {
+  total: number;
+  payments: Payment[];
+}
+
 export interface MomoPaymentRequest {
   amount: number;
   order_id: string;
@@ -77,5 +94,15 @@ export async function createPayment(paymentData: PaymentRequest) {
   } catch (error) {
     console.error("Error creating payment:", error);
     throw new Error("Failed to create payment");
+  }
+}
+
+export async function getMyPaymentsHistory(order: string): Promise<PaymentListResponse> {
+  try {
+    const response = await axiosInstance.get(`/payments/me?sort_order=${order}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting my payments history:", error);
+    throw new Error("Failed to get my payments history");
   }
 }

@@ -17,7 +17,7 @@ export default function MyBookingPage() {
                             <Search className="w-8 h-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-foreground mb-2">Tìm Kiếm Và Tạo Lịch Hẹn</h2>
+                            <h2 className="text-xl font-semibold text-foreground mb-2">Tìm kiếm và tạo lịch hẹn</h2>
                             <p className="text-muted-foreground text-sm min-h-8">Xem và quản lý các lịch hẹn chụp ảnh của bạn</p>
                         </div>
                     </div>
@@ -33,7 +33,7 @@ export default function MyBookingPage() {
                             <CalendarDays className="w-8 h-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-foreground mb-2">Lịch Hẹn Của Bạn</h2>
+                            <h2 className="text-xl font-semibold text-foreground mb-2">Lịch hẹn của bạn</h2>
                             <p className="text-muted-foreground text-sm min-h-8">Xem và quản lý các lịch hẹn chụp ảnh của bạn</p>
                         </div>
                     </div>
@@ -49,7 +49,7 @@ export default function MyBookingPage() {
                             <Shell className="w-8 h-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-foreground mb-2">Tạo Yêu Cầu</h2>
+                            <h2 className="text-xl font-semibold text-foreground mb-2">Tạo yêu cầu</h2>
                             <p className="text-muted-foreground text-sm min-h-8">Tạo yêu cầu chụp ảnh mới</p>
                         </div>
                     </div>
@@ -65,7 +65,7 @@ export default function MyBookingPage() {
                             <FileText className="w-8 h-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-foreground mb-2">Yêu Cầu Của Bạn</h2>
+                            <h2 className="text-xl font-semibold text-foreground mb-2">Yêu cầu của bạn</h2>
                             <p className="text-muted-foreground text-sm min-h-8">Xem và theo dõi trạng thái các yêu cầu chụp ảnh của bạn</p>
                         </div>
                     </div>
@@ -73,7 +73,7 @@ export default function MyBookingPage() {
                 </Link>
 
                 <Link 
-                    href="/my-booking/requests" 
+                    href="/my-booking/payments" 
                     className="group relative bg-card rounded-lg border border-border p-6 hover:border-primary transition-all duration-200"
                 >
                     <div className="flex items-center space-x-4">
@@ -81,9 +81,9 @@ export default function MyBookingPage() {
                             <History className="w-8 h-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-foreground mb-2">Lịch Sử Đặt</h2>
+                            <h2 className="text-xl font-semibold text-foreground mb-2">Lịch sử thanh toán</h2>
                             <p className="text-muted-foreground text-sm min-h-8">
-                                Xem lịch sử
+                                Xem lịch sử thanh toán của bạn
                             </p>
                         </div>
                     </div>
@@ -99,7 +99,7 @@ export default function MyBookingPage() {
                             <TicketPercent className="w-8 h-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-foreground mb-2">Mã Giảm Giá</h2>
+                            <h2 className="text-xl font-semibold text-foreground mb-2">Mã giảm giá</h2>
                             <p className="text-muted-foreground text-sm min-h-8">
                                 Xem và quản lý các mã giảm giá của bạn
                             </p>
