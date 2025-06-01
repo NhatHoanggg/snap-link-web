@@ -23,6 +23,11 @@ export interface ReviewEdit{
     comment: string;
 }
 
+export interface ReviewStatusResponse{
+    has_reviewed: boolean;
+    review: ReviewResponse | null;
+}
+
 export interface PhotographerReviews{
     total: number;
     reviews: ReviewResponse[];
@@ -58,6 +63,15 @@ export const editReview = async (review_id: number, review: ReviewEdit) => {
 export const deleteReview = async (review_id: number) => {
     try {
         const response = await axiosInstance.delete<ReviewResponse>(`/reviews/${review_id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const isReviewed = async (booking_id: number) => {
+    try {
+        const response = await axiosInstance.get<ReviewStatusResponse>(`/reviews/${booking_id}/review-status`);
         return response.data;
     } catch (error) {
         throw error;

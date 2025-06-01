@@ -18,6 +18,7 @@ import {
   Tag,
   MapPinned,
   ImageUp,
+  Star,
   // User,
 } from "lucide-react"
 import Link from "next/link"
@@ -39,6 +40,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { getBookingByCode, updateBookingStatus, type BookingResponse } from "@/services/booking.service"
 import { photographerService, type Photographer } from "@/services/photographer.service"
 import { getServiceByIdPublic, type Service } from "@/services/services.service"
+import { isReviewed, createReview } from "@/services/review.service"
+
 import toast, { Toaster, ToastBar } from "react-hot-toast"
 
 type Booking = BookingResponse
@@ -111,6 +114,11 @@ export default function BookingDetailPage() {
   const [isPhotosReadyPartialDialogOpen, setIsPhotosReadyPartialDialogOpen] = useState(false)
   const [photographer, setPhotographer] = useState<Photographer | null>(null)
   const [service, setService] = useState<Service | null>(null)
+  const [hasReviewed, setHasReviewed] = useState(false)
+  const [isReviewLoading, setIsReviewLoading] = useState(true)
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState("")
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
   // Extract booking code from params and ensure it's a string
   const bookingCode = typeof params.code === 'string' ? params.code : Array.isArray(params.code) ? params.code[0] : null
 
@@ -179,6 +187,24 @@ export default function BookingDetailPage() {
     loadBooking()
   }, [bookingCode]) // Only depend on bookingCode
 
+  // Check if booking has been reviewed
+  useEffect(() => {
+    const checkReviewStatus = async () => {
+      if (booking?.booking_id) {
+        try {
+          const response = await isReviewed(booking.booking_id)
+          setHasReviewed(response.has_reviewed)
+        } catch (error) {
+          console.error("Failed to check review status:", error)
+        } finally {
+          setIsReviewLoading(false)
+        }
+      }
+    }
+
+    checkReviewStatus()
+  }, [booking?.booking_id])
+
   const handleCopyBookingCode = () => {
     if (booking?.booking_code) {
       navigator.clipboard.writeText(booking.booking_code)
@@ -244,6 +270,26 @@ export default function BookingDetailPage() {
   const getImageUrl = (url: string | null) => {
     if (!url) return "https://res.cloudinary.com/dy8p5yjsd/image/upload/v1748164460/23101740_6725295_ru1wsv.jpg"
     return url
+  }
+
+  const handleSubmitReview = async () => {
+    if (!booking?.booking_id) return
+
+    try {
+      setIsSubmittingReview(true)
+      await createReview({
+        booking_id: booking.booking_id,
+        rating,
+        comment
+      })
+      toast.success("Đánh giá của bạn đã được gửi thành công!")
+      setHasReviewed(true)
+    } catch (error) {
+      console.error("Failed to submit review:", error)
+      toast.error("Không thể gửi đánh giá. Vui lòng thử lại sau.")
+    } finally {
+      setIsSubmittingReview(false)
+    }
   }
 
   if (loading) {
@@ -608,29 +654,88 @@ export default function BookingDetailPage() {
           </Card>
 
           {booking.photo_storage_link && booking.status === "completed" && booking.payment_status === "fully_paid" && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Ảnh chụp</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-2">
-                <ImageUp className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">Liên kết ảnh:</span> 
-                    <a href= {booking.photo_storage_link || ""} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      Xem ảnh
-                    </a>
-                  </p>
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Ảnh chụp</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start gap-2">
+                  <ImageUp className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Liên kết ảnh:</span> 
+                      <a href= {booking.photo_storage_link || ""} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        Xem ảnh
+                      </a>
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <Button variant="outline" onClick={handleCopyPhotoLink}>
-                <Copy className="h-4 w-4 mr-2" />
-                Sao chép liên kết
-              </Button>
-            </CardContent>
-          </Card>
+                <Button variant="outline" onClick={handleCopyPhotoLink}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Sao chép liên kết
+                </Button>
+              </CardContent>
+            </Card>
           )}
+
+          {booking.status === "completed" && !hasReviewed && !isReviewLoading && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Đánh giá</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p>Bạn có thể đánh giá nhiếp ảnh gia sau khi đã nhận được ảnh chụp</p>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Đánh giá của bạn</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="focus:outline-none"
+                        >
+                          <Star
+                            className={`h-6 w-6 ${
+                              star <= rating
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="comment" className="text-sm font-medium">
+                      Nhận xét của bạn
+                    </label>
+                    <Textarea
+                      id="comment"
+                      placeholder="Chia sẻ trải nghiệm của bạn..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleSubmitReview}
+                    disabled={isSubmittingReview}
+                    className="w-full"
+                  >
+                    {isSubmittingReview ? "Đang gửi..." : "Gửi đánh giá"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+
+          
         </div>
       </div>
 
