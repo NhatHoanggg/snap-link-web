@@ -57,6 +57,11 @@ export async function getMyBookings() {
   return response.data
 }
 
+export async function getMyBookingsByStatus(status: string) {
+  const response = await axiosInstance.get(`/bookings/me/${status}`)
+  return response.data
+}
+
 export async function getBookingById(id: number) {
   const response = await axiosInstance.get(`/bookings/${id}`)
   return response.data
