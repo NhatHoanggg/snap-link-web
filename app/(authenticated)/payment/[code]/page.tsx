@@ -76,10 +76,10 @@ export default function PaymentPage() {
         amount: amount,
         order_id: generateOrderId(),
         order_info: orderInfo,
-        return_url: `http://localhost:3000/payment/success`,
-        notify_url: `http://127.0.0.1:8001/api/payment/momo/callback`,
-        // return_url: `https://snaplink.io.vn/payment/success`,
-        // notify_url: `https://snaplink-itqaz.ondigitalocean.app/api/payment/momo/callback`,
+        // return_url: `http://localhost:3000/payment/success`,
+        // notify_url: `http://127.0.0.1:8001/api/payment/momo/callback`,
+        return_url: `https://snaplink.io.vn/payment/success`,
+        notify_url: `https://snaplink-itqaz.ondigitalocean.app/api/payment/momo/callback`,
         payment_type: momoPaymentType,
       };
 

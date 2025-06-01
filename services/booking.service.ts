@@ -83,3 +83,10 @@ export async function deleteBooking(id: number) {
   const response = await axiosInstance.delete(`/bookings/${id}`)
   return response.data
 }
+
+export async function uploadPhotoStorageLink(booking_id: number, photo_storage_link: string) {
+  const response = await axiosInstance.patch(`/photographer/bookings/${booking_id}/photo-storage`, {
+    photo_storage_link
+  })
+  return response.data
+}

@@ -1,24 +1,39 @@
 "use client"
 
 import { useEffect, useState, use } from "react"
-import { getBookingByCode, BookingResponse } from "@/services/booking.service"
+import { getBookingByCode, BookingResponse, uploadPhotoStorageLink, updateBookingStatus } from "@/services/booking.service"
 import { userService, UserProfileResponse } from "@/services/user.service"
+import { getServiceByIdPublic, Service } from "@/services/services.service"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, MapPin, ArrowLeft, CreditCard, User } from "lucide-react"
+import { Calendar, MapPin, ArrowLeft, CreditCard, User, MapPinned, Package, SquarePercent  } from "lucide-react"
 import Image from "next/image"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import toast, { Toaster } from "react-hot-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function BookingDetailPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params)
   const [booking, setBooking] = useState<BookingResponse | null>(null)
   const [customer, setCustomer] = useState<UserProfileResponse | null>(null)
-  // const [photographer, setPhotographer] = useState<UserProfileResponse | null>(null)
+  const [service, setService] = useState<Service | null>(null)
+  const [photoStorageLink, setPhotoStorageLink] = useState("")
+  const [isUploading, setIsUploading] = useState(false)
+  const [isCompleting, setIsCompleting] = useState(false)
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false)
+  const [showServiceDialog, setShowServiceDialog] = useState(false)
   const [loading, setLoading] = useState(true)
   const [userLoading, setUserLoading] = useState(true)
   const router = useRouter()
@@ -29,12 +44,13 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
         const bookingData = await getBookingByCode(code)
         setBooking(bookingData)
         
-        // Fetch user information
-        const [customerData] = await Promise.all([
+        // Fetch user and service information
+        const [customerData, serviceData] = await Promise.all([
           userService.getUserById(bookingData.customer_id),
-          // userService.getUserById(bookingData.photographer_id)
+          getServiceByIdPublic(bookingData.service_id)
         ])
         setCustomer(customerData)
+        setService(serviceData)
       } catch (error) {
         console.error("Error fetching data:", error)
       } finally {
@@ -58,6 +74,44 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
         return "bg-blue-100 text-blue-800 border-blue-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const handleCompleteSession = async () => {
+    if (!booking) return
+    
+    try {
+      setIsCompleting(true)
+      await updateBookingStatus(booking.booking_id, "completed")
+      toast.success("Đã xác nhận hoàn thành buổi chụp")
+      // Refresh booking data
+      const updatedBooking = await getBookingByCode(code)
+      setBooking(updatedBooking)
+      setShowCompleteDialog(false)
+    } catch (error) {
+      console.error("Error completing session:", error)
+      toast.error("Có lỗi xảy ra khi xác nhận hoàn thành")
+    } finally {
+      setIsCompleting(false)
+    }
+  }
+
+  const handleUploadPhotoStorageLink = async () => {
+    if (!booking || !photoStorageLink) return
+    
+    try {
+      setIsUploading(true)
+      await uploadPhotoStorageLink(booking.booking_id, photoStorageLink)
+      toast.success("Đã lưu đường dẫn")
+      // Refresh booking data
+      const updatedBooking = await getBookingByCode(code)
+      setBooking(updatedBooking)
+      setPhotoStorageLink("")
+    } catch (error) {
+      console.error("Error uploading photo storage link:", error)
+      toast.error("Có lỗi xảy ra khi lưu đường dẫn")
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -138,15 +192,59 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>{format(new Date(booking.booking_date), "EEEE, dd/MM/yyyy", { locale: vi })}</span>
+                    <span>Ngày chụp: {format(new Date(booking.booking_date), "EEEE, dd/MM/yyyy", { locale: vi })}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  {/* <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4" />
                     <span>{format(new Date(booking.booking_date), "HH:mm", { locale: vi })}</span>
+                  </div> */}
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                    <MapPinned className="h-4 w-4 mt-0.5" />
+                    <span>Tỉnh/Thành phố: {booking.province}</span>
                   </div>
                   <div className="flex items-start gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4 mt-0.5" />
-                    <span>{booking.custom_location || "Chưa xác định địa điểm"}</span>
+                    <span>Địa điểm: {booking.custom_location || "Chưa xác định địa điểm"}</span>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                    <Package className="h-4 w-4 mt-0.5" />
+                    <div className="flex flex-col">
+                      <span>Gói dịch vụ: {service?.title || "Đang tải..."}</span>
+                      {service && (
+                        <div className="mt-1">
+                          <span className="text-sm">
+                            Giá gốc: {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)}
+                          </span>
+                          {/* {booking.total_price < service.price && (
+                            <span className="text-sm text-green-600 ml-2">
+                              (Giảm {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price - booking.total_price)})
+                            </span>
+                          )} */}
+                        </div>
+                      )}
+
+                      {service && booking.total_price < service.price && (
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center text-sm text-green-600">
+                            <SquarePercent className="h-4 w-4 mr-1" />
+                            <span>Mã giảm giá: {booking.discount_code}</span>
+                          </div>
+                          <div className="text-sm text-green-600">
+                            Giảm ({new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price - booking.total_price)} so với giá gốc)
+                          </div>
+                        </div>
+                      )}
+
+                      
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-sm"
+                        onClick={() => setShowServiceDialog(true)}
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -160,7 +258,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">Số lượng</span>
-                    <p className="font-medium">{booking.quantity} người</p>
+                    <p className="font-medium">{booking.quantity}</p>
                   </div>
                 </div>
               </div>
@@ -217,10 +315,119 @@ export default function BookingDetailPage({ params }: { params: Promise<{ code: 
                   </Button>
                 </div>
               )}
+
+              {booking.status === "confirmed" && 
+               (booking.payment_status === "fully_paid" || booking.payment_status === "deposit_paid") && (
+                <div className="flex gap-3 mt-4">
+                  <Button 
+                    onClick={() => setShowCompleteDialog(true)}
+                    variant="default"
+                  >
+                    Xác nhận đã hoàn thành buổi chụp hình
+                  </Button>
+                </div>
+              )}
+
+              {booking.status === "completed" && 
+               (booking.payment_status === "fully_paid" || booking.payment_status === "deposit_paid") && (
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Nhập đường dẫn upload ảnh</h3>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={photoStorageLink}
+                      onChange={(e) => setPhotoStorageLink(e.target.value)}
+                      placeholder="Nhập đường dẫn lưu trữ ảnh"
+                      className="flex-1 px-3 py-2 border rounded-md"
+                    />
+                    <Button 
+                      onClick={handleUploadPhotoStorageLink}
+                      disabled={isUploading || !photoStorageLink}
+                    >
+                      {isUploading ? "Đang lưu..." : "Lưu đường dẫn"}
+                    </Button>
+                  </div>
+                  {booking.photo_storage_link && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Đường dẫn hiện tại: {booking.photo_storage_link}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {booking.status === "accepted" && (
+                <div className="flex gap-3 mt-4">
+                  <Button variant="default">
+                    Nhắc nhở thanh toán
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận hoàn thành buổi chụp</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xác nhận đã hoàn thành buổi chụp hình này không?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCompleteDialog(false)}
+              disabled={isCompleting}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleCompleteSession}
+              disabled={isCompleting}
+            >
+              {isCompleting ? "Đang xác nhận..." : "Xác nhận"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showServiceDialog} onOpenChange={setShowServiceDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chi tiết gói dịch vụ</DialogTitle>
+          </DialogHeader>
+          {service && (
+            <div className="space-y-4">
+              {service.thumbnail_url && (
+                <div className="relative w-full h-[300px] bg-muted/30 rounded-lg overflow-hidden">
+                  <Image
+                    src={service.thumbnail_url}
+                    alt={service.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <div>
+                <h3 className="text-lg font-semibold">{service.title}</h3>
+                <p className="text-muted-foreground mt-2">{service.description}</p>
+                <div className="mt-4">
+                  <p className="font-medium">
+                    Giá: {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(service.price)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowServiceDialog(false)}>Đóng</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Toaster position="bottom-right"/>
     </div>
   )
 } 
