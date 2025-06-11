@@ -560,7 +560,7 @@ export default function ModernBookingManagement() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                       
-                      <Button variant="ghost" className="w-full gap-2">
+                      <Button variant="ghost" className="w-full gap-2" onClick={() => router.push(`/manage/bookings/${booking.booking_code}`)}>
                         <Eye className="w-4 h-4" />
                         Xem chi tiết
                       </Button>
