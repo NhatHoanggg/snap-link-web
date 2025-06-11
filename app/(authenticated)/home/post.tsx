@@ -5,7 +5,8 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { formatDistanceToNow } from "date-fns"
+import { format } from "date-fns"
+import { vi } from "date-fns/locale"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -113,7 +114,7 @@ export function Post({ post }: PostProps) {
     }
   }
 
-  const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true })
+  const formattedTime = format(new Date(post.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })
 
   return (
     <Card className="overflow-hidden">
@@ -135,7 +136,7 @@ export function Post({ post }: PostProps) {
                 </Link>
                 <p className="text-sm text-muted-foreground">@{post.photographer_slug}</p>
               </div>
-              <p className="text-xs text-muted-foreground">{timeAgo}</p>
+              <p className="text-xs text-muted-foreground">{formattedTime}</p>
             </div>
           </div>
         </div>
@@ -272,7 +273,7 @@ export function Post({ post }: PostProps) {
                               {comment.user_name}
                             </Link>
                             <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                              {format(new Date(comment.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
                             </span>
                           </div>
                           <p className="text-sm">{comment.content}</p>
