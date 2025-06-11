@@ -246,7 +246,7 @@ export function AvailabilityCalendar() {
                         selected={selectedDate}
                         onSelect={handleDateSelect}
                         month={date}
-                        className="rounded-md border w-full"
+                        className="rounded-md border w-full p-5"
                         modifiers={{
                           available: (date) =>
                             availabilities.some(
@@ -259,9 +259,9 @@ export function AvailabilityCalendar() {
                         }}
                         modifiersClassNames={{
                           available:
-                            "bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium",
+                            "bg-green-300 hover:bg-green-100 dark:bg-green-900 dark:hover:bg-green-900 text-green-600 dark:text-green-400 font-medium rounded-md",
                           booked:
-                            "bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 line-through opacity-70",
+                            "bg-red-300 hover:bg-red-100 dark:bg-red-900 dark:hover:bg-red-900 text-red-600 dark:text-red-400 line-through opacity-70 rounded-md",
                         }}
                       />
                     </motion.div>
