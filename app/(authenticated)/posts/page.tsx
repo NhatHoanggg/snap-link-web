@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
-import { Loader2, Plus, ImageIcon, Pencil, Trash2 } from "lucide-react"
+import { Loader2, Plus, ImageIcon, Pencil, Trash2, Heart, MessageCircle, Eye } from "lucide-react"
 import { postsService, type Post, type CreatePostRequest } from "@/services/posts.service"
 import { useRouter } from "next/navigation"
 
@@ -250,7 +250,7 @@ export default function PostsManagement() {
                       </div>
                       <CardContent className="p-4">
                         <p className="text-sm line-clamp-3">{post.caption}</p>
-                        {post.tags.length > 0 && (
+                        {/* {post.tags.length > 0 && (
                           <div className="mt-2 flex flex-wrap gap-1">
                             {post.tags.map((tag, index) => (
                               <span key={index} className="text-xs bg-muted px-2 py-1 rounded-full">
@@ -258,7 +258,7 @@ export default function PostsManagement() {
                               </span>
                             ))}
                           </div>
-                        )}
+                        )} */}
                         <div className="mt-2 space-y-1">
                           <div className="text-xs text-muted-foreground">
                             Tạo lúc: {format(new Date(post.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
@@ -269,11 +269,27 @@ export default function PostsManagement() {
                             </div>
                           )}
                         </div>
+
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Heart className="h-4 w-4" />
+                            <span className="text-sm">{post.like_count}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <MessageCircle className="h-4 w-4" />
+                            <span className="text-sm">{post.comment_count}</span>
+                          </div>
+                        </div>
+                        
                       </CardContent>
                       <CardFooter className="p-4 pt-0 flex justify-between">
-                        <Button variant="outline" size="sm" onClick={() => router.push(`/posts/edit/${post.post_id}`)}>
-                          <Pencil className="h-4 w-4 mr-1" />
-                          Chỉnh sửa
+                        <Button variant="outline" size="sm" onClick={() => router.push(`/posts/${post.post_id}`)} className="gap-2">
+                          <Eye className="h-4 w-4" />
+                          Xem
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push(`/posts/edit/${post.post_id}`)} className="gap-2">
+                          <Pencil className="h-4 w-4" />
+                          Sửa
                         </Button>
                         <Button
                           variant="outline"
@@ -281,7 +297,7 @@ export default function PostsManagement() {
                           className="text-destructive"
                           onClick={() => openDeleteDialog(post)}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
+                          <Trash2 className="h-4 w-4" />
                           Xóa
                         </Button>
                       </CardFooter>
@@ -328,10 +344,26 @@ export default function PostsManagement() {
                                 </div>
                               )}
                             </div>
+
+                            <div className="mt-2 flex items-center gap-3">
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Heart className="h-4 w-4" />
+                                <span className="text-sm">{post.like_count}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <MessageCircle className="h-4 w-4" />
+                                <span className="text-sm">{post.comment_count}</span>
+                              </div>
+                            </div>
+
                           </div>
                           <div className="flex justify-end gap-2 mt-4">
-                            <Button variant="outline" size="sm" onClick={() => router.push(`/posts/edit/${post.post_id}`)}>
-                              <Pencil className="h-4 w-4 mr-1" />
+                            <Button variant="outline" size="sm" onClick={() => router.push(`/posts/${post.post_id}`)} className="gap-2">
+                              <Eye className="h-4 w-4" />
+                              Xem
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => router.push(`/posts/edit/${post.post_id}`)} className="gap-2">
+                              <Pencil className="h-4 w-4" />
                               Chỉnh sửa
                             </Button>
                             <Button
