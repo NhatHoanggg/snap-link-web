@@ -13,7 +13,7 @@ import {
   Star,
   MessageSquare,
   ShoppingBag,
-  CalendarDays,
+  HandCoins ,
 } from "lucide-react"
 
 interface StatCard {
@@ -80,10 +80,10 @@ export default function ManagementDashboard() {
       color: "bg-yellow-500",
     },
     {
-      title: "Lịch tổng quan",
-      description: "Xem lịch tổng quan của tháng",
-      icon: <CalendarDays className="h-6 w-6" />,
-      href: "/calendar",
+      title: "Xem đề xuất",
+      description: "Quản lý đề xuất của bạn",
+      icon: <HandCoins className="h-6 w-6" />,
+      href: "/manage/request-offers",
       color: "bg-indigo-500",
     },
   ]

@@ -60,7 +60,7 @@ export default function PaymentPage() {
     try {
       setPaymentLoading(true);
       const amount = calculatePaymentAmount();
-      const description = `Thanh toán đặt lịch ${booking.booking_code} - ${paymentOption === "deposit" ? "Đặt cọc" : "Toàn bộ"}`;
+      const description = `${booking.booking_code}`;
 
       const paymentData = {
         amount: amount,
@@ -70,10 +70,11 @@ export default function PaymentPage() {
       };
 
       const response = await createPayment(paymentData);
+      // console.log(response)
       
       // Redirect to payment page
-      if (response.checkoutUrl) {
-        window.location.href = response.payment_url;
+      if (response.data.checkoutUrl) {
+        window.location.href = response.data.checkoutUrl;
       }
 
     } catch (error) {

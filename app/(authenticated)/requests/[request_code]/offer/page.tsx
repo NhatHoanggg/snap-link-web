@@ -63,7 +63,7 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
   const errorMessages: { [key: string]: string } = {
     "Cannot create offer for closed request": "Không thể tạo đề xuất cho yêu cầu đã bị hủy bởi khách hàng",
     "You are not available on the requested date": "Bạn đã bận hoặc có lịch chụp vào ngày chụp của yêu cầu này",
-    "You have already created an offer for this request": "Bạn đã tạo request cho yêu cầu này"
+    "You have already created an offer for this request": "Bạn đã tạo đề xuất cho yêu cầu này"
   }
 
   useEffect(() => {
@@ -150,9 +150,10 @@ export default function RequestOfferPage({ params }: { params: Promise<{ request
       console.error("Error creating offer:", err)
 
       if (err instanceof AxiosError) {
-        console.log("hello")
+        // console.log("hello")
         const errorMessage = err.response?.data?.detail as string
         if (errorMessages[errorMessage]) {
+          toast.error(errorMessages[errorMessage])
           setSubmitError(errorMessages[errorMessage])
         } else {
           setSubmitError("Không thể gửi đề xuất. Vui lòng thử lại sau.")

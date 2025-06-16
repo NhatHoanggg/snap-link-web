@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2, Calendar, Camera, MapPin, MapPinned, ChevronDown, ChevronUp } from "lucide-react";
 import { getBookingByCode, updateBookingStatus, updatePaymentStatus, type BookingResponse, type PaymentStatus } from '@/services/booking.service';
+import { createHistory, PaymentType } from '@/services/payment.service';
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import toast, { Toaster } from 'react-hot-toast';
@@ -79,6 +80,15 @@ export default function PaymentSuccessPage() {
             await updateBookingStatus(bookingData.booking_id, newStatus);
             await updatePaymentStatus(bookingData.booking_id, newPaymentStatus);
 
+            // Create payment history
+            await createHistory({
+              booking_code: bookingCode,
+              amount: bookingData.total_price,
+              payment_type: paymentTypeParam === 'deposit' ? PaymentType.DEPOSIT : PaymentType.FULL,
+              order_code: orderCode || '',
+              status: 'PAID'
+            });
+
             // Update local booking state with new status
             setBooking(prev => prev ? { 
               ...prev, 
@@ -101,7 +111,7 @@ export default function PaymentSuccessPage() {
     };
 
     fetchBooking();
-  }, [bookingCode, code, status, isCancelled, paymentTypeParam]);
+  }, [bookingCode, code, status, isCancelled, paymentTypeParam, orderCode]);
 
   const isSuccess = code === '00' && status === 'PAID' && !isCancelled;
 

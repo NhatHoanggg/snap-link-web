@@ -256,7 +256,7 @@ export default function MyBookingsPage() {
           <h1 className="text-3xl font-bold">Lịch hẹn của tôi</h1>
           <p className="text-muted-foreground mt-1">Quản lý tất cả các buổi chụp ảnh đã đặt lịch</p>
         </div>
-        <Button onClick={() => router.push("/book-now")} className="shrink-0">
+        <Button onClick={() => router.push("/search")} className="shrink-0">
           Đặt lịch mới
         </Button>
       </div>

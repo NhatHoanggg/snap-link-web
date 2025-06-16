@@ -83,3 +83,12 @@ export const changeOfferStatus = async (request_offer_id: number, status: OfferS
         throw error;
     }
 }
+
+export const deleteOffer = async (request_offer_id: number) => {
+    try {
+        const response = await axiosInstance.delete(`/requests/offers/${request_offer_id}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

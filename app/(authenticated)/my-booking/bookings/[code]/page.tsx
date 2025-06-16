@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { format, parseISO } from "date-fns"
 import { vi } from "date-fns/locale"
+import Image from "next/image"
 import {
   ArrowLeft,
   Calendar,
@@ -49,6 +50,7 @@ type Booking = BookingResponse
 const fetchBookingByCode = async (code: string): Promise<Booking | null> => {
   try {
     const data = await getBookingByCode(code)
+    console.log(data)
     return data
   } catch (error) {
     console.error("Failed to fetch booking:", error)
@@ -71,21 +73,40 @@ const getStatusBadgeVariant = (status: string): "destructive" | "secondary" | "d
 }
 
 // Helper function to translate status
-const translateStatus = (status: string) => {
-  switch (status) {
-    case "completed":
-      return "Hoàn thành"
-    case "accepted":
-      return "Đã xác nhận"
-    case "confirmed":
-      return "Đã thanh toán"
-    case "cancelled":
-      return "Đã hủy"
-    case "pending":
-      return "Đang chờ"
-    default:
-      return status
+// const translateStatus = (status: string) => {
+//   switch (status) {
+//     case "completed":
+//       return "Hoàn thành"
+//     case "accepted":
+//       return "Đã xác nhận"
+//     case "confirmed":
+//       return "Đã thanh toán"
+//     case "cancelled":
+//       return "Đã hủy"
+//     case "pending":
+//       return "Đang chờ"
+//     default:
+//       return status
+//   }
+// }
+
+// Helper function to get payment status text
+const getPaymentStatusText = (bookingStatus: string, paymentStatus: string | null) => {
+  if (!paymentStatus) return "Chưa thanh toán"
+  
+  if (bookingStatus === "confirmed" && paymentStatus === "deposit_paid") {
+    return "Đã thanh toán một phần (20%)"
   }
+  if (bookingStatus === "confirmed" && paymentStatus === "fully_paid") {
+    return "Đã thanh toán toàn bộ"
+  }
+  if (bookingStatus === "completed" && paymentStatus === "deposit_paid") {
+    return "Đã thanh toán một phần (20%)"
+  }
+  if (bookingStatus === "completed" && paymentStatus === "fully_paid") {
+    return "Đã hoàn thành"
+  }
+  return "Chưa thanh toán"
 }
 
 // Helper function to translate shooting type
@@ -399,7 +420,8 @@ export default function BookingDetailPage() {
           <h1 className="text-2xl font-bold">Chi tiết đặt lịch</h1>
         </div>
         <Badge variant={getStatusBadgeVariant(booking.status)} className="text-sm px-3 py-1">
-          {translateStatus(booking.status)}
+          {/* {translateStatus(booking.status)} */}
+          {getPaymentStatusText(booking.status, booking.payment_status)}
         </Badge>
       </div>
 
@@ -420,12 +442,20 @@ export default function BookingDetailPage() {
             <CardContent className="space-y-6">
               {/* Concept Image */}
               <div className="aspect-video w-full bg-muted rounded-md overflow-hidden">
-                <img
+                {/* <img
+                  src={getImageUrl(booking.illustration_url)}
+                  alt={booking.concept || "Ảnh minh họa"}
+                  className="w-full h-full object-cover"
+                /> */}
+                <Image
+                  width={300}
+                  height={100}
                   src={getImageUrl(booking.illustration_url)}
                   alt={booking.concept || "Ảnh minh họa"}
                   className="w-full h-full object-cover"
                 />
               </div>
+              Im
 
               {/* Booking Details */}
               <div className="space-y-4">
@@ -545,8 +575,7 @@ export default function BookingDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Giá dịch vụ</span>
-                {/* <span>{booking.total_price > 0 ? `${booking.total_price.toLocaleString()} VND` : "Liên hệ"}</span> */}
+                <span className="text-muted-foreground">Giá tiền: </span>
                 <span>{service?.price.toLocaleString()} VND</span>
               </div>
               {booking.discount_code && (
@@ -556,6 +585,27 @@ export default function BookingDetailPage() {
                 </div>
               )}
               <Separator />
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Đã thanh toán: </span>
+                <span className="font-medium text-green-600">
+                  {booking.payment_status === "deposit_paid" 
+                    ? `${Math.round((service?.price || 0) * 0.2).toLocaleString()} VND (20%)`
+                    : booking.payment_status === "fully_paid"
+                    ? `${(service?.price || 0).toLocaleString()} VND (100%)`
+                    : "0 VND (0%)"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Còn lại: </span>
+                <span className="font-medium text-orange-600">
+                  {booking.payment_status === "deposit_paid"
+                    ? `${Math.round((service?.price || 0) * 0.8).toLocaleString()} VND (80%)`
+                    : booking.payment_status === "fully_paid"
+                    ? "0 VND (0%)"
+                    : `${(service?.price || 0).toLocaleString()} VND (100%)`}
+                </span>
+              </div>
+              <Separator />
               <div className="flex justify-between font-medium">
                 <span>Tổng cộng</span>
                 <span>{booking.total_price > 0 ? `${booking.total_price.toLocaleString()} VND` : "Liên hệ"}</span>
@@ -563,28 +613,13 @@ export default function BookingDetailPage() {
               <div className="text-xs text-muted-foreground">* Giá cuối cùng sẽ được xác nhận bởi nhiếp ảnh gia</div>
             </CardContent>
             <CardFooter className="flex-col space-y-2">
-              {/* <Button className="w-full" asChild>
-                <Link href={`/chat/${booking.photographer_id}`}>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Nhắn tin với nhiếp ảnh gia
-                </Link>
-              </Button> */}
-
-                {/* <Button
-                  variant="outline"
-                  className="w-full hover:text-accent-foreground"
-                  onClick={() => handlePayment(booking.booking_code)}
-                >
-                  💸Thanh toán
-                </Button> */}
-                
-              {booking.status === "accepted" && (
+              {((booking.status === "confirmed" || booking.status === "completed") && booking.payment_status === "deposit_paid") && (
                 <Button
                   variant="outline"
                   className="w-full hover:text-accent-foreground"
                   onClick={() => handlePayment(booking.booking_code)}
                 >
-                  💸Thanh toán
+                  💸Thanh toán phần còn lại ({Math.round((service?.price || 0) * 0.8).toLocaleString()} VND)
                 </Button>
               )}
               {booking.status === "pending" && (
@@ -614,14 +649,6 @@ export default function BookingDetailPage() {
                   </p>
                 </div>
               </div>
-              {/* <div className="flex items-start gap-2">
-                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">Mã khách hàng:</span> #{booking.customer_id}
-                  </p>
-                </div>
-              </div> */}
               <div className="flex items-start gap-2">
                 <Camera className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
@@ -647,6 +674,15 @@ export default function BookingDetailPage() {
                 <div>
                   <p className="text-sm">
                     <span className="text-muted-foreground">Mã đặt lịch:</span> {booking.booking_code || "Chưa có"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Tag className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Trạng thái thanh toán:</span>{" "}
+                    {getPaymentStatusText(booking.status, booking.payment_status)}
                   </p>
                 </div>
               </div>
@@ -752,7 +788,14 @@ export default function BookingDetailPage() {
             <div className="space-y-6 overflow-y-auto pr-2 -mr-2">
               {/* Service Image */}
               <div className="aspect-video w-full bg-muted rounded-md overflow-hidden">
-                <img
+                {/* <img
+                  src={service.thumbnail_url || "https://res.cloudinary.com/dy8p5yjsd/image/upload/v1748164460/23101740_6725295_ru1wsv.jpg"}
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                /> */}
+                <Image
+                  width={300}
+                  height={100}
                   src={service.thumbnail_url || "https://res.cloudinary.com/dy8p5yjsd/image/upload/v1748164460/23101740_6725295_ru1wsv.jpg"}
                   alt={service.title}
                   className="w-full h-full object-cover"
@@ -807,13 +850,6 @@ export default function BookingDetailPage() {
             <Button variant="outline" onClick={() => setIsServiceDialogOpen(false)}>
               Đóng
             </Button>
-            {/* {service && (
-              <Button asChild>
-                <Link href={`/photographers/${photographer?.slug}/services/${service.service_id}`}>
-                  Xem chi tiết trên trang nhiếp ảnh gia
-                </Link>
-              </Button>
-            )} */}
           </DialogFooter>
         </DialogContent>
       </Dialog>
