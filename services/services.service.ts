@@ -15,7 +15,7 @@ export interface Service {
 
 export async function getServices(): Promise<Service[]> {
     try {
-        const response = await axiosInstance.get('/photographers/me/services')
+        const response = await axiosInstance.get('/me/services')
         return response.data
     } catch (error) {
         console.error('Error fetching services:', error)
