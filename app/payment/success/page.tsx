@@ -83,7 +83,7 @@ export default function PaymentSuccessPage() {
             // Create payment history
             await createHistory({
               booking_code: bookingCode,
-              amount: bookingData.total_price,
+              amount: paymentTypeParam === 'deposit' ? bookingData.total_price * 0.2 : bookingData.total_price,
               payment_type: paymentTypeParam === 'deposit' ? PaymentType.DEPOSIT : PaymentType.FULL,
               order_code: orderCode || '',
               status: 'PAID'
