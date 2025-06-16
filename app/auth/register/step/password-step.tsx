@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-
+import toast, { Toaster } from "react-hot-toast"
 interface PasswordStepProps {
   formData: {
     password: string
@@ -32,8 +32,15 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (formData.password.length < 8 || formData.password.length > 20) {
+      // Handle password length error
+      toast.error("Mật khẩu phải có từ 8 đến 20 ký tự")
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       // Handle password mismatch error
+      toast.error("Mật khẩu không khớp")
       return
     }
 
@@ -165,6 +172,7 @@ export default function PasswordStep({ formData, updateFormData, onNext, onPrev 
           Tiếp tục
         </Button>
       </div>
+      <Toaster position="bottom-right" />
     </form>
   )
 }

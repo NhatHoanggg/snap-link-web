@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getBookingByCode } from "@/services/booking.service";
-import { createMomoPayment, MomoPaymentType } from "@/services/payment.service";
 import { BookingResponse } from "@/services/booking.service";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Loader2, CreditCard, Wallet } from "lucide-react";
+import { Loader2, CreditCard } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { createPayment } from "@/services/payment.service";
 
 export default function PaymentPage() {
   const params = useParams();
@@ -54,42 +54,26 @@ export default function PaymentPage() {
     fetchBooking();
   }, [params.code]);
 
-  const handleMomoPayment = async (momoPaymentType: MomoPaymentType) => {
+  const handlePayment = async () => {
     if (!booking) return;
 
     try {
       setPaymentLoading(true);
-      let orderInfo = booking.booking_code;
-      const amount = calculatePaymentAmount(); // Sử dụng hàm tính toán mới
-
-      if (booking.status === "accepted" && booking.payment_status === "unpaid") {
-        if (paymentOption === "deposit") {
-          orderInfo += "_deposit";
-        } else {
-          orderInfo += "_full";
-        }
-      } else if (booking.status === "confirmed" && booking.payment_status === "deposit_paid") {
-        orderInfo += "_reminder";
-      }
+      const amount = calculatePaymentAmount();
+      const description = `Thanh toán đặt lịch ${booking.booking_code} - ${paymentOption === "deposit" ? "Đặt cọc" : "Toàn bộ"}`;
 
       const paymentData = {
         amount: amount,
-        order_id: generateOrderId(),
-        order_info: orderInfo,
-        // return_url: `http://localhost:3000/payment/success`,
-        // notify_url: `http://127.0.0.1:8001/api/payment/momo/callback`,
-        return_url: `https://snaplink.io.vn/payment/success`,
-        notify_url: `https://snaplink-itqaz.ondigitalocean.app/api/payment/momo/callback`,
-        payment_type: momoPaymentType,
+        description: description,
+        cancel_url: `https://snaplink.io.vn/payment/${booking.booking_code}`,
+        return_url: `https://snaplink.io.vn/payment/success?booking_code=${booking.booking_code}&payment_type=${paymentOption}`
       };
 
-      const response = await createMomoPayment(paymentData);
-
-      // Redirect to MoMo payment page
-      if (response.payUrl) {
-        window.location.href = response.payUrl;
-      } else if (response.deeplink) {
-        window.location.href = response.deeplink;
+      const response = await createPayment(paymentData);
+      
+      // Redirect to payment page
+      if (response.checkoutUrl) {
+        window.location.href = response.payment_url;
       }
 
     } catch (error) {
@@ -99,12 +83,6 @@ export default function PaymentPage() {
       setPaymentLoading(false);
     }
   };
-
-  const generateOrderId = () => {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    return `SNAP_${timestamp}_${random}`;
-  }
 
   if (loading) {
     return (
@@ -223,21 +201,7 @@ export default function PaymentPage() {
               <div className="space-y-3">
                 <Button
                   className="w-full"
-                  onClick={() => handleMomoPayment(MomoPaymentType.CAPTURE_WALLET)}
-                  disabled={paymentLoading}
-                >
-                  {paymentLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Wallet className="w-4 h-4 mr-2" />
-                  )}
-                  Thanh toán {paymentAmount.toLocaleString("vi-VN")} VNĐ qua ví MoMo
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleMomoPayment(MomoPaymentType.PAY_WITH_ATM)}
+                  onClick={handlePayment}
                   disabled={paymentLoading}
                 >
                   {paymentLoading ? (
@@ -245,7 +209,7 @@ export default function PaymentPage() {
                   ) : (
                     <CreditCard className="w-4 h-4 mr-2" />
                   )}
-                  Thanh toán {paymentAmount.toLocaleString("vi-VN")} VNĐ qua ATM
+                  Thanh toán {paymentAmount.toLocaleString("vi-VN")} VNĐ
                 </Button>
               </div>
             </div>

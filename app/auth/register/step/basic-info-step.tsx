@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import toast, { Toaster } from "react-hot-toast"
 
 interface BasicInfoStepProps {
   formData: {
@@ -45,6 +46,10 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (formData.name.length < 3 || formData.name.length > 50) {
+      toast.error("Họ và tên phải có từ 3 đến 50 ký tự")
+      return
+    }
     onNext()
   }
 
@@ -129,6 +134,7 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
       <Button type="submit" className="w-full">
         Tiếp tục
       </Button>
+      <Toaster position="bottom-right" />
     </form>
   )
 }

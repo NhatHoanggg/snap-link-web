@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { getTags, Tag } from "@/services/tags.service"
+import toast, { Toaster } from "react-hot-toast"
 
 interface PhotographerDetailsStepProps {
   formData: {
@@ -47,6 +48,14 @@ export default function PhotographerDetailsStep({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (formData.pricePerHour && formData.pricePerHour < 0) {
+      toast.error("Giá /giờ không được nhỏ hơn 0")
+      return
+    }
+    if (formData.experienceYears && formData.experienceYears < 0) {
+      toast.error("Năm kinh nghiệm không được nhỏ hơn 0")
+      return
+    }
     onNext()
   }
 
@@ -112,6 +121,7 @@ export default function PhotographerDetailsStep({
           Tiếp tục
         </Button>
       </div>
+      <Toaster position="bottom-right" />
     </form>
   )
 }

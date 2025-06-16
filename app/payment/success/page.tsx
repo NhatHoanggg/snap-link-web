@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2, Calendar, Camera, MapPin, MapPinned, ChevronDown, ChevronUp } from "lucide-react";
 import { getBookingByCode, updateBookingStatus, updatePaymentStatus, type BookingResponse, type PaymentStatus } from '@/services/booking.service';
-import { createPayment, PaymentType, PaymentMethod } from '@/services/payment.service';
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import toast, { Toaster } from 'react-hot-toast';
@@ -19,17 +18,17 @@ export default function PaymentSuccessPage() {
   const [error, setError] = useState<string | null>(null);
   const [showBookingInfo, setShowBookingInfo] = useState(false);
 
-  const resultCode = searchParams.get('resultCode');
-  const bookingCode = searchParams.get('orderInfo')?.split('_')[0];
-  const paymentOption = searchParams.get('orderInfo')?.split('_')[1];
-  const message = searchParams.get('message');
-  const amount = searchParams.get('amount');
-  const transId = searchParams.get('transId');
-  const payType = searchParams.get('payType');
+  const bookingCode = searchParams.get('booking_code');
+  const paymentTypeParam = searchParams.get('payment_type');
+  const code = searchParams.get('code');
+  const transactionId = searchParams.get('id');
+  const isCancelled = searchParams.get('cancel') === 'true';
+  const status = searchParams.get('status');
+  const orderCode = searchParams.get('orderCode');
 
   // Helper function to get payment type information
   const getPaymentTypeInfo = () => {
-    switch (paymentOption) {
+    switch (paymentTypeParam) {
       case 'full':
         return {
           title: 'Thanh toán toàn bộ',
@@ -41,12 +40,6 @@ export default function PaymentSuccessPage() {
           title: 'Thanh toán đặt cọc',
           description: 'Bạn đã thanh toán 20% giá trị đặt lịch',
           percentage: 20
-        };
-      case 'reminder':
-        return {
-          title: 'Thanh toán phần còn lại',
-          description: 'Bạn đã thanh toán 80% giá trị đặt lịch còn lại',
-          percentage: 80
         };
       default:
         return {
@@ -72,38 +65,20 @@ export default function PaymentSuccessPage() {
         const bookingData = await getBookingByCode(bookingCode);
         setBooking(bookingData);
 
-        // If payment is successful, update booking status
-        if (resultCode === '0') {
+        // If payment is successful
+        if (code === '00' && status === 'PAID' && !isCancelled) {
           try {
             const newStatus = 'confirmed';
-            let newPaymentStatus: PaymentStatus = 'fully_paid'; // Mặc định là fully_paid
-            let paymentType: PaymentType = PaymentType.FULL;
+            let newPaymentStatus: PaymentStatus = 'fully_paid';
 
-            if (paymentOption === 'deposit') {
+            if (paymentTypeParam === 'deposit') {
               newPaymentStatus = 'deposit_paid';
-              paymentType = PaymentType.DEPOSIT;
-            } else if (paymentOption === 'reminder') {
-              newPaymentStatus = 'fully_paid';
-              paymentType = PaymentType.FULL;
             }
 
             // Update booking status
             await updateBookingStatus(bookingData.booking_id, newStatus);
             await updatePaymentStatus(bookingData.booking_id, newPaymentStatus);
 
-            // Create payment record
-            const orderInfo = searchParams.get('orderInfo');
-            const paymentData = {
-              booking_id: bookingData.booking_id,
-              amount: Number(amount),
-              payment_type: paymentType,
-              transaction_id: transId || '',
-              payment_method: payType === 'momo_wallet' ? PaymentMethod.MOBILE : PaymentMethod.CARD,
-              info: orderInfo || ''
-            };
-
-            await createPayment(paymentData);
-            
             // Update local booking state with new status
             setBooking(prev => prev ? { 
               ...prev, 
@@ -126,21 +101,9 @@ export default function PaymentSuccessPage() {
     };
 
     fetchBooking();
-  }, [bookingCode, resultCode, paymentOption, amount, transId, payType, searchParams]);
+  }, [bookingCode, code, status, isCancelled, paymentTypeParam]);
 
-  const isSuccess = resultCode === '0';
-
-  // Helper function to translate payment type
-  const translatePaymentType = (type: string | null) => {
-    switch (type) {
-      case 'napas':
-        return 'Thẻ ATM';
-      case 'momo_wallet':
-        return 'Ví MoMo';
-      default:
-        return type;
-    }
-  };
+  const isSuccess = code === '00' && status === 'PAID' && !isCancelled;
 
   if (loading) {
     return (
@@ -200,7 +163,7 @@ export default function PaymentSuccessPage() {
           <CardDescription className="text-center">
             {isSuccess 
               ? paymentInfo.description
-              : message || 'Có lỗi xảy ra trong quá trình thanh toán.'}
+              : 'Có lỗi xảy ra trong quá trình thanh toán.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -216,22 +179,22 @@ export default function PaymentSuccessPage() {
                 <span className="text-muted-foreground">Loại thanh toán:</span>
                 <span className="font-medium">{paymentInfo.title}</span>
               </div>
-              {amount && (
+              {booking && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Số tiền đã thanh toán:</span>
-                  <span className="font-medium">{Number(amount).toLocaleString()} VND</span>
+                  <span className="font-medium">{booking.total_price.toLocaleString()} VND</span>
                 </div>
               )}
-              {payType && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Phương thức:</span>
-                  <span className="font-medium capitalize">{translatePaymentType(payType)}</span>
-                </div>
-              )}
-              {transId && (
+              {transactionId && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Mã giao dịch:</span>
-                  <span className="font-medium">{transId}</span>
+                  <span className="font-medium">{transactionId}</span>
+                </div>
+              )}
+              {orderCode && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Mã đơn hàng:</span>
+                  <span className="font-medium">{orderCode}</span>
                 </div>
               )}
             </div>
@@ -248,10 +211,10 @@ export default function PaymentSuccessPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Đã thanh toán:</span>
                     <span className="font-medium text-green-600">
-                      {paymentInfo.percentage}% ({Number(amount).toLocaleString()} VND)
+                      {paymentInfo.percentage}% ({booking.total_price.toLocaleString()} VND)
                     </span>
                   </div>
-                  {paymentOption === 'deposit' && (
+                  {paymentTypeParam === 'deposit' && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Còn lại:</span>
                       <span className="font-medium text-orange-600">

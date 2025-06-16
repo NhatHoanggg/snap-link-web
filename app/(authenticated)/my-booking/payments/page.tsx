@@ -2,29 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { getMyPaymentsHistory } from "@/services/payment.service";
-import {
-  Payment,
-  PaymentMethod,
-  PaymentType,
-} from "@/services/payment.service";
+import { Payment, PaymentType } from "@/services/payment.service";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
 export default function PaymentHistoryPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPayments();
-  }, [sortOrder]);
+  }, []);
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const data = await getMyPaymentsHistory(sortOrder);
-      console.log(data);
+      const data = await getMyPaymentsHistory();
       setPayments(data.payments);
       setError(null);
     } catch (err) {
@@ -35,29 +29,14 @@ export default function PaymentHistoryPage() {
     }
   };
 
-  const getPaymentMethodText = (method: PaymentMethod) => {
-    switch (method) {
-      case "card":
-        return "Thẻ tín dụng";
-      case "cash":
-        return "Tiền mặt";
-      case "mobile":
-        return "Ví điện tử";
-      case "bank_transfer":
-        return "Chuyển khoản";
-      default:
-        return method;
-    }
-  };
-
   const getPaymentTypeText = (type: PaymentType) => {
     switch (type) {
-      case "deposit":
+      case PaymentType.DEPOSIT:
         return "Đặt cọc";
-      case "full":
+      case PaymentType.FULL:
         return "Thanh toán đầy đủ";
-      case "refunded":
-        return "Hoàn tiền";
+      case PaymentType.REMINDER:
+        return "Thanh toán phần còn lại";
       default:
         return type;
     }
@@ -74,20 +53,6 @@ export default function PaymentHistoryPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-foreground">Lịch sử thanh toán</h1>
-        <div className="flex items-center space-x-2">
-          <label htmlFor="sortOrder" className="text-sm text-muted-foreground">
-            Sắp xếp theo:
-          </label>
-          <select
-            id="sortOrder"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as "desc" | "asc")}
-            className="border border-input rounded-md px-3 py-1 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="desc">Mới nhất</option>
-            <option value="asc">Cũ nhất</option>
-          </select>
-        </div>
       </div>
 
       {loading ? (
@@ -107,25 +72,32 @@ export default function PaymentHistoryPage() {
               <thead className="bg-muted">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Mã đặt lịch
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Thời gian
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Số tiền
                   </th>
+                  
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Loại thanh toán
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Phương thức
+                    Mã đơn hàng
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Mã giao dịch
+                    Trạng thái
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
                 {payments.map((payment) => (
                   <tr key={payment.payment_id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                      {payment.booking_code}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {format(new Date(payment.paid_at), "dd/MM/yyyy HH:mm", {
                         locale: vi,
@@ -138,10 +110,16 @@ export default function PaymentHistoryPage() {
                       {getPaymentTypeText(payment.payment_type)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {getPaymentMethodText(payment.payment_method)}
+                      {payment.order_code}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {payment.transaction_id}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        payment.status === 'success' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {payment.status === 'success' ? 'Đã thanh toán' : 'Đã hủy'}
+                      </span>
                     </td>
                   </tr>
                 ))}
