@@ -103,7 +103,17 @@ export async function deleteDiscount(id: number): Promise<void> {
 
 export async function getDiscountById(id: number): Promise<Discount> {
     try {
-        const response = await axiosInstance.get(`/photographer/discounts/${id}`)
+        const response = await axiosInstance.get(`/api/discounts/${id}`)
+        return response.data
+    } catch (error) {
+        console.error("Error fetching discount:", error)
+        throw new Error("Failed to fetch discount")
+    }
+}
+
+export async function getDiscountByCode(code: string): Promise<Discount> {
+    try {
+        const response = await axiosInstance.get(`/api/discounts/code/${code}`)
         return response.data
     } catch (error) {
         console.error("Error fetching discount:", error)
