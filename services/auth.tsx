@@ -94,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
+    router.push("/")
     try {
       const token = localStorage.getItem("token")
       if (token) {
@@ -102,13 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error during logout:", error)
     } finally {
-      localStorage.removeItem("token")
-      localStorage.removeItem("refreshToken")
-      localStorage.removeItem("user")
-      setUser(null)
-      setToken(null)
-      // router.push("/")
-      signOut({ callbackUrl: "/auth/login" });
+      signOut({ callbackUrl: "/auth/logout" });
+      // signOut({ callbackUrl: "/auth/login" });
+      setTimeout(() => {
+        localStorage.removeItem("token")
+        localStorage.removeItem("refreshToken")
+        localStorage.removeItem("user")
+        setUser(null)
+        setToken(null)
+      }, 100)
     }
   }
 

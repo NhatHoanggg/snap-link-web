@@ -73,8 +73,15 @@ interface RegisterResponse {
   user: User;
 }
 
+export interface ResetPasswordForm{
+  email: string;
+  otp: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 export async function login(credentials: { email: string; password: string }): Promise<LoginResponse> {
-  console.log("credentials", credentials);
+  // console.log("credentials", credentials);
   
   const response = await axiosInstance.post<LoginResponse>('/login', credentials);
   return response.data;
@@ -134,6 +141,40 @@ export async function verifyEmail(email: string, otp: string): Promise<void> {
     throw new Error('An unexpected error occurred');
   }
 }
+
+export async function forgotPassword(email: string): Promise<void> {
+  try {
+    await axiosInstance.post('/forgot-password', {email});
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to forgot password');
+    }
+    throw new Error('An unexpected error occurred');
+  }
+}
+
+export async function verifyResetOTP(email: string, otp: string): Promise<void> {
+  try {
+    await axiosInstance.post('/verify-reset-otp',  { email, otp });
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to verify OTP');
+    }
+    throw new Error('An unexpected error occurred');
+  }
+}
+
+export async function resetPassword(formData: ResetPasswordForm): Promise<void> {
+  try {
+    await axiosInstance.post('/reset-password',  formData);
+  } catch (error: unknown) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to verify OTP');
+    }
+    throw new Error('An unexpected error occurred');
+  }
+}
+
 
 export const registerCustomerWithGoogle = async (data: CustomerRegisterData): Promise<RegisterResponse> => {
   try {

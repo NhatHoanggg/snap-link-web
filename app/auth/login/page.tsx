@@ -12,11 +12,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/services/auth"
-import { useToast } from "@/components/ui/use-toast"
+// import { useToast } from "@/components/ui/use-toast"
+import toast, {Toaster, ToastBar} from "react-hot-toast"
 import { signIn } from "next-auth/react"
 
 export default function LoginPage() {
-  const { toast } = useToast()
   const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: "",
@@ -42,18 +42,25 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password)
-      toast({
-        title: "Đăng nhập thành công",
-        description: "Chào mừng đến với SnapLink",
+    //   toast({
+    //     title: "Đăng nhập thành công",
+    //     description: "Chào mừng đến với SnapLink",
+    //   })
+      toast.success("Đăng nhập thành công!", {
+        duration: 6000,
       })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Đăng nhập thất bại"
+      console.log(error)
+      const errorMessage = "Đăng nhập thất bại"
+      // const errorMessage = error instanceof Error ? error.message : "Đăng nhập thất bại"
       setError(errorMessage)
-      toast({
-        title: "Đăng nhập thất bại",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      // toast({
+      //   title: "Đăng nhập thất bại",
+      //   description: errorMessage,
+      //   variant: "destructive",
+      // })
+      toast.error(errorMessage)
+      
     } finally {
       setIsLoading(false)
     }
@@ -247,6 +254,21 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <Toaster position="bottom-right">
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== "loading" && (
+                  <button onClick={() => toast.dismiss(t.id)}>X</button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
     </div>
   )
 }
