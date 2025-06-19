@@ -7,10 +7,12 @@ import { vi } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/components/ui/use-toast"
-import { Loader2, Heart, MessageCircle, Send } from "lucide-react"
+import toast, {Toaster} from "react-hot-toast"
+import { Loader2, Heart, MessageCircle, Send, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { postsService, type Post, type CommentResponse } from "@/services/posts.service"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/services/auth"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -21,6 +23,10 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const [commentContent, setCommentContent] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const { user } = useAuth()
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editingCommentText, setEditingCommentText] = useState("")
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchPostAndComments()
@@ -34,14 +40,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         postsService.getCommentsByPostId(parseInt(resolvedParams.id))
       ])
       setPost(postData)
+      // console.log(postData)
       setComments(commentsData)
+      // console.log(commentsData)
     } catch (error) {
       console.error("Error fetching post and comments:", error)
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải bài viết. Vui lòng thử lại sau.",
-        variant: "destructive",
-      })
+      toast.error("Không thể tải bài viết. Vui lòng thử lại sau.")
     } finally {
       setLoading(false)
     }
@@ -62,11 +66,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       }
     } catch (error) {
       console.error("Error toggling like:", error)
-      toast({
-        title: "Lỗi",
-        description: "Không thể thực hiện thao tác. Vui lòng thử lại sau.",
-        variant: "destructive",
-      })
+      toast.error("Không thể thực hiện thao tác. Vui lòng thử lại sau.")
     }
   }
 
@@ -78,19 +78,48 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       await postsService.commentPost(post.post_id, commentContent.trim())
       await fetchPostAndComments() // Refresh comments
       setCommentContent("")
-      toast({
-        title: "Thành công",
-        description: "Đã thêm bình luận",
-      })
+      toast.success("Đã thêm bình luận")
     } catch (error) {
       console.error("Error posting comment:", error)
-      toast({
-        title: "Lỗi",
-        description: "Không thể thêm bình luận. Vui lòng thử lại sau.",
-        variant: "destructive",
-      })
+      toast.error("Không thể thêm bình luận. Vui lòng thử lại sau.")
     } finally {
       setSubmittingComment(false)
+    }
+  }
+
+  const handleEditComment = (comment: CommentResponse) => {
+    setEditingCommentId(comment.comment_id)
+    setEditingCommentText(comment.content)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null)
+    setEditingCommentText("")
+  }
+
+  const handleUpdateComment = async (commentId: number) => {
+    if (!editingCommentText.trim()) return
+    try {
+      await postsService.updateComment(commentId, editingCommentText)
+      setComments(comments.map(c => c.comment_id === commentId ? { ...c, content: editingCommentText } : c))
+      toast.success("Cập nhật bình luận thành công.")
+      setEditingCommentId(null)
+      setEditingCommentText("")
+    } catch {
+      toast.success("Không thể cập nhật bình luận.")
+    }
+  }
+
+  const handleDeleteComment = async (commentId: number) => {
+    setDeletingCommentId(commentId)
+    try {
+      await postsService.deleteComment(commentId)
+      setComments(comments.filter(c => c.comment_id !== commentId))
+      toast.success("Đã xóa bình luận.")
+    } catch {
+      toast.error("Không thể xóa bình luận. Vui lòng thử lại sau.")
+    } finally {
+      setDeletingCommentId(null)
     }
   }
 
@@ -208,20 +237,59 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                   <div key={comment.comment_id} className="flex gap-4">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                       <Image
-                        src={comment.user_avatar || "/placeholder.svg"}
+                        src={comment.user_avatar || "/images/default.jpg"}
                         alt={comment.user_name}
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{comment.user_name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {format(new Date(comment.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
-                        </span>
+                      <div className="flex justify-between items-start mb-1">
+                        <div>
+                          <span className="font-medium">{comment.user_name}</span>
+                          <span className="text-sm text-muted-foreground ml-2">
+                            {format(new Date(comment.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
+                          </span>
+                        </div>
+                        {user?.user_id === comment.user_id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="ml-2 p-1 rounded hover:bg-accent"><MoreHorizontal className="h-4 w-4" /></button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditComment(comment)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Sửa
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteComment(comment.comment_id)} variant="destructive">
+                                <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
-                      <p className="mt-1">{comment.content}</p>
+                      {editingCommentId === comment.comment_id ? (
+                        <div className="space-y-2 mt-2">
+                          <Textarea
+                            value={editingCommentText}
+                            onChange={e => setEditingCommentText(e.target.value)}
+                            className="min-h-[60px]"
+                            autoFocus
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" onClick={handleCancelEdit}>Hủy</Button>
+                            <Button size="sm" onClick={() => handleUpdateComment(comment.comment_id)}>
+                              <Send className="mr-2 h-4 w-4" /> Lưu
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-1">{comment.content}</p>
+                      )}
+                      {deletingCommentId === comment.comment_id && (
+                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                          <Loader2 className="animate-spin h-6 w-6 text-primary" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -236,6 +304,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </Card>
         </div>
       </div>
+      <Toaster position="bottom-right"/>
     </div>
   )
 }

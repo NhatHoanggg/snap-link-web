@@ -13,10 +13,11 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Heart, MessageCircle, Send, Loader2 } from "lucide-react"
+import { Heart, MessageCircle, Send, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { PostResponse, CommentResponse, postsService } from "@/services/posts.service"
 import toast, { Toaster } from 'react-hot-toast';
 import { useAuth } from "@/services/auth";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 
 interface PostProps {
@@ -33,6 +34,9 @@ export function Post({ post }: PostProps) {
   const [loadingComments, setLoadingComments] = useState(false)
   const [liking, setLiking] = useState(false)
   const { user } = useAuth()
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editingCommentText, setEditingCommentText] = useState("")
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
 
   const fetchComments = async () => {
     if (comments.length > 0) return
@@ -111,6 +115,42 @@ export function Post({ post }: PostProps) {
 
     } finally {
       setSubmittingComment(false)
+    }
+  }
+
+  const handleEditComment = (comment: CommentResponse) => {
+    setEditingCommentId(comment.comment_id)
+    setEditingCommentText(comment.content)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null)
+    setEditingCommentText("")
+  }
+
+  const handleUpdateComment = async (commentId: number) => {
+    if (!editingCommentText.trim()) return
+    try {
+      await postsService.updateComment(commentId, editingCommentText)
+      setComments(comments.map(c => c.comment_id === commentId ? { ...c, content: editingCommentText } : c))
+      toast.success("Cập nhật bình luận thành công.")
+      setEditingCommentId(null)
+      setEditingCommentText("")
+    } catch {
+      toast.error("Không thể cập nhật bình luận. Vui lòng thử lại sau.")
+    }
+  }
+
+  const handleDeleteComment = async (commentId: number) => {
+    setDeletingCommentId(commentId)
+    try {
+      await postsService.deleteComment(commentId)
+      setComments(comments.filter(c => c.comment_id !== commentId))
+      toast.success("Đã xóa bình luận.")
+    } catch {
+      toast.error("Không thể xóa bình luận. Vui lòng thử lại sau.")
+    } finally {
+      setDeletingCommentId(null)
     }
   }
 
@@ -209,7 +249,7 @@ export function Post({ post }: PostProps) {
 
               <form onSubmit={handleSubmitComment} className="mb-4">
                 <div className="flex gap-3">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 border-2">
                     <AvatarFallback>{user?.full_name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                     <AvatarImage src={user?.avatar || ""} alt={user?.full_name || ""} />
                   </Avatar>
@@ -257,26 +297,67 @@ export function Post({ post }: PostProps) {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex gap-3"
                     >
-                      <Link href={`/photographer/${comment.user_slug}`}>
-                        <Avatar className="h-8 w-8 cursor-pointer">
+                      {/* <Link href={`/photographer/${comment.user_slug}`}> */}
+                        <Avatar className="h-8 w-8 cursor-pointer border-2">
                           <AvatarImage src={comment.user_avatar} alt={comment.user_name} />
                           <AvatarFallback>{comment.user_name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                         </Avatar>
-                      </Link>
+                      {/* </Link> */}
                       <div className="flex-1">
-                        <div className="bg-muted/50 rounded-lg p-3">
+                        <div className="bg-muted/50 rounded-lg p-3 pt-0 relative">
                           <div className="flex justify-between items-start mb-1">
-                            <Link 
-                              href={`/photographer/${comment.user_slug}`}
+                          <div>
+                          <Link 
+                              // href={`/photographer/${comment.user_slug}`}
+                              href={``}
                               className="font-medium text-sm hover:underline"
                             >
                               {comment.user_name}
                             </Link>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="ml-3.5 text-xs text-muted-foreground">
                               {format(new Date(comment.created_at), "HH:mm - dd/MM/yyyy", { locale: vi })}
                             </span>
                           </div>
-                          <p className="text-sm">{comment.content}</p>
+                            
+                            {user?.user_id === comment.user_id && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="ml-2 p-1 rounded hover:bg-accent"><MoreHorizontal className="h-4 w-4" /></button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditComment(comment)}>
+                                    <Pencil className="mr-2 h-4 w-4" /> Sửa
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDeleteComment(comment.comment_id)} variant="destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
+                          {editingCommentId === comment.comment_id ? (
+                            <div className="space-y-2">
+                              <Textarea
+                                value={editingCommentText}
+                                onChange={e => setEditingCommentText(e.target.value)}
+                                className="min-h-[60px]"
+                                autoFocus
+                              />
+                              <div className="flex gap-2 justify-end">
+                                <Button size="sm" variant="outline" onClick={handleCancelEdit}>Hủy</Button>
+                                <Button size="sm" onClick={() => handleUpdateComment(comment.comment_id)}>
+                                  <Send className="mr-2 h-4 w-4" /> Lưu
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm">{comment.content}</p>
+                          )}
+                          {deletingCommentId === comment.comment_id && (
+                            <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                              <Loader2 className="animate-spin h-6 w-6 text-primary" />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>

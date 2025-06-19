@@ -153,7 +153,18 @@ export const postsService = {
             throw error
         }
     },
+
     
+    async deleteComment(commentId: number): Promise<void> {
+        try {
+            await axiosInstance.delete(`/comments/${commentId}`)
+        } catch (error) {
+            console.error(`Error delete comment ${commentId}:`, error)
+            throw error
+        }
+    },
+
+
     async getCommentsByPostId(postId: number): Promise<CommentResponse[]> {
         try {
             const response = await axiosInstance.get(`/posts/${postId}/comments`)

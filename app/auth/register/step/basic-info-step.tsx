@@ -121,6 +121,7 @@ export default function BasicInfoStep({ formData, updateFormData, onNext }: Basi
         <div className="relative">
           <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           <Input
+            type="tel"
             id="phoneNumber"
             value={formData.phoneNumber}
             onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
