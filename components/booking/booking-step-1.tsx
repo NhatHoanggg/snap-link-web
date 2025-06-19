@@ -98,36 +98,38 @@ export function BookingStep1({
           </div>
         ) : (
           <div className="space-y-4">
-            <Calendar
-              mode="single"
-              selected={
-                formData.booking_date
-                  ? new Date(formData.booking_date)
-                  : undefined
-              }
-              onSelect={handleDateSelect}
-              className="rounded-md border"
-              modifiers={{
-                available: (date) =>
-                  availabilities.some(
-                    (a) =>
-                      isSameDay(parseISO(a.available_date), date) &&
-                      a.status === "available"
-                  ),
-                booked: (date) =>
-                  availabilities.some(
-                    (a) =>
-                      isSameDay(parseISO(a.available_date), date) &&
-                      a.status === "booked"
-                  ),
-              }}
-              modifiersClassNames={{
-                available:
-                  "bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium",
-                booked:
-                  "bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 line-through opacity-70",
-              }}
-            />
+            <div className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={
+                  formData.booking_date
+                    ? new Date(formData.booking_date)
+                    : undefined
+                }
+                onSelect={handleDateSelect}
+                className="rounded-md border"
+                modifiers={{
+                  available: (date) =>
+                    availabilities.some(
+                      (a) =>
+                        isSameDay(parseISO(a.available_date), date) &&
+                        a.status === "available"
+                    ),
+                  booked: (date) =>
+                    availabilities.some(
+                      (a) =>
+                        isSameDay(parseISO(a.available_date), date) &&
+                        a.status === "booked"
+                    ),
+                }}
+                modifiersClassNames={{
+                  available:
+                    "bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium",
+                  booked:
+                    "bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 line-through opacity-70",
+                }}
+              />
+             </div>
 
             <div className="flex items-center justify-center space-x-8 mt-6">
               <div className="flex items-center">

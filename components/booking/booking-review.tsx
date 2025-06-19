@@ -176,12 +176,13 @@ export function BookingReview({ formData, prevStep, handleSubmit, isSubmitting, 
                   value={discountCode}
                   onChange={handleDiscountCodeChange}
                   className="max-w-[200px]"
+                  disabled={!!selectedDiscount}
                 />
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => handleSelectDiscount(discountCode)}
-                  disabled={isLoadingDiscount}
+                  disabled={isLoadingDiscount || !!selectedDiscount}
                 >
                   {isLoadingDiscount ? (
                     <>
@@ -192,6 +193,22 @@ export function BookingReview({ formData, prevStep, handleSubmit, isSubmitting, 
                     "Áp dụng"
                   )}
                 </Button>
+                {selectedDiscount && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedDiscount(null)
+                      setDiscountCode("")
+                      updateFormData({
+                        discount_code: "",
+                        total_price: basePrice
+                      })
+                    }}
+                  >
+                    Hủy áp dụng
+                  </Button>
+                )}
               </div>
             </div>
           </div>
