@@ -417,7 +417,7 @@ export default function ProfilePage() {
                     <Settings className="mr-2 h-4 w-4" />
                     Cài đặt tài khoản
                   </Button>
-                  {profile.role === "photographer" && (
+                  {/* {profile.role === "photographer" && (
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
@@ -425,6 +425,17 @@ export default function ProfilePage() {
                     >
                       <Briefcase className="mr-2 h-4 w-4" />
                       Quản lý hồ sơ công việc
+                    </Button>
+                  )} */}
+
+                  {profile.role === "photographer" && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => router.push("/profile/payment")}
+                    >
+                      <Briefcase className="mr-2 h-4 w-4" />
+                      Thanh toán
                     </Button>
                   )}
                 </PopoverContent>

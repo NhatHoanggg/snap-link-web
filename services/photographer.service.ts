@@ -81,6 +81,11 @@ export interface SimplifiedPhotographerProfile {
   total_bookings: number;
 }
 
+export interface PaymentInfo{
+  bank_name: string;
+  account_number: string;
+}
+
 export interface SimplifiedPhotographersResponse {
   total: number;
   photographers: SimplifiedPhotographerProfile[];
@@ -225,6 +230,26 @@ export const photographerService = {
       const response = await axiosInstance.get<SimplifiedPhotographersResponse>(
         `/photographers/simplified?${params.toString()}`
       );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  async getMyPaymentInfo(){
+    try {
+      const response = await axiosInstance.get(`/photographers/me/payment-info`);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
+  async updateMyPaymentInfo(paymentInfo: PaymentInfo){
+    try {
+      const response = await axiosInstance.patch(`/photographers/me/payment-info`, paymentInfo);
       return response.data;
     } catch (error) {
       console.log(error);
