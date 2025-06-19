@@ -13,13 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -110,12 +110,12 @@ export function RequestForm({
     }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // const handleSelectChange = (name: string, value: string) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  // };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -187,7 +187,7 @@ export function RequestForm({
             />
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="shooting_type">Loại hình chụp ảnh</Label>
             <Select
               value={formData.shooting_type}
@@ -206,11 +206,10 @@ export function RequestForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="outdoor">Ngoại cảnh</SelectItem>
-                {/* <SelectItem value="indoor">Trong nhà</SelectItem> */}
                 <SelectItem value="studio">Studio</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="illustration">Ảnh tham khảo</Label>
