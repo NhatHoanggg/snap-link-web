@@ -17,7 +17,7 @@ export default function PostFeed() {
 
   const fetchPosts = async (skipCount: number) => {
     try {
-      const data = await postsService.getLastestPosts()
+      const data = await postsService.getAllPosts(skipCount, 20)
 
       if (data.length === 0) {
         setHasMore(false)

@@ -111,6 +111,16 @@ export const postsService = {
         }
     },
 
+    async getAllPosts(skip = 0, limit = 20): Promise<PostResponse[]> {
+        try {
+            const response = await axiosInstance.get(`/posts/all?skip=${skip}&limit=${limit}`)
+            return response.data
+        } catch (error) {
+            console.error('Error fetching all posts:', error)
+            throw error
+        }
+    },
+
     async likePost(postId: number): Promise<void> {
         try {
             await axiosInstance.post(`/posts/like`, {

@@ -455,7 +455,6 @@ export default function BookingDetailPage() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              Im
 
               {/* Booking Details */}
               <div className="space-y-4">

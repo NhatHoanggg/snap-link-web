@@ -11,11 +11,30 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { Search, MapPin, Loader2, LayoutGrid, List, X, ChevronLeft, ChevronRight, Users } from "lucide-react"
+import { Search, MapPin, Loader2, LayoutGrid, List, X, ChevronLeft, ChevronRight, Users, ChevronsUpDown, Check } from "lucide-react"
 import { photographerService, SimplifiedPhotographerFilters, type SimplifiedPhotographerProfile } from "@/services/photographer.service"
 import { getTags, type Tag } from "@/services/tags.service"
 import { useDebounce } from "@/hooks/use-debounce"
 import { formatCurrency } from "@/lib/utils"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+
+// Thêm interface Province
+interface Province {
+  name: string;
+  code: number;
+}
 
 // Filter component
 const FilterSection = ({
@@ -24,16 +43,42 @@ const FilterSection = ({
   availableTags,
   viewMode,
   onViewModeChange,
+  onResetFilters,
 }: {
-  onFilterChange: (filters: SimplifiedPhotographerFilters) => void
-  filters: SimplifiedPhotographerFilters
+  onFilterChange: (filters: SimplifiedPhotographerFilters & { province?: string }) => void
+  filters: SimplifiedPhotographerFilters & { province?: string }
   availableTags: Tag[]
   viewMode: "grid" | "list"
   onViewModeChange: (mode: "grid" | "list") => void
+  onResetFilters: () => void
 }) => {
+  // Thêm state cho province
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
+  const [openCityPopover, setOpenCityPopover] = useState(false);
+
+  useEffect(() => {
+    fetch("/data/vietnam.json")
+      .then((res) => res.json())
+      .then((data: Province[]) => {
+        setProvinces(data);
+        // Nếu filters.province có giá trị, set selectedProvince
+        if (filters.province) {
+          const found = data.find(p => p.name === filters.province);
+          if (found) setSelectedProvince(found);
+        }
+      });
+    // eslint-disable-next-line
+  }, []);
+
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="flex justify-end mb-2">
+        <Button variant="outline" size="sm" onClick={onResetFilters}>
+          Đặt lại bộ lọc
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Khoảng giá</label>
           <div className="space-y-2">
@@ -109,6 +154,57 @@ const FilterSection = ({
               Danh sách
             </Button>
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Thành phố</label>
+          <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openCityPopover}
+                className="w-full justify-between"
+              >
+                {selectedProvince?.name || "Chọn thành phố..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <Command>
+                <CommandInput placeholder="Tìm thành phố..." />
+                <CommandList>
+                  <CommandEmpty>Không tìm thấy thành phố.</CommandEmpty>
+                  <CommandGroup>
+                    {provinces.map((province) => (
+                      <CommandItem
+                        key={province.code}
+                        value={province.name}
+                        onSelect={() => {
+                          if (selectedProvince?.code === province.code) {
+                            setSelectedProvince(null);
+                            onFilterChange({ ...filters, province: undefined });
+                          } else {
+                            setSelectedProvince(province);
+                            onFilterChange({ ...filters, province: province.name });
+                          }
+                          setOpenCityPopover(false);
+                        }}
+                      >
+                        <Check
+                          className={
+                            "mr-2 h-4 w-4" +
+                            (selectedProvince?.code === province.code ? " opacity-100" : " opacity-0")
+                          }
+                        />
+                        {province.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -306,12 +402,22 @@ export default function PhotographersDirectory() {
   const [viewMode, setViewMode] = useState<"grid" | "list">(searchParams.get("view") as "grid" | "list" || "grid")
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"))
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
-  const [filters, setFilters] = useState<SimplifiedPhotographerFilters>({
+  const defaultFilters = {
+    min_price: 0,
+    max_price: 1000000,
+    min_experience: 0,
+    sort_by: "rating" as const,
+    tags: [],
+    province: undefined,
+  };
+  const [filters, setFilters] = useState<SimplifiedPhotographerFilters & { province?: string }>({
+    ...defaultFilters,
     min_price: parseInt(searchParams.get("min_price") || "0"),
     max_price: parseInt(searchParams.get("max_price") || "1000000"),
     min_experience: parseInt(searchParams.get("min_experience") || "0"),
     sort_by: (searchParams.get("sort_by") as SimplifiedPhotographerFilters['sort_by']) || "rating",
-    tags: searchParams.get("tags")?.split(",") || []
+    tags: searchParams.get("tags")?.split(",") || [],
+    province: searchParams.get("province") || undefined,
   })
 
   const ITEMS_PER_PAGE = 12
@@ -325,6 +431,7 @@ export default function PhotographersDirectory() {
     if (filters.min_experience) params.set("min_experience", filters.min_experience.toString())
     if (filters.sort_by) params.set("sort_by", filters.sort_by)
     if (filters.tags?.length) params.set("tags", filters.tags.join(","))
+    if (filters.province) params.set("province", filters.province)
     if (currentPage > 1) params.set("page", currentPage.toString())
     if (viewMode !== "grid") params.set("view", viewMode)
 
@@ -357,7 +464,8 @@ export default function PhotographersDirectory() {
           max_price: filters.max_price,
           min_experience: filters.min_experience,
           tags: filters.tags,
-          sort_by: filters.sort_by
+          sort_by: filters.sort_by,
+          location: filters.province,
         })
         setPhotographers(response.photographers)
         setTotalPhotographers(response.total)
@@ -395,7 +503,7 @@ export default function PhotographersDirectory() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Tìm kiếm theo tên, vị trí hoặc chuyên môn..."
+            placeholder="Tìm kiếm theo tên..."
             className="pl-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -409,6 +517,7 @@ export default function PhotographersDirectory() {
         availableTags={availableTags}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        onResetFilters={() => setFilters(defaultFilters)}
       />
 
       <div className="mt-8 min-h-[300px]">

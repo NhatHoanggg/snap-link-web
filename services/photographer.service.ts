@@ -111,6 +111,7 @@ export interface SimplifiedPhotographerFilters {
   min_experience?: number;
   tags?: string[];
   sort_by?: 'rating' | 'price_low' | 'price_high' | 'experience';
+  location?: string;
 }
 
 export const photographerService = {
@@ -227,9 +228,15 @@ export const photographerService = {
         filters.tags.forEach(tag => params.append('tags', tag));
       }
 
+      // Add province filter if present
+      if (filters.location) {
+        params.append('location', filters.location);
+      }
+
       const response = await axiosInstance.get<SimplifiedPhotographersResponse>(
         `/photographers/simplified?${params.toString()}`
       );
+      console.log(`/photographers/simplified?${params.toString()}`);
       return response.data;
     } catch (error) {
       console.log(error);
