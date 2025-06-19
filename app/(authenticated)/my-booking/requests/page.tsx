@@ -56,7 +56,7 @@ export default function MyRequestsPage() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Ngày Chụp</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Concept</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Ngân Sách</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Loại Chụp</th>
+                                {/* <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Loại Chụp</th> */}
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Địa Điểm</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Trạng Thái</th>
                             </tr>
@@ -82,9 +82,9 @@ export default function MyRequestsPage() {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                         {request.estimated_budget} VND
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                         {request.shooting_type}
-                                    </td>
+                                    </td> */}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                         {request.location_text}, {request.province}
                                     </td>

@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getRequestById, RequestResponse } from '@/services/request.service';
+import { getRequestById, RequestResponse, deleteRequest } from '@/services/request.service';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Eye, Check, X } from 'lucide-react';
+import { ArrowLeft, Eye, Check, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { photographerService } from '@/services/photographer.service';
 import { Button } from '@/components/ui/button';
@@ -101,6 +101,20 @@ export default function RequestDetailPage() {
         }
     };
 
+    const handleDeleteRequest = async () => {
+        setIsUpdating(true);
+        try {
+            await deleteRequest(Number(params.id));
+            toast.success('Đã xóa yêu cầu thành công');
+            router.push('/my-booking/requests');
+        } catch (err) {
+            console.error(err);
+            toast.error('Có lỗi xảy ra khi xóa yêu cầu');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -146,8 +160,43 @@ export default function RequestDetailPage() {
                              'Đã Đóng'}
                         </Badge>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                        Ngày tạo: {format(new Date(request.created_at), 'dd/MM/yyyy')}
+                    <div className="flex flex-col items-end gap-2">
+                        <div className="text-sm text-muted-foreground">
+                            Ngày tạo: {format(new Date(request.created_at), 'dd/MM/yyyy')}
+                        </div>
+                        {request.status === 'open' && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button 
+                                        variant="destructive" 
+                                        size="sm" 
+                                        className="gap-1 mt-2"
+                                        disabled={isUpdating}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Xóa yêu cầu
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Xác nhận xóa yêu cầu</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Bạn có chắc chắn muốn xóa yêu cầu này? Hành động này không thể hoàn tác.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={handleDeleteRequest}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            disabled={isUpdating}
+                                        >
+                                            Xác nhận xóa
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
                     </div>
                 </div>
 
