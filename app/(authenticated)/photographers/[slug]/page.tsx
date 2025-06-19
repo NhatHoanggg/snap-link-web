@@ -238,6 +238,17 @@ export default function PhotographerDetail() {
     }
   }
 
+  const handleBookingClick = () => {
+    if (!isAuthenticated || !user) {
+      toast.error("Vui lòng đăng nhập để đặt lịch chụp ảnh")
+      router.push("/auth/login")
+      return
+    }
+    
+    // If authenticated, proceed to booking page
+    router.push(`/booking/${photographer?.slug}`)
+  }
+
   const handleCopyDiscountCode = (code: string) => {
     navigator.clipboard.writeText(code)
     toast.success(`Đã sao chép mã giảm giá ${code} vào clipboard`)
@@ -410,11 +421,9 @@ export default function PhotographerDetail() {
                 <Share2 className="h-4 w-4 mr-2" />
                 Chia sẻ
               </Button>
-              <Button size="sm" asChild>
-                <Link href={`/booking/${photographer.slug}`}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Đặt lịch
-                </Link>
+              <Button size="sm" onClick={handleBookingClick}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Đặt lịch
               </Button>
             </div>
           </div>
@@ -508,12 +517,10 @@ export default function PhotographerDetail() {
                     <Button
                       className="w-full py-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                       size="lg"
-                      asChild
+                      onClick={handleBookingClick}
                     >
-                      <Link href={`/booking/${photographer.slug}`}>
-                        <Calendar className="h-5 w-5 mr-2" />
-                        Đặt lịch ngay
-                      </Link>
+                      <Calendar className="h-5 w-5 mr-2" />
+                      Đặt lịch ngay
                     </Button>
 
                     <div className="flex gap-2">
