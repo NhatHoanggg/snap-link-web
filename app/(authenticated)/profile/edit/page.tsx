@@ -11,8 +11,6 @@ import LocationSelector from "@/components/common/location-selector"
 import { type UpdateProfileData, userService } from "@/services/user.service"
 import { useAuth } from "@/services/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Toaster } from "@/components/ui/toaster"
-import { useToast } from "@/components/ui/use-toast"
 import { Textarea } from "@/components/ui/textarea"
 import { getTags, type Tag } from "@/services/tags.service"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -20,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AlertCircle, Camera, CheckCircle, Clock, Loader2, MapPin, Phone, Plus, Trash2, User, X } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import toast, {Toaster} from "react-hot-toast"
 
 interface Ward {
   name: string
@@ -44,7 +43,7 @@ interface SocialMediaLinks {
 
 interface PhotographerProfileData extends UpdateProfileData {
   price_per_hour?: number | null
-  experience_year?: number | null
+  experience_years?: number | null
   social_media_links?: SocialMediaLinks
   tags?: string[]
 }
@@ -52,7 +51,6 @@ interface PhotographerProfileData extends UpdateProfileData {
 export default function EditProfilePage() {
   const { token, user, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
-  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
@@ -66,7 +64,7 @@ export default function EditProfilePage() {
     ward: "",
     address_detail: "",
     price_per_hour: 0,
-    experience_year: 0,
+    experience_years: 0,
     social_media_links: {},
     tags: [],
   })
@@ -91,7 +89,7 @@ export default function EditProfilePage() {
     ward?: string
     address_detail?: string
     price_per_hour?: string
-    experience_year?: string
+    experience_years?: string
   }>({})
 
   useEffect(() => {
@@ -124,11 +122,7 @@ export default function EditProfilePage() {
         setAvailableTags(tags)
       } catch (err) {
         console.error("Error loading data", err)
-        toast({
-          variant: "destructive",
-          title: "Lỗi",
-          description: "Không thể tải thông tin hồ sơ",
-        })
+        toast.error("Không thể tải thông tin hồ sơ")
         router.push("/profile")
       } finally {
         setLoading(false)
@@ -138,7 +132,7 @@ export default function EditProfilePage() {
     if (!isAuthLoading) {
       fetchData()
     }
-  }, [token, isAuthLoading, router, toast])
+  }, [token, isAuthLoading, router])
 
   // Update formData when location changes
   useEffect(() => {
@@ -185,8 +179,8 @@ export default function EditProfilePage() {
       if (formData.price_per_hour === undefined || formData.price_per_hour === null || formData.price_per_hour < 0) {
         newErrors.price_per_hour = "Giá mỗi giờ phải là số dương"
       }
-      if (formData.experience_year === undefined || formData.experience_year === null || formData.experience_year < 0) {
-        newErrors.experience_year = "Số năm kinh nghiệm phải là số dương"
+      if (formData.experience_years === undefined || formData.experience_years === null || formData.experience_years < 0) {
+        newErrors.experience_years = "Số năm kinh nghiệm phải là số dương"
       }
     }
     setErrors(newErrors)
@@ -217,19 +211,11 @@ export default function EditProfilePage() {
 
       const response = await userService.updateProfile(dataToSubmit, user?.role as "customer" | "photographer")
       console.log("Profile updated:", response)
-      toast({
-        title: "Thành công",
-        description: "Cập nhật thông tin thành công",
-        variant: "default",
-      })
+      toast.success("Cập nhật thông tin thành công")
       router.push("/profile")
     } catch (err) {
       console.error("Error updating profile", err)
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Cập nhật thông tin thất bại",
-      })
+      toast.error("Cập nhật thông tin thất bại")
     } finally {
       setUpdating(false)
     }
@@ -298,7 +284,7 @@ export default function EditProfilePage() {
               <Camera className="h-4 w-4" />
               <span className="hidden sm:inline">Thông tin chuyên môn</span>
               <span className="sm:hidden">Chuyên môn</span>
-              {(errors.price_per_hour || errors.experience_year) && (
+              {(errors.price_per_hour || errors.experience_years) && (
                 <span className="h-2 w-2 rounded-full bg-destructive"></span>
               )}
             </TabsTrigger>
@@ -516,14 +502,14 @@ export default function EditProfilePage() {
                           min="0"
                           value={formData.experience_years || 0}
                           onChange={(e) =>
-                            setFormData({ ...formData, experience_year: Number.parseInt(e.target.value) })
+                            setFormData({ ...formData, experience_years: Number.parseInt(e.target.value) })
                           }
                           placeholder="Nhập số năm kinh nghiệm"
-                          className={errors.experience_year ? "border-destructive" : ""}
+                          className={errors.experience_years ? "border-destructive" : ""}
                         />
-                        {errors.experience_year && (
+                        {errors.experience_years && (
                           <p className="text-sm text-destructive flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" /> {errors.experience_year}
+                            <AlertCircle className="h-3 w-3" /> {errors.experience_years}
                           </p>
                         )}
                       </div>
@@ -630,7 +616,7 @@ export default function EditProfilePage() {
           </Button>
         </div>
       </form>
-      <Toaster />
+      <Toaster position="bottom-right" />
     </div>
   )
 }
