@@ -20,6 +20,7 @@ export default function PaymentHistoryPage() {
       setLoading(true);
       const data = await getMyPaymentsHistory();
       setPayments(data.payments);
+      console.log(data)
       setError(null);
     } catch (err) {
       console.log(err);
@@ -87,9 +88,9 @@ export default function PaymentHistoryPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Mã đơn hàng
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Trạng thái
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
@@ -112,15 +113,15 @@ export default function PaymentHistoryPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {payment.order_code}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        payment.status === 'success' 
+                        payment.status === 'PAID' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {payment.status === 'success' ? 'Đã thanh toán' : 'Đã hủy'}
+                        {payment.status === 'PAID' ? 'Đã thanh toán' : 'Đã hủy'}
                       </span>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
